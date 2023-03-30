@@ -1,0 +1,20 @@
+{
+    "name": "com.BlockadeLabsSDK.Runtime",
+    "rootNamespace": "",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.pusher.pusherwebsocketunity",
+            "expression": "2.1.0",
+            "define": "PUSHER_PRESENT"
+        }
+    ],
+    "noEngineReferences": false
+}
