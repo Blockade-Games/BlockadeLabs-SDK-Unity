@@ -18,7 +18,7 @@ public class PusherManager : MonoBehaviour
     private Channel _channel;
     private const string APP_KEY = "a6a7b7662238ce4494d5";
     private const string APP_CLUSTER = "mt1";
-    private List<int> imagineIds = new List<int>();
+    private List<string> imagineIds = new List<string>();
     private int previousImagineCount = 0;
     
     async Task Start()
@@ -49,7 +49,7 @@ public class PusherManager : MonoBehaviour
             _pusher.Error += OnPusherOnError;
             _pusher.ConnectionStateChanged += PusherOnConnectionStateChanged;
             _pusher.Connected += PusherOnConnected;
-            _channel = await _pusher.SubscribeAsync("api_client_status_update_" + apiSecretKey);
+            // _channel = await _pusher.SubscribeAsync("api_client_status_update_" + apiSecretKey);
 			_pusher.Subscribed += OnChannelOnSubscribed;
             await _pusher.ConnectAsync();
         }
@@ -64,6 +64,12 @@ public class PusherManager : MonoBehaviour
         CheckIfAssetsReady();
     }
 
+    public async Task SubscribeToChannel(string id)
+    {
+        Debug.Log("SubscribeToChannel");
+        _channel = await _pusher.SubscribeAsync("status_update_" + id);
+    }
+
     public void CheckIfAssetsReady()
     {
         if (imagineIds.Count != previousImagineCount)
@@ -72,6 +78,7 @@ public class PusherManager : MonoBehaviour
 
             foreach (var blockadeImaginarium in blockadeImaginariums)
             {
+                Debug.Log(blockadeImaginarium.imagineId);
                 if (imagineIds.Last() == blockadeImaginarium.imagineId)
                 {
                     _ = blockadeImaginarium.GetAssets();
@@ -85,17 +92,27 @@ public class PusherManager : MonoBehaviour
     private void PusherOnConnected(object sender)
     {
         Debug.Log("Connected");
-        _channel.Bind("status_update", (string response) =>
-        {
-            Debug.Log("status_update event received");
-            var pusherResponse = JsonConvert.DeserializeObject<PusherResponse>(response);
-            var pusherResponseData = JsonConvert.DeserializeObject<PusherResponseData>(pusherResponse.data);
+        Debug.Log(_channel);
+        // Debug.Log(_channel.Name);
+        
+        // _channel?.Bind("status_update", (string response) =>
+        // {
+        //     Debug.Log("status_update event received");
+        //     var pusherResponse = JsonConvert.DeserializeObject<PusherResponse>(response);
+        //     var pusherResponseData = JsonConvert.DeserializeObject<PusherResponseData>(pusherResponse.data);
+        //
+        //     if (pusherResponseData.status == "complete")
+        //     {
+        //         imagineIds.Add(pusherResponseData.obfuscated_id);
+        //         _ = UnsubscribeFromChannel(pusherResponseData);
+        //     }
+        // });
+        
+    }
 
-            if (pusherResponseData.status == "complete")
-            {
-                imagineIds.Add(pusherResponseData.id);
-            }
-        });
+    private async Task UnsubscribeFromChannel(PusherResponseData pusherResponseData)
+    {
+        await _pusher.UnsubscribeAsync("status_update_" + pusherResponseData.obfuscated_id).ConfigureAwait(false);
     }
 
     private void PusherOnConnectionStateChanged(object sender, ConnectionState state)
@@ -113,6 +130,28 @@ public class PusherManager : MonoBehaviour
     private void OnChannelOnSubscribed(object s, Channel channel)
     {
         Debug.Log("Subscribed");
+        Debug.Log(channel?.Name);
+
+        if (channel?.Name == "private-chat-channel-1")
+        {
+            
+        }
+        
+        Debug.Log(_channel);
+        Debug.Log(channel?.Name);
+        
+        _channel?.Bind("status_update", (string response) =>
+        {
+            Debug.Log("status_update event received");
+            var pusherResponse = JsonConvert.DeserializeObject<PusherResponse>(response);
+            var pusherResponseData = JsonConvert.DeserializeObject<PusherResponseData>(pusherResponse.data);
+
+            if (pusherResponseData.status == "complete")
+            {
+                imagineIds.Add(pusherResponseData.obfuscated_id);
+                _ = UnsubscribeFromChannel(pusherResponseData);
+            }
+        });
     }
 
     async Task OnApplicationQuit()
@@ -135,6 +174,7 @@ public class PusherResponseData
 {
     public string status { get; set; }
     public int id { get; set; }
+    public string obfuscated_id { get; set; }
 }
 
 #endif

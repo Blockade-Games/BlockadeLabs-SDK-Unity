@@ -61,7 +61,7 @@ namespace BlockadeLabsSDK
             return null;
         }
         
-        public static async Task<int> CreateSkybox(List<SkyboxStyleField> skyboxStyleFields, int id, string apiKey)
+        public static async Task<string> CreateSkybox(List<SkyboxStyleField> skyboxStyleFields, int id, string apiKey)
         {
             // Create a dictionary of string keys and dictionary values to hold the JSON POST params
             Dictionary<string, string> parameters = new Dictionary<string, string>();
@@ -101,16 +101,16 @@ namespace BlockadeLabsSDK
             
                 if (result?.id == null)
                 {
-                    return 0;
+                    return "";
                 }
             
-                return int.Parse(result.id);
+                return result.obfuscated_id;
             }
             
-            return 0;
+            return "";
         }
 
-        public static async Task<int> CreateImagine(List<GeneratorField> generatorFields, string generator, string apiKey)
+        public static async Task<string> CreateImagine(List<GeneratorField> generatorFields, string generator, string apiKey)
         {
             // Create a dictionary of string keys and values to hold the JSON POST params
             Dictionary<string, string> parameters = new Dictionary<string, string>();
@@ -150,21 +150,21 @@ namespace BlockadeLabsSDK
 
                 if (result?.request == null)
                 {
-                    return 0;
+                    return "";
                 }
 
-                return int.Parse(result.request.id);
+                return result.request.obfuscated_id;
             }
             
-            return 0;
+            return "";
         }
 
-        public static async Task<Dictionary<string, string>> GetImagine(int imagineId, string apiKey)
+        public static async Task<Dictionary<string, string>> GetImagine(string imagineId, string apiKey)
         {
             Dictionary<string, string> result = new Dictionary<string, string>();
            
             var getImagineRequest = UnityWebRequest.Get(
-                "https://backend.blockadelabs.com/api/v1/imagine/requests/" + imagineId + "?api_key=" + apiKey
+                "https://backend.blockadelabs.com/api/v1/imagine/requests/obfuscated-id/" + imagineId + "?api_key=" + apiKey
             );
 
             await getImagineRequest.SendWebRequest();

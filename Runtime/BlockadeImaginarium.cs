@@ -42,7 +42,7 @@ public class BlockadeImaginarium : MonoBehaviour
     public int skyboxStyleOptionsIndex = 0;
     public int lastGeneratorOptionsIndex = 0;
     public int lastSkyboxStyleOptionsIndex = 0;
-    public int imagineId = 0;
+    public string imagineId = "";
     private int progressId;
     GUIStyle guiStyle;
     
@@ -261,10 +261,11 @@ public class BlockadeImaginarium : MonoBehaviour
 
         var createSkyboxId = await ApiRequests.CreateSkybox(skyboxStyleFields, id, apiKey);
 
-        if (createSkyboxId != 0)
+        if (createSkyboxId != "")
         {
             imagineId = createSkyboxId;
             percentageCompleted = 33;
+            Debug.Log(imagineId);
             CalculateProgress();
 
             var pusherManager = false;
@@ -281,6 +282,13 @@ public class BlockadeImaginarium : MonoBehaviour
             )
             {
                 _ = GetAssets();
+            }
+            else
+            {
+                Debug.Log("here");
+                Debug.Log(imagineId);
+                Debug.Log(PusherManager.instance);
+                _ = PusherManager.instance.SubscribeToChannel(imagineId);
             }
         }
     }
@@ -304,7 +312,7 @@ public class BlockadeImaginarium : MonoBehaviour
 
         var createImagineId = await ApiRequests.CreateImagine(generatorFields, generator, apiKey);
 
-        if (createImagineId != 0)
+        if (createImagineId != "")
         {
             imagineId = createImagineId;
             percentageCompleted = 33;
@@ -362,7 +370,7 @@ public class BlockadeImaginarium : MonoBehaviour
         {
             percentageCompleted = -1;
             DestroyImmediate(previewImage);
-            imagineId = 0;
+            imagineId = "";
             return;
         }
 
@@ -465,7 +473,7 @@ public class BlockadeImaginarium : MonoBehaviour
             break;
         }
         
-        imagineId = 0;
+        imagineId = "";
     }
 
     private string ValidateFilename(string prompt)
