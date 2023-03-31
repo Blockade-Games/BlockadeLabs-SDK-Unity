@@ -42,7 +42,7 @@ public class BlockadeImaginarium : MonoBehaviour
     public int skyboxStyleOptionsIndex = 0;
     public int lastGeneratorOptionsIndex = 0;
     public int lastSkyboxStyleOptionsIndex = 0;
-    public string imagineId = "";
+    public string imagineObfuscatedId = "";
     private int progressId;
     GUIStyle guiStyle;
     
@@ -259,13 +259,12 @@ public class BlockadeImaginarium : MonoBehaviour
         percentageCompleted = 1;
         progressId = Progress.Start("Generating Skybox Assets");
 
-        var createSkyboxId = await ApiRequests.CreateSkybox(skyboxStyleFields, id, apiKey);
+        var createSkyboxObfuscatedId = await ApiRequests.CreateSkybox(skyboxStyleFields, id, apiKey);
 
-        if (createSkyboxId != "")
+        if (createSkyboxObfuscatedId != "")
         {
-            imagineId = createSkyboxId;
+            imagineObfuscatedId = createSkyboxObfuscatedId;
             percentageCompleted = 33;
-            Debug.Log(imagineId);
             CalculateProgress();
 
             var pusherManager = false;
@@ -285,10 +284,7 @@ public class BlockadeImaginarium : MonoBehaviour
             }
             else
             {
-                Debug.Log("here");
-                Debug.Log(imagineId);
-                Debug.Log(PusherManager.instance);
-                _ = PusherManager.instance.SubscribeToChannel(imagineId);
+                _ = PusherManager.instance.SubscribeToChannel(imagineObfuscatedId);
             }
         }
     }
@@ -310,11 +306,11 @@ public class BlockadeImaginarium : MonoBehaviour
         percentageCompleted = 1;
         progressId = Progress.Start("Generating Assets");
 
-        var createImagineId = await ApiRequests.CreateImagine(generatorFields, generator, apiKey);
+        var createImagineObfuscatedId = await ApiRequests.CreateImagine(generatorFields, generator, apiKey);
 
-        if (createImagineId != "")
+        if (createImagineObfuscatedId != "")
         {
-            imagineId = createImagineId;
+            imagineObfuscatedId = createImagineObfuscatedId;
             percentageCompleted = 33;
             CalculateProgress();
 
@@ -354,7 +350,7 @@ public class BlockadeImaginarium : MonoBehaviour
 
             count++;
             
-            var getImagineResult = await ApiRequests.GetImagine(imagineId, apiKey);
+            var getImagineResult = await ApiRequests.GetImagine(imagineObfuscatedId, apiKey);
 
             if (getImagineResult.Count > 0)
             {
@@ -370,7 +366,7 @@ public class BlockadeImaginarium : MonoBehaviour
         {
             percentageCompleted = -1;
             DestroyImmediate(previewImage);
-            imagineId = "";
+            imagineObfuscatedId = "";
             return;
         }
 
@@ -473,7 +469,7 @@ public class BlockadeImaginarium : MonoBehaviour
             break;
         }
         
-        imagineId = "";
+        imagineObfuscatedId = "";
     }
 
     private string ValidateFilename(string prompt)

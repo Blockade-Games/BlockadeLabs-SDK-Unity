@@ -99,7 +99,7 @@ namespace BlockadeLabsSDK
                 
                 createSkyboxRequest.Dispose();
             
-                if (result?.id == null)
+                if (result?.obfuscated_id == null)
                 {
                     return "";
                 }
@@ -159,12 +159,12 @@ namespace BlockadeLabsSDK
             return "";
         }
 
-        public static async Task<Dictionary<string, string>> GetImagine(string imagineId, string apiKey)
+        public static async Task<Dictionary<string, string>> GetImagine(string imagineObfuscatedId, string apiKey)
         {
             Dictionary<string, string> result = new Dictionary<string, string>();
            
             var getImagineRequest = UnityWebRequest.Get(
-                "https://backend.blockadelabs.com/api/v1/imagine/requests/obfuscated-id/" + imagineId + "?api_key=" + apiKey
+                "https://backend.blockadelabs.com/api/v1/imagine/requests/obfuscated-id/" + imagineObfuscatedId + "?api_key=" + apiKey
             );
 
             await getImagineRequest.SendWebRequest();
