@@ -329,6 +329,10 @@ public class BlockadeImaginarium : MonoBehaviour
             {
                 _ = GetAssets();
             }
+            else
+            {
+                _ = PusherManager.instance.SubscribeToChannel(imagineObfuscatedId);
+            }
         }
     }
 
