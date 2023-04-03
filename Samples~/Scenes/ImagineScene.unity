@@ -234,7 +234,7 @@ MonoBehaviour:
   skyboxStyleOptionsIndex: 0
   lastGeneratorOptionsIndex: 0
   lastSkyboxStyleOptionsIndex: 0
-  imagineId: 0
+  imagineObfuscatedId: 0
 --- !u!1 &725234794
 GameObject:
   m_ObjectHideFlags: 0
@@ -359,7 +359,7 @@ MonoBehaviour:
   skyboxStyleOptionsIndex: 0
   lastGeneratorOptionsIndex: 0
   lastSkyboxStyleOptionsIndex: 0
-  imagineId: 0
+  imagineObfuscatedId: 0
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0
@@ -599,7 +599,7 @@ MonoBehaviour:
   skyboxStyleOptionsIndex: 0
   lastGeneratorOptionsIndex: 0
   lastSkyboxStyleOptionsIndex: 0
-  imagineId: 0
+  imagineObfuscatedId: 0
 --- !u!1 &1531799243
 GameObject:
   m_ObjectHideFlags: 0
@@ -721,4 +721,4 @@ MonoBehaviour:
   skyboxStyleOptionsIndex: 3
   lastGeneratorOptionsIndex: 0
   lastSkyboxStyleOptionsIndex: 0
-  imagineId: 0
+  imagineObfuscatedId: 0

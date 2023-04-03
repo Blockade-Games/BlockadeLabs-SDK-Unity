@@ -6,6 +6,7 @@ namespace BlockadeLabsSDK
     public class CreateSkyboxResult
     {
         public string id { get; set; }
+        public string obfuscated_id { get; set; }
     }
 
     [System.Serializable]
@@ -17,6 +18,7 @@ namespace BlockadeLabsSDK
     public class CreateImagineRequest
     {
         public string id { get; set; }
+        public string obfuscated_id { get; set; }
     }
     
     [System.Serializable]
