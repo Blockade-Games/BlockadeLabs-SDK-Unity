@@ -5,7 +5,8 @@
   "description": "Unity package that allows you to generate infinite game assets using AI.",
   "unity": "2020.3",
   "dependencies": {
-    "com.unity.nuget.newtonsoft-json": "2.0.0"
+    "com.unity.nuget.newtonsoft-json": "2.0.0",
+    "com.pusher.pusherwebsocketunity": "2.1.0+211120"
   },
   "keywords": [
     "ai"
