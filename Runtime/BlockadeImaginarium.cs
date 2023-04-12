@@ -257,7 +257,10 @@ public class BlockadeImaginarium : MonoBehaviour
     async Task CreateSkybox(List<SkyboxStyleField> skyboxStyleFields, int id, bool runtime = false)
     {
         percentageCompleted = 1;
-        progressId = Progress.Start("Generating Skybox Assets");
+        
+        #if UNITY_EDITOR
+            progressId = Progress.Start("Generating Skybox Assets");
+        #endif
 
         var createSkyboxObfuscatedId = await ApiRequests.CreateSkybox(skyboxStyleFields, id, apiKey);
 
@@ -270,9 +273,7 @@ public class BlockadeImaginarium : MonoBehaviour
             var pusherManager = false;
             
             #if PUSHER_PRESENT
-                        
-            pusherManager = FindObjectOfType<PusherManager>();
-                        
+                pusherManager = FindObjectOfType<PusherManager>();
             #endif
 
             if (
@@ -304,7 +305,10 @@ public class BlockadeImaginarium : MonoBehaviour
     async Task CreateImagine(List<GeneratorField> generatorFields, string generator, bool runtime = false)
     {
         percentageCompleted = 1;
-        progressId = Progress.Start("Generating Assets");
+        
+        #if UNITY_EDITOR
+            progressId = Progress.Start("Generating Assets");
+        #endif
 
         var createImagineObfuscatedId = await ApiRequests.CreateImagine(generatorFields, generator, apiKey);
 
@@ -317,9 +321,7 @@ public class BlockadeImaginarium : MonoBehaviour
             var pusherManager = false;
             
             #if PUSHER_PRESENT
-            
-            pusherManager = FindObjectOfType<PusherManager>();
-            
+                pusherManager = FindObjectOfType<PusherManager>();
             #endif
 
             if (
@@ -344,7 +346,10 @@ public class BlockadeImaginarium : MonoBehaviour
         
         while (!isCancelled)
         {
-            EditorUtility.SetDirty(this);
+            #if UNITY_EDITOR
+                EditorUtility.SetDirty(this);
+            #endif
+            
             await Task.Delay(1000);
             
             if (isCancelled)
@@ -427,51 +432,55 @@ public class BlockadeImaginarium : MonoBehaviour
 
         percentageCompleted = 100;
         CalculateProgress();
-        Progress.Remove(progressId);
+        #if UNITY_EDITOR
+            Progress.Remove(progressId);
+        #endif
     }
 
     private void SaveAssets(Texture2D texture, Sprite sprite, string prompt)
     {
-        if (AssetDatabase.Contains(texture) && AssetDatabase.Contains(sprite))
-        {
-            Debug.Log("Texture already in assets database.");
-            return;
-        }
-
-        if (!AssetDatabase.IsValidFolder("Assets/Blockade Labs SDK Assets"))
-        {
-            AssetDatabase.CreateFolder("Assets", "Blockade Labs SDK Assets");
-        }
-
-        var maxLength = 20;
-
-        if (prompt.Length > maxLength)
-        {
-            prompt = prompt.Substring(0, maxLength);
-        }
-
-        var textureName = ValidateFilename(prompt) + "_texture";
-        var spriteName = ValidateFilename(prompt) + "_sprite";
-        
-        var counter = 0;
-        
-        while (true)
-        {
-            var modifiedTextureName = counter == 0 ? textureName : textureName + "_" + counter;
-            var modifiedSpriteName = counter == 0 ? spriteName : spriteName + "_" + counter;
-
-            var textureAssets = AssetDatabase.FindAssets(modifiedTextureName, new[] { "Assets/Blockade Labs SDK Assets" });
-            
-            if (textureAssets.Length > 0)
+        #if UNITY_EDITOR
+            if (AssetDatabase.Contains(texture) && AssetDatabase.Contains(sprite))
             {
-                counter++;
-                continue;
+                Debug.Log("Texture already in assets database.");
+                return;
             }
 
-            AssetDatabase.CreateAsset(texture, "Assets/Blockade Labs SDK Assets/" + modifiedTextureName + ".asset");
-            AssetDatabase.CreateAsset(sprite, "Assets/Blockade Labs SDK Assets/" + modifiedSpriteName + ".asset");
-            break;
-        }
+            if (!AssetDatabase.IsValidFolder("Assets/Blockade Labs SDK Assets"))
+            {
+                AssetDatabase.CreateFolder("Assets", "Blockade Labs SDK Assets");
+            }
+            
+            var maxLength = 20;
+
+            if (prompt.Length > maxLength)
+            {
+                prompt = prompt.Substring(0, maxLength);
+            }
+
+            var textureName = ValidateFilename(prompt) + "_texture";
+            var spriteName = ValidateFilename(prompt) + "_sprite";
+            
+            var counter = 0;
+            
+            while (true)
+            {
+                var modifiedTextureName = counter == 0 ? textureName : textureName + "_" + counter;
+                var modifiedSpriteName = counter == 0 ? spriteName : spriteName + "_" + counter;
+
+                var textureAssets = AssetDatabase.FindAssets(modifiedTextureName, new[] { "Assets/Blockade Labs SDK Assets" });
+                
+                if (textureAssets.Length > 0)
+                {
+                    counter++;
+                    continue;
+                }
+
+                AssetDatabase.CreateAsset(texture, "Assets/Blockade Labs SDK Assets/" + modifiedTextureName + ".asset");
+                AssetDatabase.CreateAsset(sprite, "Assets/Blockade Labs SDK Assets/" + modifiedSpriteName + ".asset");
+                break;
+            }
+        #endif
         
         imagineObfuscatedId = "";
     }
@@ -493,7 +502,9 @@ public class BlockadeImaginarium : MonoBehaviour
 
     private void CalculateProgress()
     {
-        Progress.Report(progressId, percentageCompleted / 100f);
+        #if UNITY_EDITOR
+            Progress.Report(progressId, percentageCompleted / 100f);
+        #endif
     }
 
     public float PercentageCompleted() => percentageCompleted;
@@ -502,6 +513,8 @@ public class BlockadeImaginarium : MonoBehaviour
     {
         isCancelled = true;
         percentageCompleted = -1;
-        Progress.Remove(progressId);
+        #if UNITY_EDITOR
+            Progress.Remove(progressId);
+        #endif
     }
 }
