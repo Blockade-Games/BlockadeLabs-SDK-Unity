@@ -264,30 +264,7 @@ public class BlockadeImaginarium : MonoBehaviour
 
         var createSkyboxObfuscatedId = await ApiRequests.CreateSkybox(skyboxStyleFields, id, apiKey);
 
-        if (createSkyboxObfuscatedId != "")
-        {
-            imagineObfuscatedId = createSkyboxObfuscatedId;
-            percentageCompleted = 33;
-            CalculateProgress();
-
-            var pusherManager = false;
-            
-            #if PUSHER_PRESENT
-                pusherManager = FindObjectOfType<PusherManager>();
-            #endif
-
-            if (
-                !pusherManager || 
-                (pusherManager && !runtime)
-            )
-            {
-                _ = GetAssets();
-            }
-            else
-            {
-                _ = PusherManager.instance.SubscribeToChannel(imagineObfuscatedId);
-            }
-        }
+        InitializeGetAssets(runtime, createSkyboxObfuscatedId);
     }
 
     public async Task InitializeGeneration(List<GeneratorField> generatorFields, string generator, bool runtime = false)
@@ -312,6 +289,11 @@ public class BlockadeImaginarium : MonoBehaviour
 
         var createImagineObfuscatedId = await ApiRequests.CreateImagine(generatorFields, generator, apiKey);
 
+        InitializeGetAssets(runtime, createImagineObfuscatedId);
+    }
+
+    private void InitializeGetAssets(bool runtime, string createImagineObfuscatedId)
+    {
         if (createImagineObfuscatedId != "")
         {
             imagineObfuscatedId = createImagineObfuscatedId;
@@ -319,21 +301,20 @@ public class BlockadeImaginarium : MonoBehaviour
             CalculateProgress();
 
             var pusherManager = false;
-            
+
             #if PUSHER_PRESENT
                 pusherManager = FindObjectOfType<PusherManager>();
             #endif
 
-            if (
-                !pusherManager || 
-                (pusherManager && !runtime)
-            )
+            if (pusherManager && runtime)
             {
-                _ = GetAssets();
+                #if PUSHER_PRESENT
+                    _ = PusherManager.instance.SubscribeToChannel(imagineObfuscatedId);
+                #endif
             }
             else
             {
-                _ = PusherManager.instance.SubscribeToChannel(imagineObfuscatedId);
+                _ = GetAssets();
             }
         }
     }
