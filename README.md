@@ -8,6 +8,8 @@ Unity package that allows you to generate infinite game assets using AI.
 
 ## Install
 
+### Edit the project's `manifest.json` file
+
 Package can be used standalone or optionally together with a Pusher websockets package. 
 If installed the Pusher package will use websockets to listen for any changes in the 
 Asset Generation Process on Runtime and make updates accordingly, 
@@ -28,6 +30,8 @@ and add the following in your `dependencies` (make sure to respect JSON commas):
 
 or if you don't plan on using Pusher, you can just add the `com.blockadelabs.sdk` package.
 
+### Use git URL option
+
 Alternatively you can go to your Unity Project, to `Window > Package Manager` and install the packages using the
 `Add package from git URL...` option. 
 
@@ -38,6 +42,8 @@ If using Pusher make sure to use this URL (uses the UPM branch):
 and for Blockade Labs SDK the default one will do the trick:
 
 `https://github.com/Blockade-Games/BlockadeLabs-SDK-Unity.git`
+
+### Use OpenUPM-CLI
 
 If you are using `OpenUPM-CLI`, you can easily install the Pusher package using the command below:
 
