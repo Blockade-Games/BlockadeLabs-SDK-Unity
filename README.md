@@ -39,6 +39,18 @@ and for Blockade Labs SDK the default one will do the trick:
 
 `https://github.com/Blockade-Games/BlockadeLabs-SDK-Unity.git`
 
+If you are using `OpenUPM-CLI`, you can easily install the Pusher package using the command below:
+
+```sh
+openupm add com.pusher.pusherwebsocketunity
+```
+
+and the Blockade Labs SDK with the following command:
+
+```sh
+openupm add com.blockadelabs.sdk
+```
+
 For known issues after installation check the section [below](#known-issues).
 
 ## Getting Started
