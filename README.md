@@ -1,6 +1,6 @@
 # Blockade Labs SDK for Unity
 
-Unity package that allows you to generate infinite game assets using AI.
+Create stunning AI-generated skybox assets within Unity for use as HDRIs in game dev and immersive projects.
 
 ## Unity Versions Support
 

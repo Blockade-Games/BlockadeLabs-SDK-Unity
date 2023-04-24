@@ -1,6 +1,6 @@
 {
   "name": "com.blockadelabs.sdk",
-  "version": "1.3.4",
+  "version": "1.3.5",
   "displayName": "Blockade Labs SDK",
   "description": "Unity package that allows you to generate infinite game assets using AI.",
   "unity": "2020.3",
