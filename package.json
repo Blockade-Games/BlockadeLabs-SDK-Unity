@@ -2,13 +2,15 @@
   "name": "com.blockadelabs.sdk",
   "version": "1.3.5",
   "displayName": "Blockade Labs SDK",
-  "description": "Unity package that allows you to generate infinite game assets using AI.",
+  "description": "Create stunning AI-generated skybox assets within Unity for use as HDRIs in game dev and immersive projects.",
   "unity": "2020.3",
   "dependencies": {
     "com.unity.nuget.newtonsoft-json": "2.0.0"
   },
   "keywords": [
-    "ai"
+    "ai",
+    "skybox",
+    "generator"
   ],
   "samples": [
     {
