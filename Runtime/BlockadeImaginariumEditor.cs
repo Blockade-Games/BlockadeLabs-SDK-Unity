@@ -8,40 +8,24 @@ namespace BlockadeLabsSDK
     public class BlockadeImaginariumEditor : Editor
     {
         private SerializedProperty assignToMaterial;
-        private SerializedProperty assignToSpriteRenderer;
-        private SerializedProperty enableGUI;
         private SerializedProperty enableSkyboxGUI;
-        private SerializedProperty resultImage;
         private SerializedProperty apiKey;
-        private SerializedProperty generatorFields;
         private SerializedProperty skyboxStyleFields;
-        private SerializedProperty generators;
         private SerializedProperty skyboxStyles;
-        private SerializedProperty generatorOptions;
         private SerializedProperty skyboxStyleOptions;
-        private SerializedProperty generatorOptionsIndex;
         private SerializedProperty skyboxStyleOptionsIndex;
         private bool showApi = true;
-        private bool showBasic = true;
-        private bool showImagine = true;
-        private bool showSkybox = true;
-        private bool showOutput = true;
+        private bool showBasic = false;
+        private bool showSkybox = false;
 
         void OnEnable()
         {
             assignToMaterial = serializedObject.FindProperty("assignToMaterial");
-            assignToSpriteRenderer = serializedObject.FindProperty("assignToSpriteRenderer");
-            enableGUI = serializedObject.FindProperty("enableGUI");
             enableSkyboxGUI = serializedObject.FindProperty("enableSkyboxGUI");
             apiKey = serializedObject.FindProperty("apiKey");
-            resultImage = serializedObject.FindProperty("resultImage");
-            generatorFields = serializedObject.FindProperty("generatorFields");
             skyboxStyleFields = serializedObject.FindProperty("skyboxStyleFields");
-            generators = serializedObject.FindProperty("generators");
             skyboxStyles = serializedObject.FindProperty("skyboxStyles");
-            generatorOptions = serializedObject.FindProperty("generatorOptions");
             skyboxStyleOptions = serializedObject.FindProperty("skyboxStyleOptions");
-            generatorOptionsIndex = serializedObject.FindProperty("generatorOptionsIndex");
             skyboxStyleOptionsIndex = serializedObject.FindProperty("skyboxStyleOptionsIndex");
         }
 
@@ -53,34 +37,37 @@ namespace BlockadeLabsSDK
 
             var blockadeImaginarium = (BlockadeImaginarium)target;
 
-            showApi = EditorGUILayout.Foldout(showApi, "Api");
+            showApi = EditorGUILayout.Foldout(showApi, "API");
 
             if (showApi)
             {
                 EditorGUILayout.PropertyField(apiKey);
+                GUILayout.Space(5);
+                
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField("Initialization", GUILayout.MinWidth(100));
+                
+                if (GUILayout.Button("Initialize", GUILayout.Width(265), GUILayout.MaxWidth(265)))
+                {
+                    _ = blockadeImaginarium.GetSkyboxStyleOptions();
+                }
+                EditorGUILayout.EndHorizontal();
             }
 
             showBasic = EditorGUILayout.Foldout(showBasic, "Basic Settings");
 
             if (showBasic)
             {
-                EditorGUILayout.PropertyField(enableGUI);
                 EditorGUILayout.PropertyField(enableSkyboxGUI);
-                EditorGUILayout.PropertyField(assignToSpriteRenderer);
                 EditorGUILayout.PropertyField(assignToMaterial);
             }
 
             if (!EditorApplication.isPlayingOrWillChangePlaymode)
             {
-                showSkybox = EditorGUILayout.Foldout(showSkybox, "Skybox");
+                showSkybox = EditorGUILayout.Foldout(showSkybox, "Skybox Generator");
 
                 if (showSkybox)
                 {
-                    if (GUILayout.Button("Get Styles"))
-                    {
-                        _ = blockadeImaginarium.GetSkyboxStyleOptions();
-                    }
-
                     // Iterate over skybox style fields and render them in the GUI
                     if (blockadeImaginarium.skyboxStyleFields.Count > 0)
                     {
@@ -105,97 +92,34 @@ namespace BlockadeLabsSDK
                         }
                     }
                 }
-                
-                showImagine = EditorGUILayout.Foldout(showImagine, "Imagine");
-
-                if (showImagine)
-                {
-                    if (GUILayout.Button("Get Generators"))
-                    {
-                        _ = blockadeImaginarium.GetGeneratorsWithFields();
-                    }
-
-                    // Iterate over generator fields and render them in the GUI
-                    if (blockadeImaginarium.generatorFields.Count > 0)
-                    {
-                        RenderEditorFields(blockadeImaginarium);
-                    }
-                    
-                    if (blockadeImaginarium.PercentageCompleted() >= 0 && blockadeImaginarium.PercentageCompleted() < 100)
-                    {
-                        if (GUILayout.Button("Cancel (" + blockadeImaginarium.PercentageCompleted() + "%)"))
-                        {
-                            blockadeImaginarium.Cancel();
-                        }
-                    }
-                    else
-                    {
-                        if (GUILayout.Button("Generate"))
-                        {
-                            _ = blockadeImaginarium.InitializeGeneration(
-                                blockadeImaginarium.generatorFields,
-                                blockadeImaginarium.generators[blockadeImaginarium.generatorOptionsIndex].generator
-                            );
-                        }
-                    }
-                }
-
-                showOutput = EditorGUILayout.Foldout(showOutput, "Output");
-
-                if (showOutput)
-                {
-                    EditorGUILayout.PropertyField(resultImage);
-                    if (blockadeImaginarium.previewImage != null) GUILayout.Box(blockadeImaginarium.previewImage);
-                }
             }
 
             serializedObject.ApplyModifiedProperties();
         }
 
-        private void RenderEditorFields(BlockadeImaginarium blockadeImaginarium)
-        {
-            EditorGUI.BeginChangeCheck();
-
-            blockadeImaginarium.generatorOptionsIndex = EditorGUILayout.Popup(
-                blockadeImaginarium.generatorOptionsIndex,
-                blockadeImaginarium.generatorOptions
-            );
-
-            if (EditorGUI.EndChangeCheck())
-            {
-                blockadeImaginarium.GetGeneratorFields(blockadeImaginarium.generatorOptionsIndex);
-            }
-
-            foreach (var field in blockadeImaginarium.generatorFields)
-            {
-                // Begin horizontal layout
-                EditorGUILayout.BeginHorizontal();
-                
-                var required = field.required ? "*" : "";
-                // Create label for field
-                EditorGUILayout.LabelField(field.key + required);
-
-                // Create text field for field value
-                field.value = EditorGUILayout.TextField(field.value);
-
-                // End horizontal layout
-                EditorGUILayout.EndHorizontal();
-            }
-        }
-        
         private void RenderSkyboxEditorFields(BlockadeImaginarium blockadeImaginarium)
         {
+            // Begin horizontal layout
+            EditorGUILayout.BeginHorizontal();
+            
+            // Create label for the style field
+            EditorGUILayout.LabelField("Style", GUILayout.MinWidth(100));
+            
             EditorGUI.BeginChangeCheck();
 
             blockadeImaginarium.skyboxStyleOptionsIndex = EditorGUILayout.Popup(
                 blockadeImaginarium.skyboxStyleOptionsIndex,
-                blockadeImaginarium.skyboxStyleOptions
+                blockadeImaginarium.skyboxStyleOptions,
+                GUILayout.Width(250)
             );
 
             if (EditorGUI.EndChangeCheck())
             {
                 blockadeImaginarium.GetSkyboxStyleFields(blockadeImaginarium.skyboxStyleOptionsIndex);
             }
+            
+            // End horizontal layout
+            EditorGUILayout.EndHorizontal();
 
             foreach (var field in blockadeImaginarium.skyboxStyleFields)
             {
@@ -203,10 +127,10 @@ namespace BlockadeLabsSDK
                 EditorGUILayout.BeginHorizontal();
                 
                 // Create label for field
-                EditorGUILayout.LabelField(field.name + "*");
+                EditorGUILayout.LabelField(field.name, GUILayout.MinWidth(100));
             
                 // Create text field for field value
-                field.value = EditorGUILayout.TextField(field.value);
+                field.value = EditorGUILayout.TextArea(field.value,  GUILayout.Height(100), GUILayout.Width(250));
             
                 // End horizontal layout
                 EditorGUILayout.EndHorizontal();

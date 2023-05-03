@@ -98,39 +98,15 @@ by following these steps.
 9. In about 20-30 seconds your texture will be replaced with a new texture you just created, and a folder located in `Assets/Blockade Labs SDK Assets` will now hold your newly created sprite and texture.
 10. In the `Scene` tab of the Unity editor using the `View` Tool you can position yourself inside the sphere and check out the newly generated skybox.
 
-##### Imagines
-
-###### Sprites
-
-If you open the Imagine Scene sample, you will notice 3 game objects for Character, Weapon and Environment. Also there is a
-disabled Cube object. You can interact with each of those objects in a similar fashion while in the Editor.
-
-1. Select the Character object for example. 
-2. Locate the `Blockade Imaginarium` component.
-3. Add your Blockade Labs' `public` API key in the designated field first.
-4. You can leave the `Assign to sprite renderer` option ticked to assign your newly generated sprite to the current object.
-5. Click the `Get Generators` button in the `Imagine` section.
-6. Fill the required fields (usually `prompt`) marked with an asterisk (`*`), and update the remaining fields per your preference if needed.
-7. Click the `Generate` Button.
-8. In a few seconds your sprite renderer will be replaced with a new sprite you just created, and a folder located in `Assets/Blockade Labs SDK Assets` will now hold your newly created sprite and texture.
-
-###### Materials
-
-1. Following a similar course of action as for the sprites above, you can also enable the cube object in the scene.
-2. The cube object has a Mesh Renderer and a sample Material assigned.
-3. Add the Api key as you would normally.
-4. You'll notice that the object has an option `Assign to Material` ticked. Leave it as it is.
-5. Following the same set of instructions as for the sprite, you can generate a texture that will now replace a material of the 3D object like the sample cube.
-
 #### Runtime
 
 To be able to generate assets on Runtime you just need to follow these simple steps:
 
 1. Select the game object with the attached component of `Blockade Imaginarium`.
 2. Add your Blockade Labs' `public` API key in the designated field 
-3. Click on the `Enable GUI` checkbox for Imagines or on the `Enable Skybox GUI` checkbox to display GUI for Skybox generation.
+3. Click on the `Enable Skybox GUI` checkbox to display GUI for Skybox generation.
 4. After you run the game a GUI will appear on top of your Game view.
-5. Use the GUI in the same manner as you would in the editor (`Get Generators > Enter Prompt > Generate` or `Get Styles > Enter Prompt > Generate Skybox`).
+5. Use the GUI in the same manner as you would in the editor (`Get Styles > Enter Prompt > Generate Skybox`).
 
 ### Known Issues
 
