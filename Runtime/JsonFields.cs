@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace BlockadeLabsSDK
+﻿namespace BlockadeLabsSDK
 {
     [System.Serializable]
     public class CreateSkyboxResult
@@ -45,6 +43,7 @@ namespace BlockadeLabsSDK
         }
     }
     
+    [System.Serializable]
     public class SkyboxStyleField
     {
         public string key;

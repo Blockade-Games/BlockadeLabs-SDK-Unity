@@ -15,8 +15,8 @@ namespace BlockadeLabsSDK
         private SerializedProperty skyboxStyleOptions;
         private SerializedProperty skyboxStyleOptionsIndex;
         private bool showApi = true;
-        private bool showBasic = false;
-        private bool showSkybox = false;
+        private bool showBasic;
+        private bool showSkybox;
 
         void OnEnable()
         {
@@ -45,55 +45,70 @@ namespace BlockadeLabsSDK
                 GUILayout.Space(5);
                 
                 EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.LabelField("Initialization", GUILayout.MinWidth(100));
                 
-                if (GUILayout.Button("Initialize", GUILayout.Width(265), GUILayout.MaxWidth(265)))
+                EditorGUILayout.LabelField("Initialize/Refresh");
+
+                if (skyboxStyleFields.arraySize > 0)
                 {
-                    _ = blockadeImaginarium.GetSkyboxStyleOptions();
+                    if (GUILayout.Button("Refresh"))
+                    {
+                        _ = blockadeImaginarium.GetSkyboxStyleOptions();
+                    }
                 }
+                else
+                {
+                    if (GUILayout.Button("Initialize"))
+                    {
+                        _ = blockadeImaginarium.GetSkyboxStyleOptions();
+                    }
+                }
+
                 EditorGUILayout.EndHorizontal();
             }
 
-            showBasic = EditorGUILayout.Foldout(showBasic, "Basic Settings");
-
-            if (showBasic)
+            if (skyboxStyleFields.arraySize > 0)
             {
-                EditorGUILayout.PropertyField(enableSkyboxGUI);
-                EditorGUILayout.PropertyField(assignToMaterial);
-            }
+                showBasic = EditorGUILayout.Foldout(showBasic, "Basic Settings");
 
-            if (!EditorApplication.isPlayingOrWillChangePlaymode)
-            {
-                showSkybox = EditorGUILayout.Foldout(showSkybox, "Skybox Generator");
-
-                if (showSkybox)
+                if (showBasic)
                 {
-                    // Iterate over skybox style fields and render them in the GUI
-                    if (blockadeImaginarium.skyboxStyleFields.Count > 0)
+                    EditorGUILayout.PropertyField(enableSkyboxGUI);
+                    EditorGUILayout.PropertyField(assignToMaterial);
+                }
+
+                if (!EditorApplication.isPlayingOrWillChangePlaymode)
+                {
+                    showSkybox = EditorGUILayout.Foldout(showSkybox, "Skybox Generator");
+
+                    if (showSkybox)
                     {
-                        RenderSkyboxEditorFields(blockadeImaginarium);
-                    }
-                    
-                    if (blockadeImaginarium.PercentageCompleted() >= 0 && blockadeImaginarium.PercentageCompleted() < 100)
-                    {
-                        if (GUILayout.Button("Cancel (" + blockadeImaginarium.PercentageCompleted() + "%)"))
+                        // Iterate over skybox style fields and render them in the GUI
+                        if (blockadeImaginarium.skyboxStyleFields.Count > 0)
                         {
-                            blockadeImaginarium.Cancel();
+                            RenderSkyboxEditorFields(blockadeImaginarium);
                         }
-                    }
-                    else
-                    {
-                        if (GUILayout.Button("Generate Skybox"))
+                    
+                        if (blockadeImaginarium.PercentageCompleted() >= 0 && blockadeImaginarium.PercentageCompleted() < 100)
                         {
-                            _ = blockadeImaginarium.InitializeSkyboxGeneration(
-                                blockadeImaginarium.skyboxStyleFields,
-                                blockadeImaginarium.skyboxStyles[blockadeImaginarium.skyboxStyleOptionsIndex].id
-                            );
+                            if (GUILayout.Button("Cancel (" + blockadeImaginarium.PercentageCompleted() + "%)"))
+                            {
+                                blockadeImaginarium.Cancel();
+                            }
+                        }
+                        else
+                        {
+                            if (GUILayout.Button("Generate Skybox"))
+                            {
+                                _ = blockadeImaginarium.InitializeSkyboxGeneration(
+                                    blockadeImaginarium.skyboxStyleFields,
+                                    blockadeImaginarium.skyboxStyles[blockadeImaginarium.skyboxStyleOptionsIndex].id
+                                );
+                            }
                         }
                     }
                 }
             }
-
+            
             serializedObject.ApplyModifiedProperties();
         }
 
@@ -110,7 +125,7 @@ namespace BlockadeLabsSDK
             blockadeImaginarium.skyboxStyleOptionsIndex = EditorGUILayout.Popup(
                 blockadeImaginarium.skyboxStyleOptionsIndex,
                 blockadeImaginarium.skyboxStyleOptions,
-                GUILayout.Width(250)
+                GUILayout.Width(260)
             );
 
             if (EditorGUI.EndChangeCheck())
@@ -130,7 +145,7 @@ namespace BlockadeLabsSDK
                 EditorGUILayout.LabelField(field.name, GUILayout.MinWidth(100));
             
                 // Create text field for field value
-                field.value = EditorGUILayout.TextArea(field.value,  GUILayout.Height(100), GUILayout.Width(250));
+                field.value = EditorGUILayout.TextArea(field.value,  GUILayout.Height(100), GUILayout.Width(260));
             
                 // End horizontal layout
                 EditorGUILayout.EndHorizontal();

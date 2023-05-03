@@ -18,8 +18,8 @@ namespace BlockadeLabsSDK
         [SerializeField]
         public bool assignToMaterial = false;
         
-        public List<SkyboxStyleField> skyboxStyleFields = new List<SkyboxStyleField>();
-        public List<SkyboxStyle> skyboxStyles = new List<SkyboxStyle>();
+        public List<SkyboxStyleField> skyboxStyleFields;
+        public List<SkyboxStyle> skyboxStyles;
         public string[] skyboxStyleOptions;
         public int skyboxStyleOptionsIndex = 0;
         public int lastSkyboxStyleOptionsIndex = 0;
@@ -117,13 +117,13 @@ namespace BlockadeLabsSDK
         {
             skyboxStyles = await ApiRequests.GetSkyboxStyles(apiKey);
             skyboxStyleOptions = skyboxStyles.Select(s => s.name).ToArray();
-
+            
             GetSkyboxStyleFields(skyboxStyleOptionsIndex);
         }
 
         public void GetSkyboxStyleFields(int index)
         {
-            skyboxStyleFields = new List<SkyboxStyleField>();
+            skyboxStyleFields = new List<SkyboxStyleField>(); 
 
             // add the default prompt field
             var promptField = new SkyboxStyleField(
@@ -134,6 +134,7 @@ namespace BlockadeLabsSDK
                     ""
                 )
             );
+            
             skyboxStyleFields.Add(promptField);
         }
 
