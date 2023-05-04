@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
+using TMPro;
 
 namespace BlockadeLabsSDK
 {
@@ -17,7 +18,7 @@ namespace BlockadeLabsSDK
         [Tooltip("Specifies if the result should automatically be assigned as the texture of the current game objects renderer material")]
         [SerializeField]
         public bool assignToMaterial = false;
-        
+
         public List<SkyboxStyleField> skyboxStyleFields;
         public List<SkyboxStyle> skyboxStyles;
         public string[] skyboxStyleOptions;
@@ -26,9 +27,32 @@ namespace BlockadeLabsSDK
         public string imagineObfuscatedId = "";
         private int progressId;
         GUIStyle guiStyle;
+        private TMP_InputField prompt;
+        private TMP_Dropdown stylesDropdown;
 
         [HideInInspector] private float percentageCompleted = -1;
         private bool isCancelled;
+
+        async void Start()
+        {
+            prompt = GameObject.Find("Prompt Field").GetComponent<TMP_InputField>();
+            stylesDropdown = GameObject.Find("Styles Dropdown").GetComponent<TMP_Dropdown>();
+            await GetSkyboxStyleOptions();
+            Debug.Log(skyboxStyles);
+            
+            // stylesDropdown.options.Add(new TMP_Dropdown.OptionData() { text = "Style" });
+            
+            foreach (var skyboxStyle in skyboxStyles)
+            {
+                stylesDropdown.options.Add(new TMP_Dropdown.OptionData() { text = skyboxStyle.name });
+            }
+        }
+
+        void Update()
+        {
+            Debug.Log(prompt.text);
+            Debug.Log(stylesDropdown.value);
+        }
 
         public void OnGUI()
         {
@@ -40,8 +64,6 @@ namespace BlockadeLabsSDK
 
         private void DrawSkyboxGUILayout()
         {
-            DefineStyles();
-
             GUILayout.BeginArea(new Rect(Screen.width - (Screen.width / 3), 0, 300, Screen.height), guiStyle);
 
             if (GUILayout.Button("Get Styles"))
@@ -99,18 +121,6 @@ namespace BlockadeLabsSDK
                     _ = InitializeSkyboxGeneration(skyboxStyleFields, skyboxStyles[skyboxStyleOptionsIndex].id, true);
                 }
             }
-        }
-
-        private void DefineStyles()
-        {
-            guiStyle = new GUIStyle();
-            guiStyle.fontSize = 20;
-            guiStyle.normal.textColor = Color.white;
-            guiStyle.normal.background = new Texture2D(1, 1);
-            guiStyle.normal.background.SetPixel(0, 0, Color.blue);
-            guiStyle.normal.background.Apply();
-            guiStyle.margin = new RectOffset(20, 20, 20, 20);
-            guiStyle.padding = new RectOffset(20, 20, 20, 20);
         }
 
         public async Task GetSkyboxStyleOptions()
