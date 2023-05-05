@@ -8,20 +8,18 @@ namespace BlockadeLabsSDK
     public class BlockadeImaginariumEditor : Editor
     {
         private SerializedProperty assignToMaterial;
-        private SerializedProperty enableSkyboxGUI;
         private SerializedProperty apiKey;
         private SerializedProperty skyboxStyleFields;
         private SerializedProperty skyboxStyles;
         private SerializedProperty skyboxStyleOptions;
         private SerializedProperty skyboxStyleOptionsIndex;
         private bool showApi = true;
-        private bool showBasic;
-        private bool showSkybox;
+        private bool showBasic = true;
+        private bool showSkybox = true;
 
         void OnEnable()
         {
             assignToMaterial = serializedObject.FindProperty("assignToMaterial");
-            enableSkyboxGUI = serializedObject.FindProperty("enableSkyboxGUI");
             apiKey = serializedObject.FindProperty("apiKey");
             skyboxStyleFields = serializedObject.FindProperty("skyboxStyleFields");
             skyboxStyles = serializedObject.FindProperty("skyboxStyles");
@@ -72,7 +70,6 @@ namespace BlockadeLabsSDK
 
                 if (showBasic)
                 {
-                    EditorGUILayout.PropertyField(enableSkyboxGUI);
                     EditorGUILayout.PropertyField(assignToMaterial);
                 }
 
@@ -130,7 +127,7 @@ namespace BlockadeLabsSDK
 
             if (EditorGUI.EndChangeCheck())
             {
-                blockadeImaginarium.GetSkyboxStyleFields(blockadeImaginarium.skyboxStyleOptionsIndex);
+                blockadeImaginarium.GetSkyboxStyleFields();
             }
             
             // End horizontal layout

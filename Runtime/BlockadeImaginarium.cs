@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
-using TMPro;
 
 namespace BlockadeLabsSDK
 {
@@ -12,12 +11,9 @@ namespace BlockadeLabsSDK
         [Tooltip("API Key from Blockade Labs")] [SerializeField]
         public string apiKey;
 
-        [Tooltip("Specifies if in-game Skybox GUI should be displayed")] [SerializeField]
-        public bool enableSkyboxGUI = false;
-
         [Tooltip("Specifies if the result should automatically be assigned as the texture of the current game objects renderer material")]
         [SerializeField]
-        public bool assignToMaterial = false;
+        public bool assignToMaterial = true;
 
         public List<SkyboxStyleField> skyboxStyleFields;
         public List<SkyboxStyle> skyboxStyles;
@@ -27,111 +23,19 @@ namespace BlockadeLabsSDK
         public string imagineObfuscatedId = "";
         private int progressId;
         GUIStyle guiStyle;
-        private TMP_InputField prompt;
-        private TMP_Dropdown stylesDropdown;
 
         [HideInInspector] private float percentageCompleted = -1;
         private bool isCancelled;
-
-        async void Start()
-        {
-            prompt = GameObject.Find("Prompt Field").GetComponent<TMP_InputField>();
-            stylesDropdown = GameObject.Find("Styles Dropdown").GetComponent<TMP_Dropdown>();
-            await GetSkyboxStyleOptions();
-            Debug.Log(skyboxStyles);
-            
-            // stylesDropdown.options.Add(new TMP_Dropdown.OptionData() { text = "Style" });
-            
-            foreach (var skyboxStyle in skyboxStyles)
-            {
-                stylesDropdown.options.Add(new TMP_Dropdown.OptionData() { text = skyboxStyle.name });
-            }
-        }
-
-        void Update()
-        {
-            Debug.Log(prompt.text);
-            Debug.Log(stylesDropdown.value);
-        }
-
-        public void OnGUI()
-        {
-            if (enableSkyboxGUI)
-            {
-                DrawSkyboxGUILayout();
-            }
-        }
-
-        private void DrawSkyboxGUILayout()
-        {
-            GUILayout.BeginArea(new Rect(Screen.width - (Screen.width / 3), 0, 300, Screen.height), guiStyle);
-
-            if (GUILayout.Button("Get Styles"))
-            {
-                _ = GetSkyboxStyleOptions();
-            }
-
-            // Iterate over skybox fields and render them
-            if (skyboxStyleFields.Count > 0)
-            {
-                RenderSkyboxInGameFields();
-            }
-
-            GUILayout.EndArea();
-        }
-
-        private void RenderSkyboxInGameFields()
-        {
-            GUILayout.BeginVertical("Box");
-            skyboxStyleOptionsIndex = GUILayout.SelectionGrid(skyboxStyleOptionsIndex, skyboxStyleOptions, 1);
-            GUILayout.EndVertical();
-
-            if (skyboxStyleOptionsIndex != lastSkyboxStyleOptionsIndex)
-            {
-                GetSkyboxStyleFields(skyboxStyleOptionsIndex);
-                lastSkyboxStyleOptionsIndex = skyboxStyleOptionsIndex;
-            }
-
-            foreach (var field in skyboxStyleFields)
-            {
-                // Begin horizontal layout
-                GUILayout.BeginHorizontal();
-
-                // Create label for field
-                GUILayout.Label(field.name);
-
-                // Create text field for field value
-                field.value = GUILayout.TextField(field.value);
-
-                // End horizontal layout
-                GUILayout.EndHorizontal();
-            }
-
-            if (PercentageCompleted() >= 0 && PercentageCompleted() < 100)
-            {
-                if (GUILayout.Button("Cancel (" + PercentageCompleted() + "%)"))
-                {
-                    Cancel();
-                }
-            }
-            else
-            {
-                if (GUILayout.Button("Generate"))
-                {
-                    _ = InitializeSkyboxGeneration(skyboxStyleFields, skyboxStyles[skyboxStyleOptionsIndex].id, true);
-                }
-            }
-        }
 
         public async Task GetSkyboxStyleOptions()
         {
             skyboxStyles = await ApiRequests.GetSkyboxStyles(apiKey);
             skyboxStyleOptions = skyboxStyles.Select(s => s.name).ToArray();
             
-            GetSkyboxStyleFields(skyboxStyleOptionsIndex);
+            GetSkyboxStyleFields();
         }
 
-        public void GetSkyboxStyleFields(int index)
+        public void GetSkyboxStyleFields()
         {
             skyboxStyleFields = new List<SkyboxStyleField>(); 
 
