@@ -122,7 +122,7 @@ namespace BlockadeLabsSDK
             blockadeImaginarium.skyboxStyleOptionsIndex = EditorGUILayout.Popup(
                 blockadeImaginarium.skyboxStyleOptionsIndex,
                 blockadeImaginarium.skyboxStyleOptions,
-                GUILayout.Width(260)
+                GUILayout.Width(250)
             );
 
             if (EditorGUI.EndChangeCheck())
@@ -142,7 +142,7 @@ namespace BlockadeLabsSDK
                 EditorGUILayout.LabelField(field.name, GUILayout.MinWidth(100));
             
                 // Create text field for field value
-                field.value = EditorGUILayout.TextArea(field.value,  GUILayout.Height(100), GUILayout.Width(260));
+                field.value = EditorGUILayout.TextArea(field.value,  GUILayout.Height(100), GUILayout.Width(250));
             
                 // End horizontal layout
                 EditorGUILayout.EndHorizontal();
