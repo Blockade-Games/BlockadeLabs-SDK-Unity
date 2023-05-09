@@ -3120,35 +3120,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 80c37ee5440861a47884a14ba990aa23, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  apiKey: jKkn5T50MEziUeaCuPVDJIxPZPXmp0UEU1FH3nuAah26r2ZbKBvYqXPosANo
+  apiKey: 
   assignToMaterial: 1
-  skyboxStyleFields:
-  - key: prompt
-    name: Prompt
-    value: 
-  skyboxStyleOptions:
-  - Digital Painting
-  - Realistic
-  - Anime Art Style
-  - Fantasy Lands
-  - Advanced (no style)
-  - SciFi
-  - Modern Computer Animation
-  - Scenic
-  - Dreamlike
-  - Oil Painting
-  - Manga (Testing)
-  - Sky
-  - Interior Views
-  - Surreal Style
-  - Watercolor (testing)
-  - Nebula
-  - Pen & Ink (testing)
-  - Technical (testing)
-  - Low Poly (Experimental)
-  - Interior Archviz (testing)
-  - Infrared (experimental nature scenes)
-  - testing
+  skyboxStyleFields: []
+  skyboxStyleOptions: []
   skyboxStyleOptionsIndex: 0
   lastSkyboxStyleOptionsIndex: 0
   imagineObfuscatedId: 
