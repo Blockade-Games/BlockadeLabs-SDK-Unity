@@ -142,8 +142,15 @@ namespace BlockadeLabsSDK
                 EditorGUILayout.LabelField(field.name, GUILayout.Width(EditorGUIUtility.labelWidth));
             
                 // Create text field for field value
-                field.value = EditorGUILayout.TextArea(field.value, GUILayout.Height(100), GUILayout.Width(EditorGUIUtility.currentViewWidth));
-            
+                if (field.name == "Prompt")
+                {
+                    field.value = EditorGUILayout.TextArea(field.value, GUILayout.Height(100), GUILayout.Width(EditorGUIUtility.currentViewWidth));
+                }
+                else
+                {
+                    field.value = EditorGUILayout.TextField(field.value, GUILayout.Width(EditorGUIUtility.currentViewWidth)); 
+                }
+
                 // End horizontal layout
                 EditorGUILayout.EndHorizontal();
             }

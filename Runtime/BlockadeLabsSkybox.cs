@@ -39,17 +39,34 @@ namespace BlockadeLabsSDK
         {
             skyboxStyleFields = new List<SkyboxStyleField>(); 
 
-            // add the default prompt field
-            var promptField = new SkyboxStyleField(
-                new UserInput(
-                    "prompt",
-                    1,
-                    "Prompt",
-                    ""
-                )
-            );
-            
-            skyboxStyleFields.Add(promptField);
+            // add the default fields
+            skyboxStyleFields.AddRange(new List<SkyboxStyleField>
+            {
+                new SkyboxStyleField(
+                    new UserInput(
+                        "prompt",
+                        1,
+                        "Prompt",
+                        ""
+                    )
+                ),
+                new SkyboxStyleField(
+                    new UserInput(
+                        "negative_text",
+                        2,
+                        "Negative text",
+                        ""
+                    )
+                ),
+                new SkyboxStyleField(
+                    new UserInput(
+                        "seed",
+                        3,
+                        "Seed",
+                        "0"
+                    )
+                ),
+            });
         }
 
         public async Task InitializeSkyboxGeneration(List<SkyboxStyleField> skyboxStyleFields, int id,

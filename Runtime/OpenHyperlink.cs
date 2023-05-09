@@ -7,19 +7,19 @@ namespace BlockadeLabsSDK
     [RequireComponent(typeof(TMP_Text))]
     public class OpenHyperlink : MonoBehaviour, IPointerClickHandler
     {
-        private TMP_Text m_textMeshPro;
+        private TMP_Text textMeshProText;
 
         void Start()
         {
-            m_textMeshPro = GetComponent<TMP_Text>();
+            textMeshProText = GetComponent<TMP_Text>();
         }
 
         public void OnPointerClick(PointerEventData eventData)
         {
-            int linkIndex = TMP_TextUtilities.FindIntersectingLink(m_textMeshPro, Input.mousePosition, null);
+            int linkIndex = TMP_TextUtilities.FindIntersectingLink(textMeshProText, Input.mousePosition, null);
             if (linkIndex != -1)
             {
-                TMP_LinkInfo linkInfo = m_textMeshPro.textInfo.linkInfo[linkIndex];
+                TMP_LinkInfo linkInfo = textMeshProText.textInfo.linkInfo[linkIndex];
                 Application.OpenURL(linkInfo.GetLinkID());
             }
         }

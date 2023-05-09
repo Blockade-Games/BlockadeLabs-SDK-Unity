@@ -20,6 +20,7 @@
         public string prompt { get; set; }
     }
 
+    [System.Serializable]
     public class SkyboxStyle
     {
         public int id;
@@ -55,7 +56,7 @@
         {
             key = fieldData.key; // "prompt"
             name = fieldData.name; // "Prompt"
-            value = "";
+            value = fieldData.placeholder ?? "";
         }
     }
 }
