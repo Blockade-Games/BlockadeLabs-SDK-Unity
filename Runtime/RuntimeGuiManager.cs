@@ -9,14 +9,14 @@ namespace BlockadeLabsSDK
         [SerializeField] private TMP_Dropdown stylesDropdown;
         [SerializeField] private TMP_Text generateButton;
         [SerializeField] private GameObject popupPanel;
-        private BlockadeImaginarium blockadeImaginarium;
+        private BlockadeLabsSkybox blockadeLabsSkybox;
 
         async void Start()
         {
-            blockadeImaginarium = FindObjectOfType<BlockadeImaginarium>();
-            await blockadeImaginarium.GetSkyboxStyleOptions();
+            blockadeLabsSkybox = FindObjectOfType<BlockadeLabsSkybox>();
+            await blockadeLabsSkybox.GetSkyboxStyleOptions();
 
-            foreach (var skyboxStyle in blockadeImaginarium.skyboxStyles)
+            foreach (var skyboxStyle in blockadeLabsSkybox.skyboxStyles)
             {
                 stylesDropdown.options.Add(new TMP_Dropdown.OptionData() { text = skyboxStyle.name });
             }
@@ -29,9 +29,9 @@ namespace BlockadeLabsSDK
         
         private void SetGenerateButtonText()
         {
-            if (blockadeImaginarium.PercentageCompleted() >= 0 && blockadeImaginarium.PercentageCompleted() < 100)
+            if (blockadeLabsSkybox.PercentageCompleted() >= 0 && blockadeLabsSkybox.PercentageCompleted() < 100)
             {
-                generateButton.text = blockadeImaginarium.PercentageCompleted() + "%";
+                generateButton.text = blockadeLabsSkybox.PercentageCompleted() + "%";
             }
             else
             {
@@ -41,15 +41,15 @@ namespace BlockadeLabsSDK
         
         public void GenerateSkybox()
         {
-            if (blockadeImaginarium.PercentageCompleted() >= 0 && blockadeImaginarium.PercentageCompleted() < 100) return;
+            if (blockadeLabsSkybox.PercentageCompleted() >= 0 && blockadeLabsSkybox.PercentageCompleted() < 100) return;
 
-            blockadeImaginarium.skyboxStyleFields[0].value = promptInput.text;
+            blockadeLabsSkybox.skyboxStyleFields[0].value = promptInput.text;
 
             if (stylesDropdown.value > 0)
             {
-                _ = blockadeImaginarium.InitializeSkyboxGeneration(
-                    blockadeImaginarium.skyboxStyleFields,
-                    blockadeImaginarium.skyboxStyles[stylesDropdown.value - 1].id,
+                _ = blockadeLabsSkybox.InitializeSkyboxGeneration(
+                    blockadeLabsSkybox.skyboxStyleFields,
+                    blockadeLabsSkybox.skyboxStyles[stylesDropdown.value - 1].id,
                     true
                 );
             }

@@ -70,7 +70,7 @@ namespace BlockadeLabsSDK
         {
             if (imagineObfuscatedIds.Count != previousImagineCount)
             {
-                var blockadeImaginariums = FindObjectsOfType<BlockadeImaginarium>();
+                var blockadeImaginariums = FindObjectsOfType<BlockadeLabsSkybox>();
 
                 foreach (var blockadeImaginarium in blockadeImaginariums)
                 {

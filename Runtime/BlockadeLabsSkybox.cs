@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace BlockadeLabsSDK
 {
-    public class BlockadeImaginarium : MonoBehaviour
+    public class BlockadeLabsSkybox : MonoBehaviour
     {
         [Tooltip("API Key from Blockade Labs")] [SerializeField]
         public string apiKey;

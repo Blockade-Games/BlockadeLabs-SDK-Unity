@@ -4,8 +4,8 @@ using UnityEngine;
 namespace BlockadeLabsSDK
 {
 #if UNITY_EDITOR
-    [CustomEditor(typeof(BlockadeImaginarium))]
-    public class BlockadeImaginariumEditor : Editor
+    [CustomEditor(typeof(BlockadeLabsSkybox))]
+    public class BlockadeLabsSkyboxEditor : Editor
     {
         private SerializedProperty assignToMaterial;
         private SerializedProperty apiKey;
@@ -33,7 +33,7 @@ namespace BlockadeLabsSDK
 
             serializedObject.Update();
 
-            var blockadeImaginarium = (BlockadeImaginarium)target;
+            var blockadeLabsSkybox = (BlockadeLabsSkybox)target;
 
             showApi = EditorGUILayout.Foldout(showApi, "API");
 
@@ -50,14 +50,14 @@ namespace BlockadeLabsSDK
                 {
                     if (GUILayout.Button("Refresh"))
                     {
-                        _ = blockadeImaginarium.GetSkyboxStyleOptions();
+                        _ = blockadeLabsSkybox.GetSkyboxStyleOptions();
                     }
                 }
                 else
                 {
                     if (GUILayout.Button("Initialize"))
                     {
-                        _ = blockadeImaginarium.GetSkyboxStyleOptions();
+                        _ = blockadeLabsSkybox.GetSkyboxStyleOptions();
                     }
                 }
 
@@ -80,25 +80,25 @@ namespace BlockadeLabsSDK
                     if (showSkybox)
                     {
                         // Iterate over skybox style fields and render them in the GUI
-                        if (blockadeImaginarium.skyboxStyleFields.Count > 0)
+                        if (blockadeLabsSkybox.skyboxStyleFields.Count > 0)
                         {
-                            RenderSkyboxEditorFields(blockadeImaginarium);
+                            RenderSkyboxEditorFields(blockadeLabsSkybox);
                         }
                     
-                        if (blockadeImaginarium.PercentageCompleted() >= 0 && blockadeImaginarium.PercentageCompleted() < 100)
+                        if (blockadeLabsSkybox.PercentageCompleted() >= 0 && blockadeLabsSkybox.PercentageCompleted() < 100)
                         {
-                            if (GUILayout.Button("Cancel (" + blockadeImaginarium.PercentageCompleted() + "%)"))
+                            if (GUILayout.Button("Cancel (" + blockadeLabsSkybox.PercentageCompleted() + "%)"))
                             {
-                                blockadeImaginarium.Cancel();
+                                blockadeLabsSkybox.Cancel();
                             }
                         }
                         else
                         {
                             if (GUILayout.Button("Generate Skybox"))
                             {
-                                _ = blockadeImaginarium.InitializeSkyboxGeneration(
-                                    blockadeImaginarium.skyboxStyleFields,
-                                    blockadeImaginarium.skyboxStyles[blockadeImaginarium.skyboxStyleOptionsIndex].id
+                                _ = blockadeLabsSkybox.InitializeSkyboxGeneration(
+                                    blockadeLabsSkybox.skyboxStyleFields,
+                                    blockadeLabsSkybox.skyboxStyles[blockadeLabsSkybox.skyboxStyleOptionsIndex].id
                                 );
                             }
                         }
@@ -109,7 +109,7 @@ namespace BlockadeLabsSDK
             serializedObject.ApplyModifiedProperties();
         }
 
-        private void RenderSkyboxEditorFields(BlockadeImaginarium blockadeImaginarium)
+        private void RenderSkyboxEditorFields(BlockadeLabsSkybox blockadeLabsSkybox)
         {
             // Begin horizontal layout
             EditorGUILayout.BeginHorizontal();
@@ -119,21 +119,21 @@ namespace BlockadeLabsSDK
             
             EditorGUI.BeginChangeCheck();
             
-            blockadeImaginarium.skyboxStyleOptionsIndex = EditorGUILayout.Popup(
-                blockadeImaginarium.skyboxStyleOptionsIndex,
-                blockadeImaginarium.skyboxStyleOptions,
+            blockadeLabsSkybox.skyboxStyleOptionsIndex = EditorGUILayout.Popup(
+                blockadeLabsSkybox.skyboxStyleOptionsIndex,
+                blockadeLabsSkybox.skyboxStyleOptions,
                 GUILayout.Width(EditorGUIUtility.currentViewWidth)
             );
 
             if (EditorGUI.EndChangeCheck())
             {
-                blockadeImaginarium.GetSkyboxStyleFields();
+                blockadeLabsSkybox.GetSkyboxStyleFields();
             }
             
             // End horizontal layout
             EditorGUILayout.EndHorizontal();
 
-            foreach (var field in blockadeImaginarium.skyboxStyleFields)
+            foreach (var field in blockadeLabsSkybox.skyboxStyleFields)
             {
                 // Begin horizontal layout
                 EditorGUILayout.BeginHorizontal();
