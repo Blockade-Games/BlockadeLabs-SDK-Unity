@@ -115,14 +115,14 @@ namespace BlockadeLabsSDK
             EditorGUILayout.BeginHorizontal();
             
             // Create label for the style field
-            EditorGUILayout.LabelField("Style", GUILayout.MinWidth(100));
+            EditorGUILayout.LabelField("Style", GUILayout.Width(EditorGUIUtility.labelWidth));
             
             EditorGUI.BeginChangeCheck();
-
+            
             blockadeImaginarium.skyboxStyleOptionsIndex = EditorGUILayout.Popup(
                 blockadeImaginarium.skyboxStyleOptionsIndex,
                 blockadeImaginarium.skyboxStyleOptions,
-                GUILayout.Width(250)
+                GUILayout.Width(EditorGUIUtility.currentViewWidth)
             );
 
             if (EditorGUI.EndChangeCheck())
@@ -139,10 +139,10 @@ namespace BlockadeLabsSDK
                 EditorGUILayout.BeginHorizontal();
                 
                 // Create label for field
-                EditorGUILayout.LabelField(field.name, GUILayout.MinWidth(100));
+                EditorGUILayout.LabelField(field.name, GUILayout.Width(EditorGUIUtility.labelWidth));
             
                 // Create text field for field value
-                field.value = EditorGUILayout.TextArea(field.value,  GUILayout.Height(100), GUILayout.Width(250));
+                field.value = EditorGUILayout.TextArea(field.value, GUILayout.Height(100), GUILayout.Width(EditorGUIUtility.currentViewWidth));
             
                 // End horizontal layout
                 EditorGUILayout.EndHorizontal();
