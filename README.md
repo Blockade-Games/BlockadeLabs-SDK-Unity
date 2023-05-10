@@ -4,7 +4,7 @@ Create stunning AI-generated skybox assets within Unity for use as HDRIs in game
 
 ## Unity Versions Support
 
-- \>= 2020.x.x
+- \>= 2020.3.x
 
 ## Install
 
@@ -93,7 +93,7 @@ shader of type `Skybox/Panoramic`. A texture generated with this package is assi
 You can generate a new texture that will replace the existing one on the sphere by following these steps.
 
 1. Select the Sphere object.
-2. Locate the `Blockade Imaginarium` component.
+2. Locate the `Blockade Labs Skybox` component.
 3. Add your Blockade Labs' `public` API key in the designated field first.
 4. Click the `Initialize` button in the `API` section.
 5. After the plugin is successfully initialized some need fields will become available.
@@ -108,7 +108,7 @@ You can generate a new texture that will replace the existing one on the sphere 
 
 To be able to generate assets on runtime you just need to follow these simple steps:
 
-1. Select the game object with the attached component of `Blockade Imaginarium`.
+1. Select the game object with the attached component of `Blockade Labs Skybox`.
 2. Make sure that you added your Blockade Labs' `public` API key in the designated field. 
 3. Demo scene already has the necessary elements to display the UI for Skybox generation on runtime.
 4. After you run the game UI will become active on top of your Game view.
