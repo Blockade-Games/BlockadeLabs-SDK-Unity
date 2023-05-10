@@ -116,20 +116,13 @@ namespace BlockadeLabsSDK
             
             // Create label for the style field
             EditorGUILayout.LabelField("Style", GUILayout.Width(EditorGUIUtility.labelWidth));
-            
-            EditorGUI.BeginChangeCheck();
-            
+
             blockadeLabsSkybox.skyboxStyleOptionsIndex = EditorGUILayout.Popup(
                 blockadeLabsSkybox.skyboxStyleOptionsIndex,
                 blockadeLabsSkybox.skyboxStyleOptions,
                 GUILayout.Width(EditorGUIUtility.currentViewWidth)
             );
 
-            if (EditorGUI.EndChangeCheck())
-            {
-                blockadeLabsSkybox.GetSkyboxStyleFields();
-            }
-            
             // End horizontal layout
             EditorGUILayout.EndHorizontal();
 

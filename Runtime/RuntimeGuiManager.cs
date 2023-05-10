@@ -14,6 +14,13 @@ namespace BlockadeLabsSDK
         async void Start()
         {
             blockadeLabsSkybox = FindObjectOfType<BlockadeLabsSkybox>();
+            
+            if (string.IsNullOrWhiteSpace(blockadeLabsSkybox.apiKey))
+            {
+                Debug.Log("You need to provide an API Key in API options.");
+                return;
+            }
+            
             await blockadeLabsSkybox.GetSkyboxStyleOptions();
 
             foreach (var skyboxStyle in blockadeLabsSkybox.skyboxStyles)
