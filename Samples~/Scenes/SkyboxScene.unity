@@ -1906,8 +1906,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "Skybox Lab: Seamless AI-powered 360\xB0 image generator by Blockade Labs.
-    Create images for use as skyboxes or HDRIs in seconds.\n \r\nSkybox Lab for Unity
+  m_text: "Skybox AI: Seamless AI-powered 360\xB0 image generator by Blockade Labs.
+    Create images for use as skyboxes or HDRIs in seconds.\n \r\nSkybox AI for Unity
     requires API access. Go <color=#31F1A0><u><link=\"https://www.blockadelabs.com/#Request-API-Access\">here</link></u></color>
     to get API access. Having problems? Check out API documentation <color=#31F1A0><u><link=\"https://api-documentation.blockadelabs.com\">here</link></u></color>.\r\n\n@2023
     Blockade Labs. <color=#31F1A0><u><link=\"https://www.blockadelabs.com\">Blockade
@@ -2209,7 +2209,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Skybox Lab by Blockade Labs
+  m_text: Skybox AI by Blockade Labs
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -2927,7 +2927,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 367.78, y: -32.3}
+  m_AnchoredPosition: {x: 347.5, y: -32.3}
   m_SizeDelta: {x: 20, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1935545510
@@ -3408,7 +3408,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Skybox Lab by Blockade Labs
+  m_text: Skybox AI by Blockade Labs
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
