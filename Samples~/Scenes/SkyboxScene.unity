@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.12731713, g: 0.13414736, b: 0.12107852, a: 1}
+  m_IndirectSpecularColor: {r: 0.12731715, g: 0.13414735, b: 0.121078536, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -3120,13 +3120,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 80c37ee5440861a47884a14ba990aa23, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  apiKey: 
+  apiKey: API key needed. Get one at blockadelabs.com
   assignToMaterial: 1
   skyboxStyleFields: []
   skyboxStyles: []
   skyboxStyleOptions: []
   skyboxStyleOptionsIndex: 0
-  lastSkyboxStyleOptionsIndex: 0
   imagineObfuscatedId: 
 --- !u!1 &1958244287
 GameObject:

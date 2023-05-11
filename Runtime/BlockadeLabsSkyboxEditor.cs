@@ -7,8 +7,8 @@ namespace BlockadeLabsSDK
     [CustomEditor(typeof(BlockadeLabsSkybox))]
     public class BlockadeLabsSkyboxEditor : Editor
     {
-        private SerializedProperty assignToMaterial;
         private SerializedProperty apiKey;
+        private SerializedProperty assignToMaterial;
         private SerializedProperty skyboxStyleFields;
         private SerializedProperty skyboxStyles;
         private SerializedProperty skyboxStyleOptions;
@@ -19,8 +19,8 @@ namespace BlockadeLabsSDK
 
         void OnEnable()
         {
-            assignToMaterial = serializedObject.FindProperty("assignToMaterial");
             apiKey = serializedObject.FindProperty("apiKey");
+            assignToMaterial = serializedObject.FindProperty("assignToMaterial");
             skyboxStyleFields = serializedObject.FindProperty("skyboxStyleFields");
             skyboxStyles = serializedObject.FindProperty("skyboxStyles");
             skyboxStyleOptions = serializedObject.FindProperty("skyboxStyleOptions");
@@ -29,8 +29,6 @@ namespace BlockadeLabsSDK
 
         public override void OnInspectorGUI()
         {
-            EditorUtility.SetDirty(target);
-
             serializedObject.Update();
 
             var blockadeLabsSkybox = (BlockadeLabsSkybox)target;
@@ -39,7 +37,7 @@ namespace BlockadeLabsSDK
 
             if (showApi)
             {
-                EditorGUILayout.PropertyField(apiKey);
+                EditorGUILayout.PropertyField(apiKey, new GUIContent("API key"));
                 GUILayout.Space(5);
                 
                 EditorGUILayout.BeginHorizontal();
@@ -96,7 +94,7 @@ namespace BlockadeLabsSDK
                         {
                             if (GUILayout.Button("Generate Skybox"))
                             {
-                                _ = blockadeLabsSkybox.InitializeSkyboxGeneration(
+                                _ = blockadeLabsSkybox.CreateSkybox(
                                     blockadeLabsSkybox.skyboxStyleFields,
                                     blockadeLabsSkybox.skyboxStyles[blockadeLabsSkybox.skyboxStyleOptionsIndex].id
                                 );

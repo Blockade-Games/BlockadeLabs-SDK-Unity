@@ -8,8 +8,9 @@ namespace BlockadeLabsSDK
 {
     public class BlockadeLabsSkybox : MonoBehaviour
     {
-        [Tooltip("API Key from Blockade Labs")] [SerializeField]
-        public string apiKey;
+        [Tooltip("API Key from Blockade Labs. Get one at blockadelabs.com")] 
+        [SerializeField]
+        public string apiKey = "API key needed. Get one at blockadelabs.com";
 
         [Tooltip("Specifies if the result should automatically be assigned as the texture of the current game objects renderer material")]
         [SerializeField]
@@ -19,7 +20,6 @@ namespace BlockadeLabsSDK
         public List<SkyboxStyle> skyboxStyles;
         public string[] skyboxStyleOptions;
         public int skyboxStyleOptionsIndex = 0;
-        public int lastSkyboxStyleOptionsIndex = 0;
         public string imagineObfuscatedId = "";
         private int progressId;
         GUIStyle guiStyle;
@@ -29,7 +29,20 @@ namespace BlockadeLabsSDK
 
         public async Task GetSkyboxStyleOptions()
         {
+            if (string.IsNullOrWhiteSpace(apiKey) || apiKey.Contains("blockadelabs.com"))
+            {
+                Debug.LogError("You need to provide an API Key in API options. Get one at blockadelabs.com");
+                return;
+            }
+            
             skyboxStyles = await ApiRequests.GetSkyboxStyles(apiKey);
+            
+            if (skyboxStyles == null)
+            {
+                Debug.LogError("Something went wrong. Please recheck you API key.");
+                return;
+            }
+            
             skyboxStyleOptions = skyboxStyles.Select(s => s.name).ToArray();
             
             GetSkyboxStyleFields();
@@ -69,21 +82,9 @@ namespace BlockadeLabsSDK
             });
         }
 
-        public async Task InitializeSkyboxGeneration(List<SkyboxStyleField> skyboxStyleFields, int id,
-            bool runtime = false)
+        public async Task CreateSkybox(List<SkyboxStyleField> skyboxStyleFields, int id, bool runtime = false)
         {
-            if (string.IsNullOrWhiteSpace(apiKey))
-            {
-                Debug.Log("You need to provide an Api Key in api options.");
-                return;
-            }
-
             isCancelled = false;
-            await CreateSkybox(skyboxStyleFields, id, runtime);
-        }
-
-        async Task CreateSkybox(List<SkyboxStyleField> skyboxStyleFields, int id, bool runtime = false)
-        {
             percentageCompleted = 1;
 
             #if UNITY_EDITOR

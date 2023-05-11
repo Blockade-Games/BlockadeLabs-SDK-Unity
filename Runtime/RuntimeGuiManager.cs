@@ -14,13 +14,7 @@ namespace BlockadeLabsSDK
         async void Start()
         {
             blockadeLabsSkybox = FindObjectOfType<BlockadeLabsSkybox>();
-            
-            if (string.IsNullOrWhiteSpace(blockadeLabsSkybox.apiKey))
-            {
-                Debug.Log("You need to provide an API Key in API options.");
-                return;
-            }
-            
+
             await blockadeLabsSkybox.GetSkyboxStyleOptions();
 
             foreach (var skyboxStyle in blockadeLabsSkybox.skyboxStyles)
@@ -54,7 +48,7 @@ namespace BlockadeLabsSDK
 
             if (stylesDropdown.value > 0)
             {
-                _ = blockadeLabsSkybox.InitializeSkyboxGeneration(
+                _ = blockadeLabsSkybox.CreateSkybox(
                     blockadeLabsSkybox.skyboxStyleFields,
                     blockadeLabsSkybox.skyboxStyles[stylesDropdown.value - 1].id,
                     true
