@@ -4,14 +4,14 @@ Create stunning AI-generated skybox assets within Unity for use as HDRIs in game
 
 ## Unity Versions Support
 
-- \>= 2020.x.x
+- \>= 2020.3.x
 
 ## Install
 
 ### Edit the project's `manifest.json` file
 
 Package can be used standalone or optionally together with a Pusher websockets package. 
-If installed the Pusher package will use websockets to listen for any changes in the 
+If installed, the Pusher package will use websockets to listen for any changes in the 
 Asset Generation Process on Runtime and make updates accordingly, 
 which in return should improve performance for your games on Runtime.
 
@@ -65,10 +65,15 @@ For known issues after installation check the section [below](#known-issues).
 
 After installing the Blockade Labs SDK you can go to `Window > Package Manager` and switch to `Packages: In Project`
 tab to locate the package. On the Blockade Labs SDK package page there are samples that can be imported in your 
-Project. Samples contain some assets and two sample scenes to get you started (Imagine and Skybox Scene).
+Project. Samples contain some assets and a demo scene to get you started (Skybox Scene).
 
-After importing the samples load one of the above mentioned sample scenes inside your project which should be located in
+After importing the samples load the above mentioned demo scene inside your project which should be located in
 `Assets/Samples/Blockade Labs SDK/x.x.x/Scenes` folder.
+
+**Note**: Demo scene uses Text Mesh Pro elements for runtime UI. If you haven't imported TMP Essentials
+you will be prompted to do so after you load the scene. When you are done importing TMP Essentials, reload the scene
+by either right clicking on it in the `Assets/Samples/Blockade Labs SDK/x.x.x/Scenes`
+folder and selecting `Reimport` or by loading some other scene and then loading the Skybox Scene again.
 
 ### How to use
 
@@ -76,61 +81,38 @@ After importing the samples load one of the above mentioned sample scenes inside
 
 On the sample scene you loaded there is game object named `Pusher`. If you don't plan on using Pusher you can delete it in order
 to avoid any future `The referenced script (PusherManager) on this Behaviour is missing!` warnings.
-If you plan on using Pusher on Runtime, add your Blockade Labs' API `Secret` Key in the designated field and that is it
-for that object.
+If you plan on using Pusher on Runtime, you can leave it as it is.
 
 #### Editor
 
 ##### Skyboxes
 
-If you open the Skybox Scene sample, you will notice a game objects named `Skybox Sphere`. The Sphere has a Mesh Renderer component which uses a sample `Skybox Material` which in turn uses a shader of type `Skybox/Panoramic`.
-A texture generated with this package is assigned to the shader. You can generate a new texture that will replace the existing one on the sphere
-by following these steps.
+If you open the Skybox Scene sample, you will notice a game objects named `Skybox Sphere`. 
+The Sphere has a Mesh Renderer component which uses a sample `Skybox Material` which in turn uses a 
+shader of type `Skybox/Panoramic`. A texture generated with this package is assigned to the shader. 
+You can generate a new texture that will replace the existing one on the sphere by following these steps.
 
 1. Select the Sphere object.
-2. Locate the `Blockade Imaginarium` component.
+2. Locate the `Blockade Labs Skybox` component.
 3. Add your Blockade Labs' `public` API key in the designated field first.
-4. You'll notice that the object has an option `Assign to Material` ticked. Leave it as it is.
-5. Click the `Get Styles` button in the `Skybox` section.
-6. Select the desired style.
-7. Fill the required fields (usually `prompt`) marked with an asterisk (`*`), and update the remaining fields per your preference if needed.
-8. Click the `Generate Skybox` Button.
-9. In about 20-30 seconds your texture will be replaced with a new texture you just created, and a folder located in `Assets/Blockade Labs SDK Assets` will now hold your newly created sprite and texture.
-10. In the `Scene` tab of the Unity editor using the `View` Tool you can position yourself inside the sphere and check out the newly generated skybox.
-
-##### Imagines
-
-###### Sprites
-
-If you open the Imagine Scene sample, you will notice 3 game objects for Character, Weapon and Environment. Also there is a
-disabled Cube object. You can interact with each of those objects in a similar fashion while in the Editor.
-
-1. Select the Character object for example. 
-2. Locate the `Blockade Imaginarium` component.
-3. Add your Blockade Labs' `public` API key in the designated field first.
-4. You can leave the `Assign to sprite renderer` option ticked to assign your newly generated sprite to the current object.
-5. Click the `Get Generators` button in the `Imagine` section.
-6. Fill the required fields (usually `prompt`) marked with an asterisk (`*`), and update the remaining fields per your preference if needed.
-7. Click the `Generate` Button.
-8. In a few seconds your sprite renderer will be replaced with a new sprite you just created, and a folder located in `Assets/Blockade Labs SDK Assets` will now hold your newly created sprite and texture.
-
-###### Materials
-
-1. Following a similar course of action as for the sprites above, you can also enable the cube object in the scene.
-2. The cube object has a Mesh Renderer and a sample Material assigned.
-3. Add the Api key as you would normally.
-4. You'll notice that the object has an option `Assign to Material` ticked. Leave it as it is.
-5. Following the same set of instructions as for the sprite, you can generate a texture that will now replace a material of the 3D object like the sample cube.
+4. Click the `Initialize` button in the `API` section.
+5. After the plugin is successfully initialized some need fields will become available.
+6. You'll notice that the object has an option `Assign to Material` ticked. Leave it as it is.
+7. Select the desired style.
+8. Fill in the `Prompt` field.
+9. Click the `Generate Skybox` Button.
+10. In about 20-30 seconds your texture will be replaced with a new texture you just created, and a folder located in `Assets/Blockade Labs SDK Assets` will now hold your newly created texture.
+11. In the `Scene` tab of the Unity editor using the `View` Tool you can position yourself inside the sphere and check out the newly generated skybox.
 
 #### Runtime
 
-To be able to generate assets on Runtime you just need to follow these simple steps:
+To be able to generate assets on runtime you just need to follow these simple steps:
 
-1. Select the game object with the attached component of `Blockade Imaginarium`.
-2. Add your Blockade Labs' `public` API key in the designated field 
-3. Click on the `Enable GUI` checkbox for Imagines or on the `Enable Skybox GUI` checkbox to display GUI for Skybox generation.
-4. After you run the game a GUI will appear on top of your Game view.
-5. Use the GUI in the same manner as you would in the editor (`Get Generators > Enter Prompt > Generate` or `Get Styles > Enter Prompt > Generate Skybox`).
+1. Select the game object with the attached component of `Blockade Labs Skybox`.
+2. Make sure that you added your Blockade Labs' `public` API key in the designated field. 
+3. Demo scene already has the necessary elements to display the UI for Skybox generation on runtime.
+4. After you run the game UI will become active on top of your Game view.
+5. Use the runtime UI in the same manner as you would in the editor (`Enter Prompt > Select a style > Generate`).
 
 ### Known Issues
 
