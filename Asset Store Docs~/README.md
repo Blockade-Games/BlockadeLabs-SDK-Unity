@@ -1,4 +1,4 @@
-# Blockade Labs - AI Skybox Generator
+# Skybox AI Generator by Blockade Labs
 
 Create stunning AI-generated skybox assets within Unity for use as HDRIs in game dev and immersive projects.
 
@@ -64,7 +64,7 @@ For known issues after installation check the section [below](#known-issues).
 
 ### Samples
 
-After installing the Blockade Labs - AI Skybox Generator you can go to `Window > Package Manager` and switch to `Packages: In Project`
+After installing the Skybox AI Generator by Blockade Labs you can go to `Window > Package Manager` and switch to `Packages: In Project`
 tab to locate the package. On the Blockade Labs package page there are samples that can be imported in your 
 Project. Samples contain some assets and a demo scene to get you started (Skybox Scene).
 
