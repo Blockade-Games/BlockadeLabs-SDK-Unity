@@ -8,9 +8,9 @@ namespace BlockadeLabsSDK
 {
     public class BlockadeLabsSkybox : MonoBehaviour
     {
-        [Tooltip("API Key from Blockade Labs. Get one at blockadelabs.com")] 
+        [Tooltip("API Key from Blockade Labs. Get one at api.blockadelabs.com")] 
         [SerializeField]
-        public string apiKey = "API key needed. Get one at blockadelabs.com";
+        public string apiKey = "API key needed. Get one at api.blockadelabs.com";
 
         [Tooltip("Specifies if the result should automatically be assigned as the texture of the current game objects renderer material")]
         [SerializeField]
@@ -29,9 +29,9 @@ namespace BlockadeLabsSDK
 
         public async Task GetSkyboxStyleOptions()
         {
-            if (string.IsNullOrWhiteSpace(apiKey) || apiKey.Contains("blockadelabs.com"))
+            if (string.IsNullOrWhiteSpace(apiKey) || apiKey.Contains("api.blockadelabs.com"))
             {
-                Debug.LogError("You need to provide an API Key in API options. Get one at blockadelabs.com");
+                Debug.LogError("You need to provide an API Key in API options. Get one at api.blockadelabs.com");
                 return;
             }
             

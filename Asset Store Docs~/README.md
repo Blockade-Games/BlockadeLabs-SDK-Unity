@@ -2,6 +2,10 @@
 
 Create stunning AI-generated skybox assets within Unity for use as HDRIs in game dev and immersive projects.
 
+## Prerequisites
+In order to use this package you need to provide an API key from Blockade Labs in the API section.
+Get one at <a href="https://api.blockadelabs.com" target="_blank">https://api.blockadelabs.com</a>.
+
 ## Unity Versions Support
 
 - \>= 2021.x.x - works out of the box
