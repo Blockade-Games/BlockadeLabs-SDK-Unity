@@ -1908,9 +1908,9 @@ MonoBehaviour:
       m_Calls: []
   m_text: "Skybox AI: Seamless AI-powered 360\xB0 image generator by Blockade Labs.
     Create images for use as skyboxes or HDRIs in seconds.\n \r\nSkybox AI for Unity
-    requires API access. Go <color=#31F1A0><u><link=\"https://www.blockadelabs.com/#Request-API-Access\">here</link></u></color>
+    requires API access. Go <color=#31F1A0><u><link=\"https://www.api.blockadelabs.com/#Request-API-Access\">here</link></u></color>
     to get API access. Having problems? Check out API documentation <color=#31F1A0><u><link=\"https://api-documentation.blockadelabs.com\">here</link></u></color>.\r\n\n@2023
-    Blockade Labs. <color=#31F1A0><u><link=\"https://www.blockadelabs.com\">Blockade
+    Blockade Labs. <color=#31F1A0><u><link=\"https://www.api.blockadelabs.com\">Blockade
     Labs website</link></u></color>"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -3120,7 +3120,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 80c37ee5440861a47884a14ba990aa23, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  apiKey: API key needed. Get one at blockadelabs.com
+  apiKey: API key needed. Get one at api.blockadelabs.com
   assignToMaterial: 1
   skyboxStyleFields: []
   skyboxStyles: []
