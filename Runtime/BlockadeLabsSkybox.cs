@@ -60,7 +60,8 @@ namespace BlockadeLabsSDK
                         "prompt",
                         1,
                         "Prompt",
-                        ""
+                        "",
+                        "textarea"
                     )
                 ),
                 new SkyboxStyleField(
@@ -68,7 +69,8 @@ namespace BlockadeLabsSDK
                         "negative_text",
                         2,
                         "Negative text",
-                        ""
+                        "",
+                        "text"
                     )
                 ),
                 new SkyboxStyleField(
@@ -76,7 +78,17 @@ namespace BlockadeLabsSDK
                         "seed",
                         3,
                         "Seed",
-                        "0"
+                        "0",
+                        "text"
+                    )
+                ),
+                new SkyboxStyleField(
+                    new UserInput(
+                        "enhance_prompt",
+                        4,
+                        "Enhance prompt",
+                        "false",
+                        "boolean"
                     )
                 ),
             });
@@ -126,6 +138,7 @@ namespace BlockadeLabsSDK
         public async Task GetAssets()
         {
             var textureUrl = "";
+            var depthMapUrl = "";
             var prompt = "";
             var count = 0;
 
@@ -151,6 +164,7 @@ namespace BlockadeLabsSDK
                     percentageCompleted = 66;
                     CalculateProgress();
                     textureUrl = getImagineResult["textureUrl"];
+                    depthMapUrl = getImagineResult["depthMapUrl"];
                     prompt = getImagineResult["prompt"];
                     break;
                 }
@@ -163,12 +177,15 @@ namespace BlockadeLabsSDK
                 return;
             }
 
-            if (!string.IsNullOrWhiteSpace(textureUrl))
+            if (!string.IsNullOrWhiteSpace(textureUrl) && !string.IsNullOrWhiteSpace(depthMapUrl))
             {
                 var image = await ApiRequests.GetImagineImage(textureUrl);
+                var depthMapImage = await ApiRequests.GetImagineImage(depthMapUrl);
 
                 var texture = new Texture2D(512, 512, TextureFormat.RGB24, false);
                 texture.LoadImage(image);
+                var depthMapTexture = new Texture2D(512, 512, TextureFormat.RGB24, false);
+                depthMapTexture.LoadImage(depthMapImage);
 
                 percentageCompleted = 80;
                 CalculateProgress();
@@ -187,7 +204,7 @@ namespace BlockadeLabsSDK
 
                 percentageCompleted = 90;
                 CalculateProgress();
-                SaveAssets(texture, prompt);
+                SaveAssets(texture, prompt, depthMapTexture);
             }
 
             percentageCompleted = 100;
@@ -197,10 +214,10 @@ namespace BlockadeLabsSDK
             #endif
         }
 
-        private void SaveAssets(Texture2D texture, string prompt)
+        private void SaveAssets(Texture2D texture, string prompt, Texture2D depthMapTexture)
         {
             #if UNITY_EDITOR
-                if (AssetDatabase.Contains(texture))
+                if (AssetDatabase.Contains(texture) || AssetDatabase.Contains(depthMapTexture))
                 {
                     Debug.Log("Texture already in assets database.");
                     return;
@@ -218,26 +235,12 @@ namespace BlockadeLabsSDK
                     prompt = prompt.Substring(0, maxLength);
                 }
 
-                var textureName = ValidateFilename(prompt) + "_texture";
+                var validatedPrompt = ValidateFilename(prompt);
+                var textureName = validatedPrompt + "_texture";
+                var depthMapTextureName = validatedPrompt + "_depth_map_texture";
 
-                var counter = 0;
-
-                while (true)
-                {
-                    var modifiedTextureName = counter == 0 ? textureName : textureName + "_" + counter;
-
-                    var textureAssets =
-                        AssetDatabase.FindAssets(modifiedTextureName, new[] { "Assets/Blockade Labs SDK Assets" });
-
-                    if (textureAssets.Length > 0)
-                    {
-                        counter++;
-                        continue;
-                    }
-
-                    AssetDatabase.CreateAsset(texture, "Assets/Blockade Labs SDK Assets/" + modifiedTextureName + ".asset");
-                    break;
-                }
+                CreateAsset(textureName, texture);
+                CreateAsset(depthMapTextureName, depthMapTexture);
             #endif
 
             imagineObfuscatedId = "";
@@ -273,6 +276,30 @@ namespace BlockadeLabsSDK
             percentageCompleted = -1;
             #if UNITY_EDITOR
                 Progress.Remove(progressId);
+            #endif
+        }
+
+        private void CreateAsset(string textureName, Texture2D texture)
+        {
+            #if UNITY_EDITOR
+                var counter = 0;
+                
+                while (true)
+                {
+                    var modifiedTextureName = counter == 0 ? textureName : textureName + "_" + counter;
+
+                    var textureAssets =
+                        AssetDatabase.FindAssets(modifiedTextureName, new[] { "Assets/Blockade Labs SDK Assets" });
+
+                    if (textureAssets.Length > 0)
+                    {
+                        counter++;
+                        continue;
+                    }
+
+                    AssetDatabase.CreateAsset(texture, "Assets/Blockade Labs SDK Assets/" + modifiedTextureName + ".asset");
+                    break;
+                }
             #endif
         }
     }

@@ -16,6 +16,7 @@
     public class GetImagineRequest
     {
         public string file_url { get; set; }
+        public string depth_map_url { get; set; }
         public string status { get; set; }
         public string prompt { get; set; }
     }
@@ -33,14 +34,16 @@
         public int id;
         public string name;
         public string placeholder;
+        public string type;
 
         // Constructor to initialize user input with data from API response
-        public UserInput(string key, int id, string name, string placeholder)
+        public UserInput(string key, int id, string name, string placeholder, string type)
         {
             this.key = key; 
             this.id = id; 
             this.name = name;
             this.placeholder = placeholder;
+            this.type = type;
         }
     }
     
@@ -50,6 +53,7 @@
         public string key;
         public string name;
         public string value;
+        public string type;
 
         // Constructor to initialize skybox style field with data from API response
         public SkyboxStyleField(UserInput fieldData)
@@ -57,6 +61,7 @@
             key = fieldData.key; // "prompt"
             name = fieldData.name; // "Prompt"
             value = fieldData.placeholder ?? "";
+            type = fieldData.type ?? "text";
         }
     }
 }

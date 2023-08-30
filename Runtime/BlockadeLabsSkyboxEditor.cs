@@ -128,20 +128,30 @@ namespace BlockadeLabsSDK
             {
                 // Begin horizontal layout
                 EditorGUILayout.BeginHorizontal();
-                
-                // Create label for field
-                EditorGUILayout.LabelField(field.name, GUILayout.Width(EditorGUIUtility.labelWidth));
-            
-                // Create text field for field value
-                if (field.name == "Prompt")
+
+                if (field.type == "boolean")
                 {
-                    field.value = EditorGUILayout.TextArea(field.value, GUILayout.Height(100), GUILayout.Width(EditorGUIUtility.currentViewWidth));
+                    var fieldBoolValue = field.value == "true";
+                    var toggleValue = EditorGUILayout.Toggle(field.name, fieldBoolValue, GUILayout.Width(EditorGUIUtility.currentViewWidth));
+                
+                    field.value = toggleValue ? "true" : "false";
                 }
                 else
                 {
-                    field.value = EditorGUILayout.TextField(field.value, GUILayout.Width(EditorGUIUtility.currentViewWidth)); 
+                    // Create label for field
+                    EditorGUILayout.LabelField(field.name, GUILayout.Width(EditorGUIUtility.labelWidth));
+                
+                    // Create text field for field value
+                    if (field.type == "textarea")
+                    {
+                        field.value = EditorGUILayout.TextArea(field.value, GUILayout.Height(100), GUILayout.Width(EditorGUIUtility.currentViewWidth));
+                    }
+                    else
+                    {
+                        field.value = EditorGUILayout.TextField(field.value, GUILayout.Width(EditorGUIUtility.currentViewWidth)); 
+                    }
                 }
-
+                
                 // End horizontal layout
                 EditorGUILayout.EndHorizontal();
             }
