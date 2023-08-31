@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -32,7 +33,7 @@ namespace BlockadeLabsSDK
             if (string.IsNullOrWhiteSpace(apiKey) || apiKey.Contains("api.blockadelabs.com"))
             {
                 Debug.LogError("You need to provide an API Key in API options. Get one at api.blockadelabs.com");
-                return;
+                throw new Exception("You need to provide an API Key in API options. Get one at api.blockadelabs.com");
             }
             
             skyboxStyles = await ApiRequests.GetSkyboxStyles(apiKey);
@@ -40,7 +41,7 @@ namespace BlockadeLabsSDK
             if (skyboxStyles == null)
             {
                 Debug.LogError("Something went wrong. Please recheck you API key.");
-                return;
+                throw new Exception("Something went wrong. Please recheck you API key.");
             }
             
             skyboxStyleOptions = skyboxStyles.Select(s => s.name).ToArray();
