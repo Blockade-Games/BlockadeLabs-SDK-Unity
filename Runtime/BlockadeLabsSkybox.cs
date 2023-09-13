@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using UnityEditor;
@@ -183,9 +184,9 @@ namespace BlockadeLabsSDK
                 var image = await ApiRequests.GetImagineImage(textureUrl);
                 var depthMapImage = await ApiRequests.GetImagineImage(depthMapUrl);
 
-                var texture = new Texture2D(512, 512, TextureFormat.RGB24, false);
+                var texture = new Texture2D(1, 1, TextureFormat.RGB24, false);
                 texture.LoadImage(image);
-                var depthMapTexture = new Texture2D(512, 512, TextureFormat.RGB24, false);
+                var depthMapTexture = new Texture2D(1, 1, TextureFormat.RGB24, false);
                 depthMapTexture.LoadImage(depthMapImage);
 
                 percentageCompleted = 80;
@@ -205,7 +206,13 @@ namespace BlockadeLabsSDK
 
                 percentageCompleted = 90;
                 CalculateProgress();
-                SaveAssets(texture, prompt, depthMapTexture);
+                Debug.Log(Application.dataPath + "/../SavedScreen.jpg");
+                Debug.Log(Application.persistentDataPath);
+                // SaveAssets(texture, prompt, depthMapTexture);
+                File.WriteAllBytes(Application.dataPath + "/Blockade Labs SDK Assets/"+prompt+".jpg", image);
+                AssetDatabase.Refresh();
+                // Debug.Log(Application.dataPath + "/../SavedScreen.jpg");
+                // AssetDatabase.CreateAsset(image, "Assets/Blockade Labs SDK Assets/" + "SavedScreen.jpg");
             }
 
             percentageCompleted = 100;
