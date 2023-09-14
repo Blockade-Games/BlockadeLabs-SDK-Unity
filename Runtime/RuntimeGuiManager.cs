@@ -26,7 +26,6 @@ namespace BlockadeLabsSDK
             }
             
             enhancePromptToggle.onValueChanged.AddListener(OnTargetToggleValueChanged);
-            Debug.Log(enhancePromptToggle);
         }
         
         void OnTargetToggleValueChanged(bool newValue) {
