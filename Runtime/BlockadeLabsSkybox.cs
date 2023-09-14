@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using UnityEditor;
@@ -195,6 +194,7 @@ namespace BlockadeLabsSDK
                 if (assignToMaterial)
                 {
                     var r = GetComponent<Renderer>();
+                    
                     if (r != null)
                     {
                         if (r.sharedMaterial != null)
@@ -206,13 +206,10 @@ namespace BlockadeLabsSDK
 
                 percentageCompleted = 90;
                 CalculateProgress();
-                Debug.Log(Application.dataPath + "/../SavedScreen.jpg");
-                Debug.Log(Application.persistentDataPath);
-                // SaveAssets(texture, prompt, depthMapTexture);
-                File.WriteAllBytes(Application.dataPath + "/Blockade Labs SDK Assets/"+prompt+".jpg", image);
-                AssetDatabase.Refresh();
-                // Debug.Log(Application.dataPath + "/../SavedScreen.jpg");
-                // AssetDatabase.CreateAsset(image, "Assets/Blockade Labs SDK Assets/" + "SavedScreen.jpg");
+
+                texture.Compress(true);
+                depthMapTexture.Compress(true);
+                SaveAssets(texture, prompt, depthMapTexture);
             }
 
             percentageCompleted = 100;
