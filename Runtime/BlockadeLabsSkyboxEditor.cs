@@ -56,7 +56,16 @@ namespace BlockadeLabsSDK
                 {
                     if (GUILayout.Button("Initialize"))
                     {
-                        _ = blockadeLabsSkybox.GetSkyboxStyleOptions();
+                        var getSkyboxStyleOptionsResult = blockadeLabsSkybox.GetSkyboxStyleOptions();
+                        
+                        getSkyboxStyleOptionsResult.ContinueWith((task) =>
+                        {
+                            if (task.IsCompletedSuccessfully)
+                            {
+                                // send attribution event to verified solution
+                                VSAttribution.SendAttributionEvent("Initialization", "BlockadeLabs", apiKey.stringValue);
+                            }
+                        }, TaskScheduler.FromCurrentSynchronizationContext());
                     }
                 }
 

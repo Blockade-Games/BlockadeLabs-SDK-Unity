@@ -1,4 +1,4 @@
-# Blockade Labs SDK for Unity
+# Skybox AI Generator by Blockade Labs
 
 Create stunning AI-generated skybox assets within Unity for use as HDRIs in game dev and immersive projects.
 
@@ -8,44 +8,51 @@ Get one at <a href="https://api.blockadelabs.com" target="_blank">https://api.bl
 
 ## Unity Versions Support
 
-- \>= 2020.3.x
+- \>= 2021.x.x - works out of the box
+- \>= 2020.x.x - requires installing newtonsoft-json
 
-## Install
-
-### Edit the project's `manifest.json` file
-
-Package can be used standalone or optionally together with a Pusher websockets package. 
-If installed, the Pusher package will use websockets to listen for any changes in the 
-Asset Generation Process on Runtime and make updates accordingly, 
-which in return should improve performance for your games on Runtime.
-
-Simplest way to install the package and it's optional Pusher dependency is to
+If you are using a Unity version `2020.x.x` you would need to add a `newtonsoft-json` package to your project.
+Simplest way to install the package is to
 open `Packages/manifest.json` file of your project with your favourite editor
 and add the following in your `dependencies` (make sure to respect JSON commas):
 
 ```json
 {
  "dependencies": {
-  "com.pusher.pusherwebsocketunity": "https://github.com/pusher/pusher-websocket-unity.git#upm",
-  "com.blockadelabs.sdk": "https://github.com/Blockade-Games/BlockadeLabs-SDK-Unity.git"
+   "com.unity.nuget.newtonsoft-json": "3.0.2",
  }
 }
 ```
 
-or if you don't plan on using Pusher, you can just add the `com.blockadelabs.sdk` package.
+## Using Pusher
+
+Scripts in the package can be used standalone or optionally together with a Pusher websockets package.
+If installed, the Pusher package will use websockets to listen for any changes in the
+Asset Generation Process on Runtime and make updates accordingly,
+which in return should improve performance for your games on Runtime.
+
+### Edit the project's `manifest.json` file
+
+Again, easiest way to install the optional Pusher dependency is to
+open `Packages/manifest.json` file of your project with your favourite editor
+and add the following in your `dependencies` (make sure to respect JSON commas):
+
+```json
+{
+  "dependencies": {
+    "com.pusher.pusherwebsocketunity": "https://github.com/pusher/pusher-websocket-unity.git#upm",
+  }
+}
+```
 
 ### Use git URL option
 
 Alternatively you can go to your Unity Project, to `Window > Package Manager` and install the packages using the
 `Add package from git URL...` option. 
 
-If using Pusher make sure to use this URL (uses the UPM branch):
+When using Pusher make sure to use this URL (uses the UPM branch):
 
-`https://github.com/pusher/pusher-websocket-unity.git#upm` 
-
-and for Blockade Labs SDK the default one will do the trick:
-
-`https://github.com/Blockade-Games/BlockadeLabs-SDK-Unity.git`
+`https://github.com/pusher/pusher-websocket-unity.git#upm`
 
 ### Use OpenUPM-CLI
 
@@ -55,20 +62,14 @@ If you are using `OpenUPM-CLI`, you can easily install the Pusher package using 
 openupm add com.pusher.pusherwebsocketunity
 ```
 
-and the Blockade Labs SDK with the following command:
-
-```sh
-openupm add com.blockadelabs.sdk
-```
-
 For known issues after installation check the section [below](#known-issues).
 
 ## Getting Started
 
 ### Samples
 
-After installing the Blockade Labs SDK you can go to `Window > Package Manager` and switch to `Packages: In Project`
-tab to locate the package. On the Blockade Labs SDK package page there are samples that can be imported in your 
+After installing the Skybox AI Generator by Blockade Labs you can go to `Window > Package Manager` and switch to `Packages: In Project`
+tab to locate the package. On the Blockade Labs package page there are samples that can be imported in your 
 Project. Samples contain some assets and a demo scene to get you started (Skybox Scene).
 
 After importing the samples load the above mentioned demo scene inside your project which should be located in
