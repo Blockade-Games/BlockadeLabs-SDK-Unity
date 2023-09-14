@@ -111,6 +111,7 @@ namespace BlockadeLabsSDK
                     {
                         result.Add("textureUrl", status.request.file_url);
                         result.Add("prompt", status.request.prompt);
+                        result.Add("depthMapUrl", status.request.depth_map_url);
                     }
                 }
             }

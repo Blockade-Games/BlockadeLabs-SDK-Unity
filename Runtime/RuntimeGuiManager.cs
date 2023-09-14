@@ -1,5 +1,7 @@
-﻿using TMPro;
+﻿using System.Linq;
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace BlockadeLabsSDK
 {
@@ -8,6 +10,7 @@ namespace BlockadeLabsSDK
         [SerializeField] private TMP_InputField promptInput;
         [SerializeField] private TMP_Dropdown stylesDropdown;
         [SerializeField] private TMP_Text generateButton;
+        [SerializeField] private Toggle enhancePromptToggle;
         [SerializeField] private GameObject popupPanel;
         private BlockadeLabsSkybox blockadeLabsSkybox;
 
@@ -20,6 +23,24 @@ namespace BlockadeLabsSDK
             foreach (var skyboxStyle in blockadeLabsSkybox.skyboxStyles)
             {
                 stylesDropdown.options.Add(new TMP_Dropdown.OptionData() { text = skyboxStyle.name });
+            }
+            
+            enhancePromptToggle.onValueChanged.AddListener(OnTargetToggleValueChanged);
+            Debug.Log(enhancePromptToggle);
+        }
+        
+        void OnTargetToggleValueChanged(bool newValue) {
+            Image targetImage = enhancePromptToggle.targetGraphic as Image;
+            Image targetCheckmarkImage = enhancePromptToggle.graphic as Image;
+
+            if (targetImage != null && targetCheckmarkImage != null) {
+                if (newValue) {
+                    targetImage.enabled = false;
+                    targetCheckmarkImage.enabled = true;
+                } else {
+                    targetImage.enabled = true;
+                    targetCheckmarkImage.enabled = false;
+                }
             }
         }
         
@@ -44,8 +65,19 @@ namespace BlockadeLabsSDK
         {
             if (blockadeLabsSkybox.PercentageCompleted() >= 0 && blockadeLabsSkybox.PercentageCompleted() < 100) return;
 
-            blockadeLabsSkybox.skyboxStyleFields[0].value = promptInput.text;
-
+            // set prompt
+            var prompt = blockadeLabsSkybox.skyboxStyleFields.First(
+                skyboxStyleField => skyboxStyleField.key == "prompt"
+            );
+            
+            // set enhance_prompt
+            var enhancePrompt = blockadeLabsSkybox.skyboxStyleFields.First(
+                skyboxStyleField => skyboxStyleField.key == "enhance_prompt"
+            );
+            
+            prompt.value = promptInput.text;
+            enhancePrompt.value = enhancePromptToggle.isOn ? "true" : "false";
+            
             if (stylesDropdown.value > 0)
             {
                 _ = blockadeLabsSkybox.CreateSkybox(
