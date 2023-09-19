@@ -6,13 +6,16 @@ Create stunning AI-generated skybox assets within Unity for use as HDRIs in game
 In order to use this package you need to provide an API key from Blockade Labs in the API section.
 Get one at <a href="https://api.blockadelabs.com" target="_blank">https://api.blockadelabs.com</a>.
 
+## Changelog
+Refer to the changelog file [here](CHANGELOG.md).
+
 ## Unity Versions Support
 
 - \>= 2021.x.x - works out of the box
 - \>= 2020.x.x - requires installing newtonsoft-json
 
 If you are using a Unity version `2020.x.x` you would need to add a `newtonsoft-json` package to your project.
-Simplest way to install the package is to
+Simplest way to install the package is to 
 open `Packages/manifest.json` file of your project with your favourite editor
 and add the following in your `dependencies` (make sure to respect JSON commas):
 
@@ -127,8 +130,3 @@ If you are using an optional Pusher package, after installation on 2021.x.x vers
 PusherClient references strong named Newtonsoft.Json Assembly references: 12.0.0.0 Found in project: 13.0.0.0.`
 
 To resolve the issue go to `Edit > Project Settings > Player > Other Settings > Configuration > Assembly Version Validation` and disable Version Validation.
-
-
-
-
-
