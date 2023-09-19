@@ -10,6 +10,9 @@ Get one at <a href="https://api.blockadelabs.com" target="_blank">https://api.bl
 
 - \>= 2020.3.x
 
+## Changelog
+Refer to the changelog file [here](CHANGELOG.md).
+
 ## Install
 
 ### Edit the project's `manifest.json` file
@@ -126,8 +129,3 @@ If you are using an optional Pusher package, after installation on 2021.x.x vers
 PusherClient references strong named Newtonsoft.Json Assembly references: 12.0.0.0 Found in project: 13.0.0.0.`
 
 To resolve the issue go to `Edit > Project Settings > Player > Other Settings > Configuration > Assembly Version Validation` and disable Version Validation.
-
-
-
-
-
