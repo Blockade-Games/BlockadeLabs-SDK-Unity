@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.5.4 - October 11th, 2023.
+
+- Fix the issue with depth maps for trial users
+
 ## 1.5.0 - September 14th, 2023.
 
 - Generate depth maps along with original skyboxes

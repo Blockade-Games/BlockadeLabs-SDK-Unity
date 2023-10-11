@@ -178,15 +178,11 @@ namespace BlockadeLabsSDK
                 return;
             }
 
-            if (!string.IsNullOrWhiteSpace(textureUrl) && !string.IsNullOrWhiteSpace(depthMapUrl))
+            if (!string.IsNullOrWhiteSpace(textureUrl))
             {
                 var image = await ApiRequests.GetImagineImage(textureUrl);
-                var depthMapImage = await ApiRequests.GetImagineImage(depthMapUrl);
-
                 var texture = new Texture2D(1, 1, TextureFormat.RGB24, false);
                 texture.LoadImage(image);
-                var depthMapTexture = new Texture2D(1, 1, TextureFormat.RGB24, false);
-                depthMapTexture.LoadImage(depthMapImage);
 
                 percentageCompleted = 80;
                 CalculateProgress();
@@ -208,8 +204,18 @@ namespace BlockadeLabsSDK
                 CalculateProgress();
 
                 texture.Compress(true);
-                depthMapTexture.Compress(true);
-                SaveAssets(texture, prompt, depthMapTexture);
+
+                var depthMapEmpty = string.IsNullOrWhiteSpace(depthMapUrl);
+                var depthMapTexture = new Texture2D(1, 1, TextureFormat.RGB24, false);;
+                
+                if (!depthMapEmpty)
+                {
+                    var depthMapImage = await ApiRequests.GetImagineImage(depthMapUrl);
+                    depthMapTexture.LoadImage(depthMapImage);
+                    depthMapTexture.Compress(true);
+                }
+                
+                SaveAssets(texture, prompt, depthMapEmpty, depthMapTexture);
             }
 
             percentageCompleted = 100;
@@ -219,10 +225,10 @@ namespace BlockadeLabsSDK
             #endif
         }
 
-        private void SaveAssets(Texture2D texture, string prompt, Texture2D depthMapTexture)
+        private void SaveAssets(Texture2D texture, string prompt, bool depthMapEmpty, Texture2D depthMapTexture)
         {
             #if UNITY_EDITOR
-                if (AssetDatabase.Contains(texture) || AssetDatabase.Contains(depthMapTexture))
+                if (AssetDatabase.Contains(texture) || (!depthMapEmpty && AssetDatabase.Contains(depthMapTexture)))
                 {
                     Debug.Log("Texture already in assets database.");
                     return;
@@ -242,10 +248,14 @@ namespace BlockadeLabsSDK
 
                 var validatedPrompt = ValidateFilename(prompt);
                 var textureName = validatedPrompt + "_texture";
-                var depthMapTextureName = validatedPrompt + "_depth_map_texture";
-
                 CreateAsset(textureName, texture);
-                CreateAsset(depthMapTextureName, depthMapTexture);
+                
+                if (!depthMapEmpty)
+                {
+                    var depthMapTextureName = validatedPrompt + "_depth_map_texture";
+                    CreateAsset(depthMapTextureName, depthMapTexture);
+                }
+                
             #endif
 
             imagineObfuscatedId = "";
