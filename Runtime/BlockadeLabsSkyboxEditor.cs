@@ -60,7 +60,7 @@ namespace BlockadeLabsSDK
                         
                         getSkyboxStyleOptionsResult.ContinueWith((task) =>
                         {
-                            if (task.IsCompletedSuccessfully)
+                            if (task.Status == TaskStatus.RanToCompletion)
                             {
                                 // send attribution event to verified solution
                                 VSAttribution.SendAttributionEvent("Initialization", "BlockadeLabs", apiKey.stringValue);
