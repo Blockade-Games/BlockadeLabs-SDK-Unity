@@ -1,30 +1,24 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
-namespace BlockadeLabsSDK
+namespace BlockadeLabsSDK.Editor
 {
     [CustomEditor(typeof(BlockadeLabsSkybox))]
-    public class BlockadeLabsSkyboxEditor : Editor
+    public class BlockadeLabsSkyboxEditor : UnityEditor.Editor
     {
-        private SerializedProperty apiKey;
-        private SerializedProperty assignToMaterial;
-        private SerializedProperty skyboxStyleFields;
-        private SerializedProperty skyboxStyles;
-        private SerializedProperty skyboxStyleOptions;
-        private SerializedProperty skyboxStyleOptionsIndex;
-        private bool showApi = true;
-        private bool showBasic = true;
-        private bool showSkybox = true;
+        private SerializedProperty _apiKey;
+        private SerializedProperty _assignToMaterial;
+        private SerializedProperty _selectedStyleFamilyIndex;
+        private SerializedProperty _selectedStyleIndex;
 
         void OnEnable()
         {
-            apiKey = serializedObject.FindProperty("apiKey");
-            assignToMaterial = serializedObject.FindProperty("assignToMaterial");
-            skyboxStyleFields = serializedObject.FindProperty("skyboxStyleFields");
-            skyboxStyles = serializedObject.FindProperty("skyboxStyles");
-            skyboxStyleOptions = serializedObject.FindProperty("skyboxStyleOptions");
-            skyboxStyleOptionsIndex = serializedObject.FindProperty("skyboxStyleOptionsIndex");
+            _apiKey = serializedObject.FindProperty("_apiKey");
+            _assignToMaterial = serializedObject.FindProperty("_assignToMaterial");
+            _selectedStyleFamilyIndex = serializedObject.FindProperty("_selectedStyleFamilyIndex");
+            _selectedStyleIndex = serializedObject.FindProperty("_selectedStyleIndex");
         }
 
         public override void OnInspectorGUI()
@@ -33,82 +27,30 @@ namespace BlockadeLabsSDK
 
             var blockadeLabsSkybox = (BlockadeLabsSkybox)target;
 
-            showApi = EditorGUILayout.Foldout(showApi, "API");
+            DrawApiKey(blockadeLabsSkybox);
 
-            if (showApi)
+            if (blockadeLabsSkybox.Initialized)
             {
-                EditorGUILayout.PropertyField(apiKey, new GUIContent("API key"));
-                GUILayout.Space(5);
+                var percentageCompleted = blockadeLabsSkybox.PercentageCompleted();
+                bool generating = percentageCompleted >= 0 && percentageCompleted < 100;
 
-                EditorGUILayout.BeginHorizontal();
-
-                EditorGUILayout.LabelField("Initialize/Refresh");
-
-                if (skyboxStyleFields.arraySize > 0)
+                BlockadeGUI.DisableGroup(generating, () =>
                 {
-                    if (GUILayout.Button("Refresh"))
-                    {
-                        _ = blockadeLabsSkybox.GetSkyboxStyleOptions();
-                    }
+                    DrawSkyboxFields(blockadeLabsSkybox);
+
+                    EditorGUILayout.PropertyField(_assignToMaterial);
+
+                });
+
+                if (generating)
+                {
+                    DrawProgress(blockadeLabsSkybox, percentageCompleted);
                 }
                 else
                 {
-                    if (GUILayout.Button("Initialize"))
+                    if (GUILayout.Button("Generate Skybox"))
                     {
-                        var getSkyboxStyleOptionsResult = blockadeLabsSkybox.GetSkyboxStyleOptions();
-
-                        getSkyboxStyleOptionsResult.ContinueWith((task) =>
-                        {
-                            if (task.Status == TaskStatus.RanToCompletion)
-                            {
-                                // send attribution event to verified solution
-                                VSAttribution.SendAttributionEvent("Initialization", "BlockadeLabs", apiKey.stringValue);
-                            }
-                        }, TaskScheduler.FromCurrentSynchronizationContext());
-                    }
-                }
-
-                EditorGUILayout.EndHorizontal();
-            }
-
-            if (skyboxStyleFields.arraySize > 0)
-            {
-                showBasic = EditorGUILayout.Foldout(showBasic, "Basic Settings");
-
-                if (showBasic)
-                {
-                    EditorGUILayout.PropertyField(assignToMaterial);
-                }
-
-                if (!EditorApplication.isPlayingOrWillChangePlaymode)
-                {
-                    showSkybox = EditorGUILayout.Foldout(showSkybox, "Skybox Generator");
-
-                    if (showSkybox)
-                    {
-                        // Iterate over skybox style fields and render them in the GUI
-                        if (blockadeLabsSkybox.skyboxStyleFields.Count > 0)
-                        {
-                            RenderSkyboxEditorFields(blockadeLabsSkybox);
-                        }
-
-                        if (blockadeLabsSkybox.PercentageCompleted() >= 0 && blockadeLabsSkybox.PercentageCompleted() < 100)
-                        {
-                            if (GUILayout.Button("Cancel (" + blockadeLabsSkybox.PercentageCompleted() + "%)"))
-                            {
-                                blockadeLabsSkybox.Cancel();
-                            }
-                        }
-                        else
-                        {
-                            if (GUILayout.Button("Generate Skybox"))
-                            {
-                                _ = blockadeLabsSkybox.CreateSkybox(
-                                    blockadeLabsSkybox.skyboxStyleFields,
-                                    blockadeLabsSkybox.skyboxStyles[blockadeLabsSkybox.skyboxStyleOptionsIndex].id
-                                );
-                            }
-                        }
+                        blockadeLabsSkybox.GenerateSkyboxAsync();
                     }
                 }
             }
@@ -116,53 +58,98 @@ namespace BlockadeLabsSDK
             serializedObject.ApplyModifiedProperties();
         }
 
-        private void RenderSkyboxEditorFields(BlockadeLabsSkybox blockadeLabsSkybox)
+        private void DrawApiKey(BlockadeLabsSkybox blockadeLabsSkybox)
         {
-            // Begin horizontal layout
-            EditorGUILayout.BeginHorizontal();
-
-            // Create label for the style field
-            EditorGUILayout.LabelField("Style", GUILayout.Width(EditorGUIUtility.labelWidth));
-
-            blockadeLabsSkybox.skyboxStyleOptionsIndex = EditorGUILayout.Popup(
-                blockadeLabsSkybox.skyboxStyleOptionsIndex,
-                blockadeLabsSkybox.skyboxStyleOptions,
-                GUILayout.Width(EditorGUIUtility.currentViewWidth)
-            );
-
-            // End horizontal layout
-            EditorGUILayout.EndHorizontal();
-
-            foreach (var field in blockadeLabsSkybox.skyboxStyleFields)
+            BlockadeGUI.Horizontal(() =>
             {
-                // Begin horizontal layout
-                EditorGUILayout.BeginHorizontal();
-
-                if (field.type == "boolean")
+                EditorGUILayout.PropertyField(_apiKey, new GUIContent("API key"));
+                if (GUILayout.Button("Apply", GUILayout.Width(80)))
                 {
-                    var fieldBoolValue = field.value == "true";
-                    var toggleValue = EditorGUILayout.Toggle(field.name, fieldBoolValue, GUILayout.Width(EditorGUIUtility.currentViewWidth));
-
-                    field.value = toggleValue ? "true" : "false";
+                    InitializeAsync(blockadeLabsSkybox);
                 }
-                else
-                {
-                    // Create label for field
-                    EditorGUILayout.LabelField(field.name, GUILayout.Width(EditorGUIUtility.labelWidth));
+            });
+        }
 
-                    // Create text field for field value
-                    if (field.type == "textarea")
+        private void DrawSkyboxFields(BlockadeLabsSkybox blockadeLabsSkybox)
+        {
+            BlockadeGUI.Horizontal(() =>
+            {
+                EditorGUILayout.LabelField("Style", GUILayout.Width(EditorGUIUtility.labelWidth));
+                var familyOptions = blockadeLabsSkybox.StyleFamilies.Select(f => f.name).ToArray();
+                var selectedFamilyIndex = EditorGUILayout.Popup(_selectedStyleFamilyIndex.intValue, familyOptions);
+                if (selectedFamilyIndex != _selectedStyleFamilyIndex.intValue)
+                {
+                    blockadeLabsSkybox.SelectedStyleFamily = blockadeLabsSkybox.StyleFamilies[selectedFamilyIndex];
+                }
+
+                var styleOptions = blockadeLabsSkybox.SelectedStyleFamily.items.Select(s => s.name).ToArray();
+                var selectedStyleIndex = EditorGUILayout.Popup(_selectedStyleIndex.intValue, styleOptions);
+                if (selectedStyleIndex != _selectedStyleIndex.intValue)
+                {
+                    blockadeLabsSkybox.SelectedStyle = blockadeLabsSkybox.SelectedStyleFamily.items[selectedStyleIndex];
+                }
+            });
+
+            foreach (var field in blockadeLabsSkybox.SkyboxStyleFields)
+            {
+                BlockadeGUI.Horizontal(() =>
+                {
+                    if (field.type == "boolean")
                     {
-                        field.value = EditorGUILayout.TextArea(field.value, GUILayout.Height(100), GUILayout.Width(EditorGUIUtility.currentViewWidth));
+                        var fieldBoolValue = field.value == "true";
+                        var toggleValue = EditorGUILayout.Toggle(field.name, fieldBoolValue, GUILayout.Width(EditorGUIUtility.currentViewWidth));
+                        field.value = toggleValue ? "true" : "false";
                     }
                     else
                     {
-                        field.value = EditorGUILayout.TextField(field.value, GUILayout.Width(EditorGUIUtility.currentViewWidth));
+                        EditorGUILayout.LabelField(field.name, GUILayout.Width(EditorGUIUtility.labelWidth));
+                        if (field.type == "textarea")
+                        {
+                            field.value = EditorGUILayout.TextArea(field.value, GUILayout.Height(60));
+                        }
+                        else
+                        {
+                            field.value = EditorGUILayout.TextField(field.value);
+                        }
                     }
-                }
+                });
+            }
+        }
 
-                // End horizontal layout
-                EditorGUILayout.EndHorizontal();
+        private void DrawProgress(BlockadeLabsSkybox blockadeLabsSkybox, float percentageCompleted)
+        {
+            BlockadeGUI.Horizontal(() =>
+            {
+                EditorGUI.ProgressBar(EditorGUILayout.GetControlRect(), percentageCompleted / 100f, "Generating Skybox");
+                if (GUILayout.Button("Cancel", GUILayout.Width(80)))
+                {
+                    blockadeLabsSkybox.Cancel();
+                }
+            });
+        }
+
+        private async void InitializeAsync(BlockadeLabsSkybox blockadeLabsSkybox)
+        {
+            if (!blockadeLabsSkybox.CheckApiKeyValid())
+            {
+                return;
+            }
+
+            bool wasInitialzied = blockadeLabsSkybox.Initialized;
+
+            try
+            {
+                await blockadeLabsSkybox.LoadOptionsAsync();
+
+                // send attribution event to verified solution
+                if (!wasInitialzied)
+                {
+                    VSAttribution.SendAttributionEvent("Initialization", "BlockadeLabs", _apiKey.stringValue);
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("Failed to initialize BlockadeLabsSkybox: " + e.Message);
             }
         }
     }

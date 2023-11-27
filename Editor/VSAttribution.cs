@@ -2,7 +2,7 @@
 using UnityEditor;
 using UnityEngine.Analytics;
 
-namespace BlockadeLabsSDK
+namespace BlockadeLabsSDK.Editor
 {
     public static class VSAttribution
     {

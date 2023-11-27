@@ -7,89 +7,182 @@ namespace BlockadeLabsSDK
 {
     public class RuntimeGuiManager : MonoBehaviour
     {
-        [SerializeField] private TMP_InputField promptInput;
-        [SerializeField] private TMP_Dropdown stylesDropdown;
-        [SerializeField] private TMP_Text generateButton;
-        [SerializeField] private Toggle enhancePromptToggle;
-        [SerializeField] private GameObject popupPanel;
-        private BlockadeLabsSkybox blockadeLabsSkybox;
+        [SerializeField]
+        private TMP_InputField _promptInput;
+        public TMP_InputField PromptInput
+        {
+            get { return _promptInput; }
+            set { _promptInput = value; }
+        }
+
+        [SerializeField]
+        private TMP_Dropdown _stylesDropdown;
+        public TMP_Dropdown StylesDropdown
+        {
+            get { return _stylesDropdown; }
+            set { _stylesDropdown = value; }
+        }
+
+        [SerializeField]
+        private TMP_Text _generateButton;
+        public TMP_Text GenerateButton
+        {
+            get { return _generateButton; }
+            set { _generateButton = value; }
+        }
+
+        [SerializeField]
+        private Toggle _enhancePromptToggle;
+        public Toggle EnhancePromptToggle
+        {
+            get { return _enhancePromptToggle; }
+            set { _enhancePromptToggle = value; }
+        }
+
+        [SerializeField]
+        private GameObject _popupPanel;
+        public GameObject PopupPanel
+        {
+            get { return _popupPanel; }
+            set { _popupPanel = value; }
+        }
+
+        [SerializeField]
+        private BlockadeLabsSkybox _blockadeLabsSkybox;
+        public BlockadeLabsSkybox BlockadeLabsSkybox
+        {
+            get { return _blockadeLabsSkybox; }
+            set { _blockadeLabsSkybox = value; }
+        }
+
+        private bool _initialized = false;
+
+        void Awake()
+        {
+            if (_blockadeLabsSkybox == null)
+            {
+                Debug.LogError("BlockadeLabsSkybox must be set.");
+                return;
+            }
+
+            if (_promptInput == null)
+            {
+                Debug.LogError("PromptInput must be set.");
+                return;
+            }
+
+            if (_stylesDropdown == null)
+            {
+                Debug.LogError("StylesDropdown must be set.");
+                return;
+            }
+
+            if (_generateButton == null)
+            {
+                Debug.LogError("GenerateButton must be set.");
+                return;
+            }
+
+            if (_enhancePromptToggle == null)
+            {
+                Debug.LogError("EnhancePromptToggle must be set.");
+                return;
+            }
+
+            if (_popupPanel == null)
+            {
+                Debug.LogError("PopupPanel must be set.");
+                return;
+            }
+
+            if (!_blockadeLabsSkybox.CheckApiKeyValid())
+            {
+                Debug.LogError("API key is not valid.");
+                return;
+            }
+
+            _initialized = true;
+        }
 
         async void Start()
         {
-            blockadeLabsSkybox = FindObjectOfType<BlockadeLabsSkybox>();
-
-            await blockadeLabsSkybox.GetSkyboxStyleOptions();
-
-            foreach (var skyboxStyle in blockadeLabsSkybox.skyboxStyles)
+            if (!_initialized)
             {
-                stylesDropdown.options.Add(new TMP_Dropdown.OptionData() { text = skyboxStyle.name });
+                return;
             }
-            
-            enhancePromptToggle.onValueChanged.AddListener(OnTargetToggleValueChanged);
-        }
-        
-        void OnTargetToggleValueChanged(bool newValue) {
-            Image targetImage = enhancePromptToggle.targetGraphic as Image;
-            Image targetCheckmarkImage = enhancePromptToggle.graphic as Image;
 
-            if (targetImage != null && targetCheckmarkImage != null) {
-                if (newValue) {
+            await _blockadeLabsSkybox.LoadOptionsAsync();
+
+            // foreach (var skyboxStyle in _blockadeLabsSkybox.SkyboxStyles)
+            // {
+            //     _stylesDropdown.options.Add(new TMP_Dropdown.OptionData() { text = skyboxStyle.name });
+            // }
+
+            _enhancePromptToggle.onValueChanged.AddListener(OnTargetToggleValueChanged);
+        }
+
+        void OnTargetToggleValueChanged(bool newValue) {
+            Image targetImage = _enhancePromptToggle.targetGraphic as Image;
+            Image targetCheckmarkImage = _enhancePromptToggle.graphic as Image;
+
+            if (targetImage != null && targetCheckmarkImage != null)
+            {
+                if (newValue)
+                {
                     targetImage.enabled = false;
                     targetCheckmarkImage.enabled = true;
-                } else {
+                }
+                else
+                {
                     targetImage.enabled = true;
                     targetCheckmarkImage.enabled = false;
                 }
             }
         }
-        
+
         private void Update()
         {
             SetGenerateButtonText();
         }
-        
+
         private void SetGenerateButtonText()
         {
-            if (blockadeLabsSkybox.PercentageCompleted() >= 0 && blockadeLabsSkybox.PercentageCompleted() < 100)
+            if (_blockadeLabsSkybox.PercentageCompleted() >= 0 && _blockadeLabsSkybox.PercentageCompleted() < 100)
             {
-                generateButton.text = blockadeLabsSkybox.PercentageCompleted() + "%";
+                _generateButton.text = _blockadeLabsSkybox.PercentageCompleted() + "%";
             }
             else
             {
-                generateButton.text = "GENERATE";
+                _generateButton.text = "GENERATE";
             }
         }
-        
+
         public void GenerateSkybox()
         {
-            if (blockadeLabsSkybox.PercentageCompleted() >= 0 && blockadeLabsSkybox.PercentageCompleted() < 100) return;
+            if (_blockadeLabsSkybox.PercentageCompleted() >= 0 && _blockadeLabsSkybox.PercentageCompleted() < 100) return;
 
             // set prompt
-            var prompt = blockadeLabsSkybox.skyboxStyleFields.First(
+            var prompt = _blockadeLabsSkybox.SkyboxStyleFields.First(
                 skyboxStyleField => skyboxStyleField.key == "prompt"
             );
-            
+
             // set enhance_prompt
-            var enhancePrompt = blockadeLabsSkybox.skyboxStyleFields.First(
+            var enhancePrompt = _blockadeLabsSkybox.SkyboxStyleFields.First(
                 skyboxStyleField => skyboxStyleField.key == "enhance_prompt"
             );
-            
-            prompt.value = promptInput.text;
-            enhancePrompt.value = enhancePromptToggle.isOn ? "true" : "false";
-            
-            if (stylesDropdown.value > 0)
+
+            prompt.value = _promptInput.text;
+            enhancePrompt.value = _enhancePromptToggle.isOn ? "true" : "false";
+
+            if (_stylesDropdown.value > 0)
             {
-                _ = blockadeLabsSkybox.CreateSkybox(
-                    blockadeLabsSkybox.skyboxStyleFields,
-                    blockadeLabsSkybox.skyboxStyles[stylesDropdown.value - 1].id,
-                    true
-                );
+                _blockadeLabsSkybox.GenerateSkyboxAsync(true);
             }
         }
 
         public void TogglePopup()
         {
-            popupPanel.SetActive(!popupPanel.activeInHierarchy);
+            _popupPanel.SetActive(!_popupPanel.activeInHierarchy);
         }
     }
 }

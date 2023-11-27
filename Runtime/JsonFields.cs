@@ -1,4 +1,7 @@
-﻿namespace BlockadeLabsSDK
+﻿using System.Collections.Generic;
+using Newtonsoft.Json;
+
+namespace BlockadeLabsSDK
 {
     [System.Serializable]
     public class CreateSkyboxResult
@@ -12,7 +15,7 @@
     {
         public GetImagineRequest request { get; set; }
     }
-    
+
     public class GetImagineRequest
     {
         public string file_url { get; set; }
@@ -26,8 +29,34 @@
     {
         public int id;
         public string name;
+        [JsonProperty("max-char")]
+        public int maxChar;
+        [JsonProperty("negative-text-max-char")]
+        public int negativeTextMaxChar;
+        public string image;
+        [JsonProperty("sort_order")]
+        public int sortOrder;
+        public bool premium;
+        [JsonProperty("new")]
+        public bool isNew;
+        public bool experimental;
+        public string status;
     }
-    
+
+    [System.Serializable]
+    public class SkyboxStyleFamily
+    {
+        public int id;
+        public string name;
+        [JsonProperty("sort_order")]
+        public int sortOrder;
+        public bool premium;
+        [JsonProperty("new")]
+        public bool isNew;
+        public bool experimental;
+        public List<SkyboxStyle> items;
+    }
+
     public class UserInput
     {
         public string key;
@@ -39,14 +68,14 @@
         // Constructor to initialize user input with data from API response
         public UserInput(string key, int id, string name, string placeholder, string type)
         {
-            this.key = key; 
-            this.id = id; 
+            this.key = key;
+            this.id = id;
             this.name = name;
             this.placeholder = placeholder;
             this.type = type;
         }
     }
-    
+
     [System.Serializable]
     public class SkyboxStyleField
     {

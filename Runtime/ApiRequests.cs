@@ -9,7 +9,34 @@ namespace BlockadeLabsSDK
 {
     public class ApiRequests
     {
-        public static async Task<List<SkyboxStyle>> GetSkyboxStyles(string apiKey)
+        public static async Task<List<SkyboxStyleFamily>> GetSkyboxStylesMenuAsync(string apiKey)
+        {
+            var request = UnityWebRequest.Get(
+                "https://backend.blockadelabs.com/api/v1/skybox/menu" + "?api_key=" + apiKey
+            );
+
+            await request.SendWebRequest();
+
+            if (request.result != UnityWebRequest.Result.Success)
+            {
+                Debug.Log("Get skybox styles menu error: " + request.error);
+                request.Dispose();
+            }
+            else
+            {
+                Debug.Log(request.downloadHandler.text);
+                var familyList =
+                    JsonConvert.DeserializeObject<List<SkyboxStyleFamily>>(request.downloadHandler.text);
+
+                request.Dispose();
+
+                return familyList;
+            }
+
+            return null;
+        }
+
+        public static async Task<List<SkyboxStyle>> GetSkyboxStylesAsync(string apiKey)
         {
             var getSkyboxStylesRequest = UnityWebRequest.Get(
                 "https://backend.blockadelabs.com/api/v1/skybox/styles" + "?api_key=" + apiKey
@@ -35,7 +62,7 @@ namespace BlockadeLabsSDK
             return null;
         }
 
-        public static async Task<string> CreateSkybox(List<SkyboxStyleField> skyboxStyleFields, int id, string apiKey)
+        public static async Task<string> GenerateSkyboxAsync(List<SkyboxStyleField> skyboxStyleFields, int id, string apiKey)
         {
             // Create a dictionary of string keys and dictionary values to hold the JSON POST params
             Dictionary<string, string> parameters = new Dictionary<string, string>();
@@ -70,24 +97,24 @@ namespace BlockadeLabsSDK
             else
             {
                 var result = JsonConvert.DeserializeObject<CreateSkyboxResult>(createSkyboxRequest.downloadHandler.text);
-                
+
                 createSkyboxRequest.Dispose();
-            
+
                 if (result?.obfuscated_id == null)
                 {
                     return "";
                 }
-            
+
                 return result.obfuscated_id;
             }
-            
+
             return "";
         }
 
-        public static async Task<Dictionary<string, string>> GetImagine(string imagineObfuscatedId, string apiKey)
+        public static async Task<Dictionary<string, string>> GetImagineAsync(string imagineObfuscatedId, string apiKey)
         {
             Dictionary<string, string> result = new Dictionary<string, string>();
-           
+
             var getImagineRequest = UnityWebRequest.Get(
                 "https://backend.blockadelabs.com/api/v1/imagine/requests/obfuscated-id/" + imagineObfuscatedId + "?api_key=" + apiKey
             );
@@ -102,7 +129,7 @@ namespace BlockadeLabsSDK
             else
             {
                 var status = JsonConvert.DeserializeObject<GetImagineResult>(getImagineRequest.downloadHandler.text);
-                
+
                 getImagineRequest.Dispose();
 
                 if (status?.request != null)
@@ -118,8 +145,8 @@ namespace BlockadeLabsSDK
 
             return result;
         }
-        
-        public static async Task<byte[]> GetImagineImage(string textureUrl)
+
+        public static async Task<byte[]> GetImagineImageAsync(string textureUrl)
         {
             var imagineImageRequest = UnityWebRequest.Get(textureUrl);
             await imagineImageRequest.SendWebRequest();
