@@ -9,57 +9,32 @@ namespace BlockadeLabsSDK
 {
     public class ApiRequests
     {
+        private static readonly string ApiEndpoint = "https://backend.blockadelabs.com/api/v1/";
+
+        public static async Task<T> GetAsync<T>(string path, string apiKey)
+        {
+            using (var request = UnityWebRequest.Get(ApiEndpoint + path + "?api_key=" + apiKey))
+            {
+                await request.SendWebRequest();
+
+                if (request.result != UnityWebRequest.Result.Success)
+                {
+                    Debug.Log("Get error: " + request.error);
+                    return default(T);
+                }
+
+                return JsonConvert.DeserializeObject<T>(request.downloadHandler.text);
+            }
+        }
+
         public static async Task<List<SkyboxStyleFamily>> GetSkyboxStylesMenuAsync(string apiKey)
         {
-            var request = UnityWebRequest.Get(
-                "https://backend.blockadelabs.com/api/v1/skybox/menu" + "?api_key=" + apiKey
-            );
-
-            await request.SendWebRequest();
-
-            if (request.result != UnityWebRequest.Result.Success)
-            {
-                Debug.Log("Get skybox styles menu error: " + request.error);
-                request.Dispose();
-            }
-            else
-            {
-                Debug.Log(request.downloadHandler.text);
-                var familyList =
-                    JsonConvert.DeserializeObject<List<SkyboxStyleFamily>>(request.downloadHandler.text);
-
-                request.Dispose();
-
-                return familyList;
-            }
-
-            return null;
+            return await GetAsync<List<SkyboxStyleFamily>>("skybox/menu", apiKey);
         }
 
         public static async Task<List<SkyboxStyle>> GetSkyboxStylesAsync(string apiKey)
         {
-            var getSkyboxStylesRequest = UnityWebRequest.Get(
-                "https://backend.blockadelabs.com/api/v1/skybox/styles" + "?api_key=" + apiKey
-            );
-
-            await getSkyboxStylesRequest.SendWebRequest();
-
-            if (getSkyboxStylesRequest.result != UnityWebRequest.Result.Success)
-            {
-                Debug.Log("Get skybox styles error: " + getSkyboxStylesRequest.error);
-                getSkyboxStylesRequest.Dispose();
-            }
-            else
-            {
-                var skyboxStylesList =
-                    JsonConvert.DeserializeObject<List<SkyboxStyle>>(getSkyboxStylesRequest.downloadHandler.text);
-
-                getSkyboxStylesRequest.Dispose();
-
-                return skyboxStylesList;
-            }
-
-            return null;
+            return await GetAsync<List<SkyboxStyle>>("skybox/styles", apiKey);
         }
 
         public static async Task<string> GenerateSkyboxAsync(List<SkyboxStyleField> skyboxStyleFields, int id, string apiKey)
