@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.12731715, g: 0.13414735, b: 0.121078536, a: 1}
+  m_IndirectSpecularColor: {r: 0.12731749, g: 0.13414757, b: 0.1210787, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -2815,11 +2815,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d8573010e2c4ebdba1f53f8c45ef701, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  promptInput: {fileID: 259703898}
-  stylesDropdown: {fileID: 987378034}
-  generateButton: {fileID: 790061108}
-  enhancePromptToggle: {fileID: 859345588}
-  popupPanel: {fileID: 897809236}
+  _promptInput: {fileID: 259703898}
+  _stylesDropdown: {fileID: 987378034}
+  _generateButton: {fileID: 790061108}
+  _enhancePromptToggle: {fileID: 859345588}
+  _popupPanel: {fileID: 897809236}
+  _blockadeLabsSkybox: {fileID: 1946445123}
 --- !u!4 &1700559438
 Transform:
   m_ObjectHideFlags: 0
@@ -2846,6 +2847,7 @@ GameObject:
   - component: {fileID: 1759603985}
   - component: {fileID: 1759603984}
   - component: {fileID: 1759603983}
+  - component: {fileID: 1759603986}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -2912,13 +2914,32 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1759603982}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: -10}
+  m_LocalPosition: {x: 0, y: 1.95, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1759603986
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1759603982}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 387d38be7b7424643a29db956f58439b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _skyboxSphere: {fileID: 1946445122}
+  _autoPan: 1
+  _autoPanSpeed: 10
+  _autoPanDelay: 5
+  _manualPanSpeed: 40
+  _zoomSpeed: 80
+  _smooth: 5
 --- !u!1 &1840588312
 GameObject:
   m_ObjectHideFlags: 0
@@ -3366,13 +3387,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 80c37ee5440861a47884a14ba990aa23, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  apiKey: API key needed. Get one at api.blockadelabs.com
-  assignToMaterial: 1
-  skyboxStyleFields: []
-  skyboxStyles: []
-  skyboxStyleOptions: []
-  skyboxStyleOptionsIndex: 0
-  imagineObfuscatedId: 
+  _apiKey: yRjYQs9SSAu6hOUG0ky753fuNsno0wmH8AFLeZ9ftZQ6jfGmCgCGdOruHHqX
+  _assignToMaterial: 1
+  _selectedStyleFamilyIndex: 5
+  _selectedStyleIndex: 0
 --- !u!1 &1958244287
 GameObject:
   m_ObjectHideFlags: 0
