@@ -4,7 +4,6 @@ using UnityEngine;
 
 namespace BlockadeLabsSDK
 {
-#if UNITY_EDITOR
     [CustomEditor(typeof(BlockadeLabsSkybox))]
     public class BlockadeLabsSkyboxEditor : Editor
     {
@@ -40,9 +39,9 @@ namespace BlockadeLabsSDK
             {
                 EditorGUILayout.PropertyField(apiKey, new GUIContent("API key"));
                 GUILayout.Space(5);
-                
+
                 EditorGUILayout.BeginHorizontal();
-                
+
                 EditorGUILayout.LabelField("Initialize/Refresh");
 
                 if (skyboxStyleFields.arraySize > 0)
@@ -57,7 +56,7 @@ namespace BlockadeLabsSDK
                     if (GUILayout.Button("Initialize"))
                     {
                         var getSkyboxStyleOptionsResult = blockadeLabsSkybox.GetSkyboxStyleOptions();
-                        
+
                         getSkyboxStyleOptionsResult.ContinueWith((task) =>
                         {
                             if (task.Status == TaskStatus.RanToCompletion)
@@ -92,7 +91,7 @@ namespace BlockadeLabsSDK
                         {
                             RenderSkyboxEditorFields(blockadeLabsSkybox);
                         }
-                    
+
                         if (blockadeLabsSkybox.PercentageCompleted() >= 0 && blockadeLabsSkybox.PercentageCompleted() < 100)
                         {
                             if (GUILayout.Button("Cancel (" + blockadeLabsSkybox.PercentageCompleted() + "%)"))
@@ -113,7 +112,7 @@ namespace BlockadeLabsSDK
                     }
                 }
             }
-            
+
             serializedObject.ApplyModifiedProperties();
         }
 
@@ -121,7 +120,7 @@ namespace BlockadeLabsSDK
         {
             // Begin horizontal layout
             EditorGUILayout.BeginHorizontal();
-            
+
             // Create label for the style field
             EditorGUILayout.LabelField("Style", GUILayout.Width(EditorGUIUtility.labelWidth));
 
@@ -143,14 +142,14 @@ namespace BlockadeLabsSDK
                 {
                     var fieldBoolValue = field.value == "true";
                     var toggleValue = EditorGUILayout.Toggle(field.name, fieldBoolValue, GUILayout.Width(EditorGUIUtility.currentViewWidth));
-                
+
                     field.value = toggleValue ? "true" : "false";
                 }
                 else
                 {
                     // Create label for field
                     EditorGUILayout.LabelField(field.name, GUILayout.Width(EditorGUIUtility.labelWidth));
-                
+
                     // Create text field for field value
                     if (field.type == "textarea")
                     {
@@ -158,14 +157,13 @@ namespace BlockadeLabsSDK
                     }
                     else
                     {
-                        field.value = EditorGUILayout.TextField(field.value, GUILayout.Width(EditorGUIUtility.currentViewWidth)); 
+                        field.value = EditorGUILayout.TextField(field.value, GUILayout.Width(EditorGUIUtility.currentViewWidth));
                     }
                 }
-                
+
                 // End horizontal layout
                 EditorGUILayout.EndHorizontal();
             }
         }
     }
-#endif
 }

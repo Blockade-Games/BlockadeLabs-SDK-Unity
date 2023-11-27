@@ -12,17 +12,5 @@
     "ai",
     "skybox",
     "generator"
-  ],
-  "samples": [
-    {
-      "displayName": "Assets",
-      "description": "Contains sample assets",
-      "path": "Samples~/Assets"
-    },
-    {
-      "displayName": "Scenes",
-      "description": "Contains sample scenes",
-      "path": "Samples~/Scenes"
-    }
   ]
 }

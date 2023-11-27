@@ -4,7 +4,6 @@ using UnityEngine.Analytics;
 
 namespace BlockadeLabsSDK
 {
-#if UNITY_EDITOR
     public static class VSAttribution
     {
         const int k_VersionId = 4;
@@ -67,5 +66,4 @@ namespace BlockadeLabsSDK
             }
         }
     }
-#endif
 }
