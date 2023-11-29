@@ -79,8 +79,8 @@ namespace BlockadeLabsSDK
         }
 
         [SerializeField]
-        private TMP_Text _generateButton;
-        public TMP_Text GenerateButton
+        private Button _generateButton;
+        public Button GenerateButton
         {
             get { return _generateButton; }
             set { _generateButton = value; }
@@ -110,6 +110,22 @@ namespace BlockadeLabsSDK
             set { _negativeTextToggle = value; }
         }
 
+        [SerializeField]
+        private StylePickerPanel _stylePickerPanel;
+        public StylePickerPanel StylePickerPanel
+        {
+            get { return _stylePickerPanel; }
+            set { _stylePickerPanel = value; }
+        }
+
+        [SerializeField]
+        private TMP_Text _selectedStyleText;
+        public TMP_Text SelectedStyleText
+        {
+            get { return _selectedStyleText; }
+            set { _selectedStyleText = value; }
+        }
+
         private float _createUnderlineOffset;
 
         async void Start()
@@ -129,6 +145,8 @@ namespace BlockadeLabsSDK
             _createUnderlineOffset = _createRemixUnderline.localPosition.x;
             _createButton.GetComponent<Hoverable>().OnHoverChanged.AddListener((_) => UpdateHintText());
             _remixButton.GetComponent<Hoverable>().OnHoverChanged.AddListener((_) => UpdateHintText());
+            _stylePickerPanel.OnStyleSelected += OnStyleSelected;
+            _generateButton.onClick.AddListener(OnGenerateButtonClicked);
 
             await _blockadeLabsSkybox.LoadAsync();
         }
@@ -138,20 +156,20 @@ namespace BlockadeLabsSDK
             _promptInput.text = _blockadeLabsSkybox.Prompt;
             _enhancePromptToggle.IsOn = _blockadeLabsSkybox.EnhancePrompt;
             _negativeTextInput.text = _blockadeLabsSkybox.NegativeText;
+            UpdateHintText();
+            UpdateGenerateButtonText();
+            _selectedStyleText.text = _blockadeLabsSkybox.SelectedStyle?.name ?? "Select a Style";
         }
 
         private void OnStateChanged()
         {
             // TODO: Let user know if they need to set the API key
             SetInteractable(_blockadeLabsSkybox.CurrentState == BlockadeLabsSkybox.State.Ready);
+            UpdateGenerateButtonText();
 
-            if (_blockadeLabsSkybox.CurrentState == BlockadeLabsSkybox.State.Generating)
+            if (_blockadeLabsSkybox.CurrentState == BlockadeLabsSkybox.State.Ready)
             {
-                _generateButton.text = _blockadeLabsSkybox.PercentageCompleted() + "%";
-            }
-            else
-            {
-                _generateButton.text = "GENERATE";
+                _stylePickerPanel.SetStyles(_blockadeLabsSkybox.StyleFamilies);
             }
         }
 
@@ -194,9 +212,32 @@ namespace BlockadeLabsSDK
             _blockadeLabsSkybox.Remix = true;
         }
 
-        public void GenerateSkybox()
+        private void OnGenerateButtonClicked()
         {
             _blockadeLabsSkybox.GenerateSkyboxAsync(true);
+        }
+
+        private void OnStyleSelected(SkyboxStyle style)
+        {
+            _blockadeLabsSkybox.SelectedStyle = style;
+        }
+
+        private void UpdateGenerateButtonText()
+        {
+            var tmpText = _generateButton.GetComponentInChildren<TMP_Text>();
+
+            if (_blockadeLabsSkybox.CurrentState == BlockadeLabsSkybox.State.Generating)
+            {
+                tmpText.text = _blockadeLabsSkybox.PercentageCompleted() + "%";
+            }
+            else if (_blockadeLabsSkybox.Remix)
+            {
+                tmpText.text = "REMIX THIS";
+            }
+            else
+            {
+                tmpText.text = "GENERATE";
+            }
         }
 
         private void UpdateHintText()

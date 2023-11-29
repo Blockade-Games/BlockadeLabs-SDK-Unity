@@ -33,7 +33,7 @@ namespace BlockadeLabsSDK
         private int _selectedStyleFamilyIndex;
         public SkyboxStyleFamily SelectedStyleFamily
         {
-            get => _styleFamilies[_selectedStyleFamilyIndex];
+            get => _styleFamilies?[_selectedStyleFamilyIndex];
             set
             {
                 _selectedStyleFamilyIndex = _styleFamilies.IndexOf(value);
@@ -46,7 +46,7 @@ namespace BlockadeLabsSDK
         private int _selectedStyleIndex;
         public SkyboxStyle SelectedStyle
         {
-            get => SelectedStyleFamily.items[_selectedStyleIndex];
+            get => SelectedStyleFamily?.items[_selectedStyleIndex];
             set
             {
                 _selectedStyleFamilyIndex = _styleFamilies.IndexOf(_styleFamilies.Find(x => x.items.Contains(value)));

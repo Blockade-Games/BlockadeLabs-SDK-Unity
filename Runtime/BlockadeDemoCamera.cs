@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace BlockadeLabsSDK
 {
@@ -94,7 +95,7 @@ namespace BlockadeLabsSDK
                     break;
             }
 
-            if (Input.mouseScrollDelta.y != 0)
+            if (!EventSystem.current.IsPointerOverGameObject() && Input.mouseScrollDelta.y != 0)
             {
                 _zoom += Input.mouseScrollDelta.y * _zoomSpeed * Time.deltaTime;
                 _zoom = Mathf.Clamp(_zoom, 0, 2);
@@ -122,7 +123,7 @@ namespace BlockadeLabsSDK
 
         private void UpdateWaitingToAutoPan()
         {
-            if (Input.GetMouseButtonDown(0))
+            if (!EventSystem.current.IsPointerOverGameObject() && Input.GetMouseButtonDown(0))
             {
                 _state = State.ManuallyMoving;
                 _mousePosition = Input.mousePosition;
@@ -135,7 +136,7 @@ namespace BlockadeLabsSDK
 
         private void UpdateAutoPanning()
         {
-            if (Input.GetMouseButtonDown(0))
+            if (!EventSystem.current.IsPointerOverGameObject() && Input.GetMouseButtonDown(0))
             {
                 _state = State.ManuallyMoving;
                 _mousePosition = Input.mousePosition;
