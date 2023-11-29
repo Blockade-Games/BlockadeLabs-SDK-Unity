@@ -103,6 +103,19 @@ namespace BlockadeLabsSDK
             }
         }
 
+        [Tooltip("Give your existing world a new style by describing it")]
+        [SerializeField]
+        private bool _remix = false;
+        public bool Remix
+        {
+            get => _remix;
+            set
+            {
+                _remix = value;
+                OnPropertyChanged?.Invoke();
+            }
+        }
+
         public enum State
         {
             NeedApiKey,
