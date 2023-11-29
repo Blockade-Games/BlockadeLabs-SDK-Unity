@@ -29,13 +29,14 @@ namespace BlockadeLabsSDK
     {
         public int id;
         public string name;
+        [JsonProperty("sort_order")]
+        public int sortOrder;
+        public string description;
         [JsonProperty("max-char")]
         public int maxChar;
         [JsonProperty("negative-text-max-char")]
         public int negativeTextMaxChar;
         public string image;
-        [JsonProperty("sort_order")]
-        public int sortOrder;
         public bool premium;
         [JsonProperty("new")]
         public bool isNew;

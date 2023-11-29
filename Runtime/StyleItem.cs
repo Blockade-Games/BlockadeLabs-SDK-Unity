@@ -23,6 +23,10 @@ namespace BlockadeLabsSDK
         public Button Button => _button;
 
         [SerializeField]
+        private Hoverable _hoverable;
+        public Hoverable Hoverable => _hoverable;
+
+        [SerializeField]
         private GameObject _nextChevron;
 
         public void SetStyle(SkyboxStyle style)

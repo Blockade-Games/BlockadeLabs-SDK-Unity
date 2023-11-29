@@ -1,7 +1,9 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Networking;
 using UnityEngine.UI;
 
 namespace BlockadeLabsSDK
@@ -29,6 +31,15 @@ namespace BlockadeLabsSDK
         [SerializeField]
         private Button _dismissButton;
 
+        [SerializeField]
+        private GameObject _previewPanelRoot;
+
+        [SerializeField]
+        private Image _previewImage;
+
+        [SerializeField]
+        private TMP_Text _previewText;
+
         public event Action<SkyboxStyle> OnStyleSelected;
 
         public void SetStyles(IReadOnlyList<SkyboxStyleFamily> styles)
@@ -54,6 +65,7 @@ namespace BlockadeLabsSDK
 
         private void OnDisable()
         {
+            StopAllCoroutines();
             _dismissButton.gameObject.SetActive(false);
         }
 
@@ -85,6 +97,7 @@ namespace BlockadeLabsSDK
                     var styleItem = Instantiate(_styleItemPrefab, _styleContainer);
                     styleItem.SetStyle(style);
                     styleItem.Button.onClick.AddListener(() => SelectStyle(style));
+                    styleItem.Hoverable.OnHover.AddListener(() => ShowPreview(style));
                 }
             }
         }
@@ -93,12 +106,54 @@ namespace BlockadeLabsSDK
         {
             _styleFamilyContainerRoot.gameObject.SetActive(true);
             _styleContainerRoot.gameObject.SetActive(false);
+            _previewPanelRoot.SetActive(false);
         }
 
         private void SelectStyle(SkyboxStyle style)
         {
             OnStyleSelected?.Invoke(style);
             gameObject.SetActive(false);
+        }
+
+        private void ShowPreview(SkyboxStyle style)
+        {
+            StopAllCoroutines();
+
+            // Doesn't currently work because Unity doesn't support webp files.
+            // StartCoroutine(DownloadImage(style.image, sprite =>
+            // {
+            //     _previewPanelRoot.SetActive(true);
+            //     _previewText.text = style.description;
+            //     _previewImage.sprite = sprite;
+            // }));
+
+            _previewPanelRoot.SetActive(true);
+            _previewText.text = style.description;
+        }
+
+        private Dictionary<string, Sprite> _imageCache = new Dictionary<string, Sprite>();
+
+        private IEnumerator DownloadImage(string url, Action<Sprite> callback)
+        {
+            if (_imageCache.TryGetValue(url, out var sprite))
+            {
+                callback(sprite);
+                yield break;
+            }
+
+            var req = UnityWebRequest.Get(url);
+            req.downloadHandler = new DownloadHandlerTexture();
+            yield return req.SendWebRequest();
+            if (req.result != UnityWebRequest.Result.Success)
+            {
+                Debug.Log("Download error: " + req.downloadHandler.error);
+                yield break;
+            }
+
+            var texture = ((DownloadHandlerTexture)req.downloadHandler).texture;
+            sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector2.zero);
+            _imageCache.Add(url, sprite);
+            callback(sprite);
         }
     }
 }

@@ -224,6 +224,7 @@ GameObject:
   - component: {fileID: 1124219785743040253}
   - component: {fileID: 1124219785743040226}
   - component: {fileID: 1124219785743040227}
+  - component: {fileID: 6418006763570324246}
   m_Layer: 5
   m_Name: Style Item
   m_TagString: Untagged
@@ -270,6 +271,7 @@ MonoBehaviour:
   _experimentalSticker: {fileID: 1363233508519662176}
   _nameText: {fileID: 1124219785478731964}
   _button: {fileID: 1124219785743040227}
+  _hoverable: {fileID: 6418006763570324246}
   _nextChevron: {fileID: 1124219785487975226}
 --- !u!222 &1124219785743040253
 CanvasRenderer:
@@ -351,6 +353,27 @@ MonoBehaviour:
   m_Interactable: 1
   m_TargetGraphic: {fileID: 1124219785743040226}
   m_OnClick:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!114 &6418006763570324246
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1124219785743040225}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2c72cb39662ae9e4892627bc1e6ab253, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  OnHoverChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  OnHover:
+    m_PersistentCalls:
+      m_Calls: []
+  OnUnhover:
     m_PersistentCalls:
       m_Calls: []
 --- !u!1 &1363233508519662176
