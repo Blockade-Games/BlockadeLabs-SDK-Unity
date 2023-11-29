@@ -26,18 +26,8 @@ namespace BlockadeLabsSDK
             set => _assignToMaterial = value;
         }
 
-        private string _lastError;
-        public string LastError => _lastError;
-
-        public event Action OnError;
-
-        private List<SkyboxStyleField> _skyboxStyleFields;
-        public List<SkyboxStyleField> SkyboxStyleFields => _skyboxStyleFields;
-
         private List<SkyboxStyleFamily> _styleFamilies;
         public IReadOnlyList<SkyboxStyleFamily> StyleFamilies => _styleFamilies;
-
-        public bool Initialized => _styleFamilies != null && _styleFamilies.Count > 0;
 
         [SerializeField]
         private int _selectedStyleFamilyIndex;
@@ -48,6 +38,7 @@ namespace BlockadeLabsSDK
             {
                 _selectedStyleFamilyIndex = _styleFamilies.IndexOf(value);
                 _selectedStyleIndex = 0;
+                OnPropertyChanged?.Invoke();
             }
         }
 
@@ -60,8 +51,74 @@ namespace BlockadeLabsSDK
             {
                 _selectedStyleFamilyIndex = _styleFamilies.IndexOf(_styleFamilies.Find(x => x.items.Contains(value)));
                 _selectedStyleIndex = _styleFamilies[_selectedStyleFamilyIndex].items.IndexOf(value);
+                OnPropertyChanged?.Invoke();
             }
         }
+
+        [Tooltip("Describe the skybox you want to generate.")]
+        [SerializeField]
+        private string _prompt = "";
+        public string Prompt
+        {
+            get => _prompt;
+            set
+            {
+                _prompt = value;
+                OnPropertyChanged?.Invoke();
+            }
+        }
+
+        [Tooltip("Which phrases to avoid in the generated skybox.")]
+        [SerializeField]
+        private string _negativeText = "";
+        public string NegativeText
+        {
+            get => _negativeText;
+            set => _negativeText = value;
+        }
+
+        [Tooltip("The seed for the random number generator. Use this to generate different skyboxes from the same prompt.")]
+        [SerializeField]
+        private int _seed;
+        public int Seed
+        {
+            get => _seed;
+            set
+            {
+                _seed = value;
+                OnPropertyChanged?.Invoke();
+            }
+        }
+
+        [Tooltip("Use AI to enhance your prompt.")]
+        [SerializeField]
+        private bool _enhancePrompt = false;
+        public bool EnhancePrompt
+        {
+            get => _enhancePrompt;
+            set
+            {
+                _enhancePrompt = value;
+                OnPropertyChanged?.Invoke();
+            }
+        }
+
+        public enum State
+        {
+            NeedApiKey,
+            Ready,
+            Generating
+        }
+
+        private State _state = State.NeedApiKey;
+        public State CurrentState => _state;
+        public event Action OnStateChanged;
+
+        private string _lastError;
+        public string LastError => _lastError;
+        public event Action OnErrorChanged;
+
+        public event Action OnPropertyChanged;
 
         private string _imagineObfuscatedId = "";
         private int _progressId;
@@ -72,44 +129,58 @@ namespace BlockadeLabsSDK
         {
             if (string.IsNullOrWhiteSpace(_apiKey) || _apiKey.Contains("api.blockadelabs.com"))
             {
-                Debug.LogError("You need to provide an API Key in API options. Get one at api.blockadelabs.com");
                 return false;
             }
 
             return true;
         }
 
-        private void NotifyError(string error)
+        private void SetState(State state)
+        {
+            _state = state;
+            OnStateChanged?.Invoke();
+        }
+
+        private void SetError(string error)
         {
             _lastError = error;
             Debug.LogError(error);
-            OnError?.Invoke();
+            OnErrorChanged?.Invoke();
         }
 
-        public async Task LoadOptionsAsync()
+        private void ClearError()
         {
+            _lastError = "";
+            OnErrorChanged?.Invoke();
+        }
+
+        public async Task LoadAsync()
+        {
+            ClearError();
+
             _styleFamilies = await ApiRequests.GetSkyboxStylesMenuAsync(_apiKey);
             if (_styleFamilies == null || _styleFamilies.Count == 0)
             {
-                NotifyError("Something went wrong. Please recheck you API key.");
+                SetError("Something went wrong. Please recheck you API key.");
+                return;
             }
 
-            InitSkyboxStyleFields();
+            SetState(State.Ready);
         }
 
-        private void InitSkyboxStyleFields()
+        private List<SkyboxStyleField> CreateFields()
         {
-            _skyboxStyleFields = new List<SkyboxStyleField>();
+            var fields = new List<SkyboxStyleField>();
 
             // add the default fields
-            _skyboxStyleFields.AddRange(new List<SkyboxStyleField>
+            fields.AddRange(new List<SkyboxStyleField>
             {
                 new SkyboxStyleField(
                     new UserInput(
                         "prompt",
                         1,
                         "Prompt",
-                        "",
+                        _prompt,
                         "textarea"
                     )
                 ),
@@ -118,7 +189,7 @@ namespace BlockadeLabsSDK
                         "negative_text",
                         2,
                         "Negative text",
-                        "",
+                        _negativeText,
                         "text"
                     )
                 ),
@@ -127,7 +198,7 @@ namespace BlockadeLabsSDK
                         "seed",
                         3,
                         "Seed",
-                        "0",
+                        _seed.ToString(),
                         "text"
                     )
                 ),
@@ -136,15 +207,19 @@ namespace BlockadeLabsSDK
                         "enhance_prompt",
                         4,
                         "Enhance prompt",
-                        "false",
+                        _enhancePrompt ? "true" : "false",
                         "boolean"
                     )
                 ),
             });
+
+            return fields;
         }
 
         public async void GenerateSkyboxAsync(bool runtime = false)
         {
+            ClearError();
+            SetState(State.Generating);
             _isCancelled = false;
             percentageCompleted = 1;
 
@@ -152,7 +227,7 @@ namespace BlockadeLabsSDK
             _progressId = Progress.Start("Generating Skybox Assets");
 #endif
 
-            var createSkyboxObfuscatedId = await ApiRequests.GenerateSkyboxAsync(_skyboxStyleFields, SelectedStyle.id, _apiKey);
+            var createSkyboxObfuscatedId = await ApiRequests.GenerateSkyboxAsync(CreateFields(), SelectedStyle.id, _apiKey);
 
             InitializeGetAssets(runtime, createSkyboxObfuscatedId);
         }
@@ -174,7 +249,7 @@ namespace BlockadeLabsSDK
                 if (pusherManager && runtime)
                 {
 #if PUSHER_PRESENT
-                        _ = PusherManager.instance.SubscribeToChannel(imagineObfuscatedId);
+                    _ = PusherManager.instance.SubscribeToChannel(imagineObfuscatedId);
 #endif
                 }
                 else
@@ -271,6 +346,7 @@ namespace BlockadeLabsSDK
 #if UNITY_EDITOR
             Progress.Remove(_progressId);
 #endif
+            SetState(State.Ready);
         }
 
         private void SaveAssets(Texture2D texture, string prompt, bool depthMapEmpty, Texture2D depthMapTexture)
@@ -303,9 +379,7 @@ namespace BlockadeLabsSDK
                 var depthMapTextureName = validatedPrompt + "_depth_map_texture";
                 CreateAsset(depthMapTextureName, depthMapTexture);
             }
-
 #endif
-
             _imagineObfuscatedId = "";
         }
 
@@ -364,6 +438,11 @@ namespace BlockadeLabsSDK
                 break;
             }
 #endif
+        }
+
+        public void EditorPropertyChanged()
+        {
+            OnPropertyChanged?.Invoke();
         }
     }
 }

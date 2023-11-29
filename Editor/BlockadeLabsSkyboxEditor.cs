@@ -12,6 +12,10 @@ namespace BlockadeLabsSDK.Editor
         private SerializedProperty _assignToMaterial;
         private SerializedProperty _selectedStyleFamilyIndex;
         private SerializedProperty _selectedStyleIndex;
+        private SerializedProperty _prompt;
+        private SerializedProperty _negativeText;
+        private SerializedProperty _seed;
+        private SerializedProperty _enhancePrompt;
 
         void OnEnable()
         {
@@ -19,6 +23,10 @@ namespace BlockadeLabsSDK.Editor
             _assignToMaterial = serializedObject.FindProperty("_assignToMaterial");
             _selectedStyleFamilyIndex = serializedObject.FindProperty("_selectedStyleFamilyIndex");
             _selectedStyleIndex = serializedObject.FindProperty("_selectedStyleIndex");
+            _prompt = serializedObject.FindProperty("_prompt");
+            _negativeText = serializedObject.FindProperty("_negativeText");
+            _seed = serializedObject.FindProperty("_seed");
+            _enhancePrompt = serializedObject.FindProperty("_enhancePrompt");
         }
 
         public override void OnInspectorGUI()
@@ -27,24 +35,28 @@ namespace BlockadeLabsSDK.Editor
 
             var blockadeLabsSkybox = (BlockadeLabsSkybox)target;
 
-            DrawApiKey(blockadeLabsSkybox);
-
-            if (blockadeLabsSkybox.Initialized)
+            bool generating = blockadeLabsSkybox.CurrentState == BlockadeLabsSkybox.State.Generating;
+            BlockadeGUI.DisableGroup(generating, () =>
             {
-                var percentageCompleted = blockadeLabsSkybox.PercentageCompleted();
-                bool generating = percentageCompleted >= 0 && percentageCompleted < 100;
+                DrawApiKey(blockadeLabsSkybox);
 
-                BlockadeGUI.DisableGroup(generating, () =>
+                if (!string.IsNullOrWhiteSpace(blockadeLabsSkybox.LastError))
                 {
-                    DrawSkyboxFields(blockadeLabsSkybox);
+                    EditorGUILayout.HelpBox(blockadeLabsSkybox.LastError, MessageType.Error);
+                }
 
-                    EditorGUILayout.PropertyField(_assignToMaterial);
+                if (blockadeLabsSkybox.CurrentState == BlockadeLabsSkybox.State.NeedApiKey)
+                {
+                    return;
+                }
 
-                });
+                DrawSkyboxFields(blockadeLabsSkybox);
+
+                EditorGUILayout.PropertyField(_assignToMaterial);
 
                 if (generating)
                 {
-                    DrawProgress(blockadeLabsSkybox, percentageCompleted);
+                    DrawProgress(blockadeLabsSkybox);
                 }
                 else
                 {
@@ -53,14 +65,17 @@ namespace BlockadeLabsSDK.Editor
                         blockadeLabsSkybox.GenerateSkyboxAsync();
                     }
                 }
+            });
 
-                if (GUILayout.Button("Move Scene Camera to Skybox"))
-                {
-                    SceneView.lastActiveSceneView.AlignViewToObject(blockadeLabsSkybox.transform);
-                }
+            if (GUILayout.Button("Move Scene Camera to Skybox"))
+            {
+                SceneView.lastActiveSceneView.AlignViewToObject(blockadeLabsSkybox.transform);
             }
 
-            serializedObject.ApplyModifiedProperties();
+            if (serializedObject.ApplyModifiedProperties())
+            {
+                blockadeLabsSkybox.EditorPropertyChanged();
+            }
         }
 
         private void DrawApiKey(BlockadeLabsSkybox blockadeLabsSkybox)
@@ -95,37 +110,17 @@ namespace BlockadeLabsSDK.Editor
                 }
             });
 
-            foreach (var field in blockadeLabsSkybox.SkyboxStyleFields)
-            {
-                BlockadeGUI.Horizontal(() =>
-                {
-                    if (field.type == "boolean")
-                    {
-                        var fieldBoolValue = field.value == "true";
-                        var toggleValue = EditorGUILayout.Toggle(field.name, fieldBoolValue, GUILayout.Width(EditorGUIUtility.currentViewWidth));
-                        field.value = toggleValue ? "true" : "false";
-                    }
-                    else
-                    {
-                        EditorGUILayout.LabelField(field.name, GUILayout.Width(EditorGUIUtility.labelWidth));
-                        if (field.type == "textarea")
-                        {
-                            field.value = EditorGUILayout.TextArea(field.value, GUILayout.Height(60));
-                        }
-                        else
-                        {
-                            field.value = EditorGUILayout.TextField(field.value);
-                        }
-                    }
-                });
-            }
+            EditorGUILayout.PropertyField(_prompt, GUILayout.Height(EditorGUIUtility.singleLineHeight * 3));
+            EditorGUILayout.PropertyField(_negativeText);
+            EditorGUILayout.PropertyField(_seed);
+            EditorGUILayout.PropertyField(_enhancePrompt);
         }
 
-        private void DrawProgress(BlockadeLabsSkybox blockadeLabsSkybox, float percentageCompleted)
+        private void DrawProgress(BlockadeLabsSkybox blockadeLabsSkybox)
         {
             BlockadeGUI.Horizontal(() =>
             {
-                EditorGUI.ProgressBar(EditorGUILayout.GetControlRect(), percentageCompleted / 100f, "Generating Skybox");
+                EditorGUI.ProgressBar(EditorGUILayout.GetControlRect(), blockadeLabsSkybox.PercentageCompleted() / 100f, "Generating Skybox");
                 if (GUILayout.Button("Cancel", GUILayout.Width(80)))
                 {
                     blockadeLabsSkybox.Cancel();
@@ -140,11 +135,11 @@ namespace BlockadeLabsSDK.Editor
                 return;
             }
 
-            bool wasInitialzied = blockadeLabsSkybox.Initialized;
+            bool wasInitialzied = blockadeLabsSkybox.CurrentState != BlockadeLabsSkybox.State.NeedApiKey;
 
             try
             {
-                await blockadeLabsSkybox.LoadOptionsAsync();
+                await blockadeLabsSkybox.LoadAsync();
 
                 // send attribution event to verified solution
                 if (!wasInitialzied)

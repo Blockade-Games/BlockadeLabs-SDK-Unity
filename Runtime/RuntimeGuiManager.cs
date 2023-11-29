@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using TMPro;
+﻿using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -8,19 +7,19 @@ namespace BlockadeLabsSDK
     public class RuntimeGuiManager : MonoBehaviour
     {
         [SerializeField]
+        private BlockadeLabsSkybox _blockadeLabsSkybox;
+        public BlockadeLabsSkybox BlockadeLabsSkybox
+        {
+            get { return _blockadeLabsSkybox; }
+            set { _blockadeLabsSkybox = value; }
+        }
+
+        [SerializeField]
         private TMP_InputField _promptInput;
         public TMP_InputField PromptInput
         {
             get { return _promptInput; }
             set { _promptInput = value; }
-        }
-
-        [SerializeField]
-        private TMP_Dropdown _stylesDropdown;
-        public TMP_Dropdown StylesDropdown
-        {
-            get { return _stylesDropdown; }
-            set { _stylesDropdown = value; }
         }
 
         [SerializeField]
@@ -40,114 +39,67 @@ namespace BlockadeLabsSDK
         }
 
         [SerializeField]
-        private GameObject _popupPanel;
-        public GameObject PopupPanel
+        private TMP_InputField _negativeTextInput;
+        public TMP_InputField NegativeTextInput
         {
-            get { return _popupPanel; }
-            set { _popupPanel = value; }
+            get { return _negativeTextInput; }
+            set { _negativeTextInput = value; }
         }
 
         [SerializeField]
-        private BlockadeLabsSkybox _blockadeLabsSkybox;
-        public BlockadeLabsSkybox BlockadeLabsSkybox
+        private Toggle _negativeTextToggle;
+        public Toggle NegativePromptToggle
         {
-            get { return _blockadeLabsSkybox; }
-            set { _blockadeLabsSkybox = value; }
+            get { return _negativeTextToggle; }
+            set { _negativeTextToggle = value; }
         }
 
-        private bool _initialized = false;
-
-        void Awake()
+        [SerializeField]
+        private Button _helpButton;
+        public Button HelpButton
         {
-            if (_blockadeLabsSkybox == null)
-            {
-                Debug.LogError("BlockadeLabsSkybox must be set.");
-                return;
-            }
+            get { return _helpButton; }
+            set { _helpButton = value; }
+        }
 
-            if (_promptInput == null)
-            {
-                Debug.LogError("PromptInput must be set.");
-                return;
-            }
-
-            if (_stylesDropdown == null)
-            {
-                Debug.LogError("StylesDropdown must be set.");
-                return;
-            }
-
-            if (_generateButton == null)
-            {
-                Debug.LogError("GenerateButton must be set.");
-                return;
-            }
-
-            if (_enhancePromptToggle == null)
-            {
-                Debug.LogError("EnhancePromptToggle must be set.");
-                return;
-            }
-
-            if (_popupPanel == null)
-            {
-                Debug.LogError("PopupPanel must be set.");
-                return;
-            }
-
-            if (!_blockadeLabsSkybox.CheckApiKeyValid())
-            {
-                Debug.LogError("API key is not valid.");
-                return;
-            }
-
-            _initialized = true;
+        [SerializeField]
+        private GameObject _helpPopup;
+        public GameObject HelpPopup
+        {
+            get { return _helpPopup; }
+            set { _helpPopup = value; }
         }
 
         async void Start()
         {
-            if (!_initialized)
-            {
-                return;
-            }
+            _blockadeLabsSkybox.OnPropertyChanged += OnPropertyChanged;
+            OnPropertyChanged();
 
-            await _blockadeLabsSkybox.LoadOptionsAsync();
+            _blockadeLabsSkybox.OnStateChanged += OnStateChanged;
+            OnStateChanged();
 
-            // foreach (var skyboxStyle in _blockadeLabsSkybox.SkyboxStyles)
-            // {
-            //     _stylesDropdown.options.Add(new TMP_Dropdown.OptionData() { text = skyboxStyle.name });
-            // }
+            _promptInput.onValueChanged.AddListener(OnPromptInputChanged);
+            _negativeTextToggle.onValueChanged.AddListener(OnNegativeTextToggleChanged);
+            _negativeTextInput.onValueChanged.AddListener(OnNegativeTextInputChanged);
+            _enhancePromptToggle.onValueChanged.AddListener(OnEnhancePromptToggleChanged);
+            _helpButton.onClick.AddListener(ToggleHelpPopup);
 
-            _enhancePromptToggle.onValueChanged.AddListener(OnTargetToggleValueChanged);
+            await _blockadeLabsSkybox.LoadAsync();
         }
 
-        void OnTargetToggleValueChanged(bool newValue) {
-            Image targetImage = _enhancePromptToggle.targetGraphic as Image;
-            Image targetCheckmarkImage = _enhancePromptToggle.graphic as Image;
-
-            if (targetImage != null && targetCheckmarkImage != null)
-            {
-                if (newValue)
-                {
-                    targetImage.enabled = false;
-                    targetCheckmarkImage.enabled = true;
-                }
-                else
-                {
-                    targetImage.enabled = true;
-                    targetCheckmarkImage.enabled = false;
-                }
-            }
-        }
-
-        private void Update()
+        private void OnPropertyChanged()
         {
-            SetGenerateButtonText();
+            _promptInput.text = _blockadeLabsSkybox.Prompt;
+            _enhancePromptToggle.isOn = _blockadeLabsSkybox.EnhancePrompt;
+            _negativeTextInput.text = _blockadeLabsSkybox.NegativeText;
         }
 
-        private void SetGenerateButtonText()
+        private void OnStateChanged()
         {
-            if (_blockadeLabsSkybox.PercentageCompleted() >= 0 && _blockadeLabsSkybox.PercentageCompleted() < 100)
+            // TODO: Let user know if they need to set the API key
+            SetInteractable(_blockadeLabsSkybox.CurrentState == BlockadeLabsSkybox.State.Ready);
+
+            if (_blockadeLabsSkybox.CurrentState == BlockadeLabsSkybox.State.Generating)
             {
                 _generateButton.text = _blockadeLabsSkybox.PercentageCompleted() + "%";
             }
@@ -157,32 +109,43 @@ namespace BlockadeLabsSDK
             }
         }
 
-        public void GenerateSkybox()
+        private void SetInteractable(bool interactable)
         {
-            if (_blockadeLabsSkybox.PercentageCompleted() >= 0 && _blockadeLabsSkybox.PercentageCompleted() < 100) return;
-
-            // set prompt
-            var prompt = _blockadeLabsSkybox.SkyboxStyleFields.First(
-                skyboxStyleField => skyboxStyleField.key == "prompt"
-            );
-
-            // set enhance_prompt
-            var enhancePrompt = _blockadeLabsSkybox.SkyboxStyleFields.First(
-                skyboxStyleField => skyboxStyleField.key == "enhance_prompt"
-            );
-
-            prompt.value = _promptInput.text;
-            enhancePrompt.value = _enhancePromptToggle.isOn ? "true" : "false";
-
-            if (_stylesDropdown.value > 0)
+            var selectables = GetComponentsInChildren<Selectable>();
+            foreach (var selectable in selectables)
             {
-                _blockadeLabsSkybox.GenerateSkyboxAsync(true);
+                selectable.interactable = interactable;
             }
         }
 
-        public void TogglePopup()
+        private void OnPromptInputChanged(string newValue)
         {
-            _popupPanel.SetActive(!_popupPanel.activeInHierarchy);
+            _blockadeLabsSkybox.Prompt = newValue;
+        }
+
+        private void OnNegativeTextToggleChanged(bool newValue)
+        {
+            _blockadeLabsSkybox.NegativeText = newValue ? _negativeTextInput.text : "";
+        }
+
+        private void OnNegativeTextInputChanged(string newValue)
+        {
+            _blockadeLabsSkybox.NegativeText = _negativeTextToggle.isOn ? newValue : "";
+        }
+
+        private void OnEnhancePromptToggleChanged(bool newValue)
+        {
+            _blockadeLabsSkybox.EnhancePrompt = newValue;
+        }
+
+        public void GenerateSkybox()
+        {
+            _blockadeLabsSkybox.GenerateSkyboxAsync(true);
+        }
+
+        public void ToggleHelpPopup()
+        {
+            _helpPopup.SetActive(!_helpPopup.activeSelf);
         }
     }
 }
