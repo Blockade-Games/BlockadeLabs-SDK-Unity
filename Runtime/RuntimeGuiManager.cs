@@ -31,8 +31,8 @@ namespace BlockadeLabsSDK
         }
 
         [SerializeField]
-        private Toggle _enhancePromptToggle;
-        public Toggle EnhancePromptToggle
+        private MultiToggle _enhancePromptToggle;
+        public MultiToggle EnhancePromptToggle
         {
             get { return _enhancePromptToggle; }
             set { _enhancePromptToggle = value; }
@@ -47,27 +47,11 @@ namespace BlockadeLabsSDK
         }
 
         [SerializeField]
-        private Toggle _negativeTextToggle;
-        public Toggle NegativePromptToggle
+        private MultiToggle _negativeTextToggle;
+        public MultiToggle NegativePromptToggle
         {
             get { return _negativeTextToggle; }
             set { _negativeTextToggle = value; }
-        }
-
-        [SerializeField]
-        private Button _helpButton;
-        public Button HelpButton
-        {
-            get { return _helpButton; }
-            set { _helpButton = value; }
-        }
-
-        [SerializeField]
-        private GameObject _helpPopup;
-        public GameObject HelpPopup
-        {
-            get { return _helpPopup; }
-            set { _helpPopup = value; }
         }
 
         async void Start()
@@ -79,10 +63,9 @@ namespace BlockadeLabsSDK
             OnStateChanged();
 
             _promptInput.onValueChanged.AddListener(OnPromptInputChanged);
-            _negativeTextToggle.onValueChanged.AddListener(OnNegativeTextToggleChanged);
+            _negativeTextToggle.OnValueChanged.AddListener(OnNegativeTextToggleChanged);
             _negativeTextInput.onValueChanged.AddListener(OnNegativeTextInputChanged);
-            _enhancePromptToggle.onValueChanged.AddListener(OnEnhancePromptToggleChanged);
-            _helpButton.onClick.AddListener(ToggleHelpPopup);
+            _enhancePromptToggle.OnValueChanged.AddListener(OnEnhancePromptToggleChanged);
 
             await _blockadeLabsSkybox.LoadAsync();
         }
@@ -90,7 +73,7 @@ namespace BlockadeLabsSDK
         private void OnPropertyChanged()
         {
             _promptInput.text = _blockadeLabsSkybox.Prompt;
-            _enhancePromptToggle.isOn = _blockadeLabsSkybox.EnhancePrompt;
+            _enhancePromptToggle.IsOn = _blockadeLabsSkybox.EnhancePrompt;
             _negativeTextInput.text = _blockadeLabsSkybox.NegativeText;
         }
 
@@ -130,7 +113,7 @@ namespace BlockadeLabsSDK
 
         private void OnNegativeTextInputChanged(string newValue)
         {
-            _blockadeLabsSkybox.NegativeText = _negativeTextToggle.isOn ? newValue : "";
+            _blockadeLabsSkybox.NegativeText = _negativeTextToggle.IsOn ? newValue : "";
         }
 
         private void OnEnhancePromptToggleChanged(bool newValue)
@@ -141,11 +124,6 @@ namespace BlockadeLabsSDK
         public void GenerateSkybox()
         {
             _blockadeLabsSkybox.GenerateSkyboxAsync(true);
-        }
-
-        public void ToggleHelpPopup()
-        {
-            _helpPopup.SetActive(!_helpPopup.activeSelf);
         }
     }
 }
