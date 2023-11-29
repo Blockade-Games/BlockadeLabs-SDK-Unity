@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace BlockadeLabsSDK
@@ -38,6 +39,9 @@ namespace BlockadeLabsSDK
         [SerializeField]
         private Sprite _experimentalSprite;
 
+        [SerializeField]
+        private Button _dismissButton;
+
         public event Action<SkyboxStyle> OnStyleSelected;
 
         public void SetStyles(IReadOnlyList<SkyboxStyleFamily> styles)
@@ -58,11 +62,18 @@ namespace BlockadeLabsSDK
         private void OnEnable()
         {
             ShowStyleFamilies();
+            _dismissButton.gameObject.SetActive(true);
+        }
+
+        private void OnDisable()
+        {
+            _dismissButton.gameObject.SetActive(false);
         }
 
         private void Start()
         {
             _backButton.onClick.AddListener(ShowStyleFamilies);
+            _dismissButton.onClick.AddListener(() => gameObject.SetActive(false));
         }
 
         private void SelectStyleFamily(SkyboxStyleFamily styleFamily)
