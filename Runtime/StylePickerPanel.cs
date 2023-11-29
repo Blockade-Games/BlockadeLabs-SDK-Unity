@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace BlockadeLabsSDK
@@ -10,10 +9,7 @@ namespace BlockadeLabsSDK
     public class StylePickerPanel : MonoBehaviour
     {
         [SerializeField]
-        private Button _styleFamilyPrefab;
-
-        [SerializeField]
-        private Button _stylePrefab;
+        private StyleItem _styleItemPrefab;
 
         [SerializeField]
         private GameObject _styleFamilyContainerRoot;
@@ -31,15 +27,6 @@ namespace BlockadeLabsSDK
         private Button _backButton;
 
         [SerializeField]
-        private Sprite _premiumSprite;
-
-        [SerializeField]
-        private Sprite _newSprite;
-
-        [SerializeField]
-        private Sprite _experimentalSprite;
-
-        [SerializeField]
         private Button _dismissButton;
 
         public event Action<SkyboxStyle> OnStyleSelected;
@@ -53,9 +40,9 @@ namespace BlockadeLabsSDK
 
             foreach (var styleFamily in styles)
             {
-                var styleFamilyObject = Instantiate(_styleFamilyPrefab, _styleFamilyContainer);
-                styleFamilyObject.GetComponentInChildren<TMP_Text>().text = styleFamily.name;
-                styleFamilyObject.onClick.AddListener(() => SelectStyleFamily(styleFamily));
+                var styleFamilyItem = Instantiate(_styleItemPrefab, _styleFamilyContainer);
+                styleFamilyItem.SetStyleFamily(styleFamily);
+                styleFamilyItem.Button.onClick.AddListener(() => SelectStyleFamily(styleFamily));
             }
         }
 
@@ -95,9 +82,9 @@ namespace BlockadeLabsSDK
             {
                 foreach (var style in styleFamily.items)
                 {
-                    var styleObject = Instantiate(_stylePrefab, _styleContainer);
-                    styleObject.GetComponentInChildren<TMP_Text>().text = style.name;
-                    styleObject.onClick.AddListener(() => SelectStyle(style));
+                    var styleItem = Instantiate(_styleItemPrefab, _styleContainer);
+                    styleItem.SetStyle(style);
+                    styleItem.Button.onClick.AddListener(() => SelectStyle(style));
                 }
             }
         }
