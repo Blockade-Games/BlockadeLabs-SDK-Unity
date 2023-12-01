@@ -23,7 +23,6 @@ namespace BlockadeLabsSDK
                     return default(T);
                 }
 
-                Debug.Log(request.downloadHandler.text);
                 return JsonConvert.DeserializeObject<T>(request.downloadHandler.text);
             }
         }

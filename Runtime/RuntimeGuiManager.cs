@@ -126,6 +126,22 @@ namespace BlockadeLabsSDK
             set { _selectedStyleText = value; }
         }
 
+        [SerializeField]
+        private TMP_Text _promptCharacterLimit;
+        public TMP_Text PromptCharacterLimit
+        {
+            get { return _promptCharacterLimit; }
+            set { _promptCharacterLimit = value; }
+        }
+
+        [SerializeField]
+        private TMP_Text _negativeTextCharacterLimit;
+        public TMP_Text NegativeTextCharacterLimit
+        {
+            get { return _negativeTextCharacterLimit; }
+            set { _negativeTextCharacterLimit = value; }
+        }
+
         private float _createUnderlineOffset;
 
         async void Start()
@@ -159,6 +175,8 @@ namespace BlockadeLabsSDK
             UpdateHintText();
             UpdateGenerateButtonText();
             _selectedStyleText.text = _blockadeLabsSkybox.SelectedStyle?.name ?? "Select a Style";
+            UpdatePromptCharacterLimit();
+            UpdateNegativeTextCharacterLimit();
         }
 
         private void OnStateChanged()
@@ -187,9 +205,35 @@ namespace BlockadeLabsSDK
             _blockadeLabsSkybox.Prompt = newValue;
         }
 
+        private void UpdatePromptCharacterLimit()
+        {
+            if (_blockadeLabsSkybox.SelectedStyle != null)
+            {
+                _promptCharacterLimit.text = _blockadeLabsSkybox.Prompt.Length + "/" + _blockadeLabsSkybox.SelectedStyle.maxChar;
+                _promptCharacterLimit.color = _blockadeLabsSkybox.Prompt.Length > _blockadeLabsSkybox.SelectedStyle.maxChar ? Color.red : Color.white;
+            }
+            else
+            {
+                _promptCharacterLimit.text = "";
+            }
+        }
+
         private void OnNegativeTextToggleChanged(bool newValue)
         {
             _blockadeLabsSkybox.NegativeText = newValue ? _negativeTextInput.text : "";
+        }
+
+        private void UpdateNegativeTextCharacterLimit()
+        {
+            if (_blockadeLabsSkybox.SelectedStyle != null)
+            {
+                _negativeTextCharacterLimit.text = _blockadeLabsSkybox.NegativeText.Length + "/" + _blockadeLabsSkybox.SelectedStyle.negativeTextMaxChar;
+                _negativeTextCharacterLimit.color = _blockadeLabsSkybox.NegativeText.Length > _blockadeLabsSkybox.SelectedStyle.negativeTextMaxChar ? Color.red : Color.white;
+            }
+            else
+            {
+                _negativeTextCharacterLimit.text = "";
+            }
         }
 
         private void OnNegativeTextInputChanged(string newValue)
