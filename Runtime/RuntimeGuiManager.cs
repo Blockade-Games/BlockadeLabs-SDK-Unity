@@ -159,6 +159,7 @@ namespace BlockadeLabsSDK
         }
 
         private float _createUnderlineOffset;
+        private bool _anyStyleSelected;
 
         async void Start()
         {
@@ -190,11 +191,15 @@ namespace BlockadeLabsSDK
             _negativeTextInput.text = _blockadeLabsSkybox.NegativeText;
             UpdateHintText();
             UpdateGenerateButtonText();
-            _selectedStyleText.text = _blockadeLabsSkybox.SelectedStyle?.name ?? "Select a Style";
             UpdatePromptCharacterLimit();
             UpdateNegativeTextCharacterLimit();
             _promptCharacterWarning.SetActive(false);
             _negativeTextCharacterWarning.SetActive(false);
+
+            if (_anyStyleSelected)
+            {
+                _selectedStyleText.text = _blockadeLabsSkybox.SelectedStyle?.name ?? "Select a Style";
+            }
         }
 
         private void OnStateChanged()
@@ -298,11 +303,18 @@ namespace BlockadeLabsSDK
                 return;
             }
 
-            // _blockadeLabsSkybox.GenerateSkyboxAsync(true);
+            if (!_anyStyleSelected)
+            {
+                _stylePickerPanel.gameObject.SetActive(true);
+                return;
+            }
+
+            _blockadeLabsSkybox.GenerateSkyboxAsync(true);
         }
 
         private void OnStyleSelected(SkyboxStyle style)
         {
+            _anyStyleSelected = true;
             _blockadeLabsSkybox.SelectedStyle = style;
         }
 
