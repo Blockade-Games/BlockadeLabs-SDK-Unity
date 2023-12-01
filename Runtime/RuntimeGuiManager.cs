@@ -142,6 +142,22 @@ namespace BlockadeLabsSDK
             set { _negativeTextCharacterLimit = value; }
         }
 
+        [SerializeField]
+        private GameObject _promptCharacterWarning;
+        public GameObject PromptCharacterWarning
+        {
+            get { return _promptCharacterWarning; }
+            set { _promptCharacterWarning = value; }
+        }
+
+        [SerializeField]
+        private GameObject _negativeTextCharacterWarning;
+        public GameObject NegativeTextCharacterWarning
+        {
+            get { return _negativeTextCharacterWarning; }
+            set { _negativeTextCharacterWarning = value; }
+        }
+
         private float _createUnderlineOffset;
 
         async void Start()
@@ -177,6 +193,8 @@ namespace BlockadeLabsSDK
             _selectedStyleText.text = _blockadeLabsSkybox.SelectedStyle?.name ?? "Select a Style";
             UpdatePromptCharacterLimit();
             UpdateNegativeTextCharacterLimit();
+            _promptCharacterWarning.SetActive(false);
+            _negativeTextCharacterWarning.SetActive(false);
         }
 
         private void OnStateChanged()
@@ -258,7 +276,29 @@ namespace BlockadeLabsSDK
 
         private void OnGenerateButtonClicked()
         {
-            _blockadeLabsSkybox.GenerateSkyboxAsync(true);
+
+            if (_blockadeLabsSkybox.Prompt.Length == 0)
+            {
+                _promptCharacterWarning.SetActive(true);
+                _promptCharacterWarning.GetComponentInChildren<TMP_Text>().text = "Prompt cannot be empty";
+                return;
+            }
+
+            if (_blockadeLabsSkybox.Prompt.Length > _blockadeLabsSkybox.SelectedStyle.maxChar)
+            {
+                _promptCharacterWarning.SetActive(true);
+                _promptCharacterWarning.GetComponentInChildren<TMP_Text>().text = $"Prompt should be {_blockadeLabsSkybox.SelectedStyle.maxChar} characters or less";
+                return;
+            }
+
+            if (_blockadeLabsSkybox.NegativeText.Length > _blockadeLabsSkybox.SelectedStyle.negativeTextMaxChar)
+            {
+                _negativeTextCharacterWarning.SetActive(true);
+                _negativeTextCharacterWarning.GetComponentInChildren<TMP_Text>().text = $"Negative text should be {_blockadeLabsSkybox.SelectedStyle.negativeTextMaxChar} characters or less";
+                return;
+            }
+
+            // _blockadeLabsSkybox.GenerateSkyboxAsync(true);
         }
 
         private void OnStyleSelected(SkyboxStyle style)

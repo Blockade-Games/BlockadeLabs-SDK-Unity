@@ -74,7 +74,11 @@ namespace BlockadeLabsSDK
         public string NegativeText
         {
             get => _negativeText;
-            set => _negativeText = value;
+            set
+            {
+                _negativeText = value;
+                OnPropertyChanged?.Invoke();
+            }
         }
 
         [Tooltip("The seed for the random number generator. Use this to generate different skyboxes from the same prompt.")]
