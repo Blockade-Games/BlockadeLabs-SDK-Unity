@@ -29,6 +29,9 @@ namespace BlockadeLabsSDK
         [SerializeField]
         private GameObject _nextChevron;
 
+        [SerializeField]
+        private GameObject _selectedIndicator;
+
         public void SetStyle(SkyboxStyle style)
         {
             _nameText.text = style.name;
@@ -44,7 +47,12 @@ namespace BlockadeLabsSDK
             _newSticker.SetActive(styleFamily.isNew);
             _premiumSticker.SetActive(styleFamily.premium);
             _experimentalSticker.SetActive(styleFamily.experimental);
-            _nextChevron.SetActive(true);
+            _nextChevron.SetActive(styleFamily.items.Count > 1);
+        }
+
+        public void SetSelected(bool selected)
+        {
+            _selectedIndicator.SetActive(selected);
         }
     }
 }

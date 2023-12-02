@@ -46,7 +46,7 @@ namespace BlockadeLabsSDK
         private int _selectedStyleIndex;
         public SkyboxStyle SelectedStyle
         {
-            get => SelectedStyleFamily?.items[_selectedStyleIndex];
+            get => SelectedStyleFamily?.items?[_selectedStyleIndex];
             set
             {
                 _selectedStyleFamilyIndex = _styleFamilies.IndexOf(_styleFamilies.Find(x => x.items.Contains(value)));
@@ -180,6 +180,34 @@ namespace BlockadeLabsSDK
             {
                 SetError("Something went wrong. Please recheck you API key.");
                 return;
+            }
+
+            // Ensure each style has a family to simplify logic everywhere.
+            for (int i = 0; i < _styleFamilies.Count; i++)
+            {
+                if (_styleFamilies[i].type == "style")
+                {
+                    var style = _styleFamilies[i];
+                    _styleFamilies[i] = new SkyboxStyleFamily
+                    {
+                        type = "family",
+                        id = style.id,
+                        name = style.name,
+                        sortOrder = style.sortOrder,
+                        description = style.description,
+                        maxChar = style.maxChar,
+                        negativeTextMaxChar = style.negativeTextMaxChar,
+                        image = style.image,
+                        premium = style.premium,
+                        isNew = style.isNew,
+                        experimental = style.experimental,
+                        status = style.status,
+                        items = new List<SkyboxStyle> { style }
+                    };
+                }
+
+                _selectedStyleFamilyIndex = Math.Min(_selectedStyleFamilyIndex, _styleFamilies.Count - 1);
+                _selectedStyleIndex = Math.Min(_selectedStyleIndex, _styleFamilies[_selectedStyleFamilyIndex].items.Count - 1);
             }
 
             SetState(State.Ready);

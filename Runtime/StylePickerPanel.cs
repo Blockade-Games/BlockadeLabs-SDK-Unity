@@ -42,18 +42,32 @@ namespace BlockadeLabsSDK
 
         public event Action<SkyboxStyle> OnStyleSelected;
 
-        public void SetStyles(IReadOnlyList<SkyboxStyleFamily> styles)
+        public void SetStyles(IReadOnlyList<SkyboxStyleFamily> styleFamilies, SkyboxStyle selectedStyle)
         {
             foreach (Transform child in _styleFamilyContainer)
             {
                 Destroy(child.gameObject);
             }
 
-            foreach (var styleFamily in styles)
+            foreach (var styleFamily in styleFamilies)
             {
                 var styleFamilyItem = Instantiate(_styleItemPrefab, _styleFamilyContainer);
                 styleFamilyItem.SetStyleFamily(styleFamily);
-                styleFamilyItem.Button.onClick.AddListener(() => SelectStyleFamily(styleFamily));
+
+                if (styleFamily.items.Count == 1)
+                {
+                    styleFamilyItem.SetStyle(styleFamily.items[0]);
+                    styleFamilyItem.Button.onClick.AddListener(() => SelectStyle(styleFamily.items[0]));
+                }
+                else
+                {
+                    styleFamilyItem.Button.onClick.AddListener(() => SelectStyleFamily(styleFamily));
+                }
+            }
+
+            if (selectedStyle != null)
+            {
+                SelectStyle(selectedStyle);
             }
         }
 
@@ -90,15 +104,12 @@ namespace BlockadeLabsSDK
 
             _backButton.GetComponentInChildren<TMP_Text>().text = styleFamily.name;
 
-            if (styleFamily.items.Count > 0) // TODO: How to do Advanced?
+            foreach (var style in styleFamily.items)
             {
-                foreach (var style in styleFamily.items)
-                {
-                    var styleItem = Instantiate(_styleItemPrefab, _styleContainer);
-                    styleItem.SetStyle(style);
-                    styleItem.Button.onClick.AddListener(() => SelectStyle(style));
-                    styleItem.Hoverable.OnHover.AddListener(() => ShowPreview(style));
-                }
+                var styleItem = Instantiate(_styleItemPrefab, _styleContainer);
+                styleItem.SetStyle(style);
+                styleItem.Button.onClick.AddListener(() => SelectStyle(style));
+                styleItem.Hoverable.OnHover.AddListener(() => ShowPreview(style));
             }
         }
 

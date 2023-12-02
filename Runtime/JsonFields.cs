@@ -27,6 +27,7 @@ namespace BlockadeLabsSDK
     [System.Serializable]
     public class SkyboxStyle
     {
+        public string type;
         public int id;
         public string name;
         [JsonProperty("sort_order")]
@@ -45,16 +46,8 @@ namespace BlockadeLabsSDK
     }
 
     [System.Serializable]
-    public class SkyboxStyleFamily
+    public class SkyboxStyleFamily : SkyboxStyle
     {
-        public int id;
-        public string name;
-        [JsonProperty("sort_order")]
-        public int sortOrder;
-        public bool premium;
-        [JsonProperty("new")]
-        public bool isNew;
-        public bool experimental;
         public List<SkyboxStyle> items;
     }
 

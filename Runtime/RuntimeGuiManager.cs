@@ -210,7 +210,7 @@ namespace BlockadeLabsSDK
 
             if (_blockadeLabsSkybox.CurrentState == BlockadeLabsSkybox.State.Ready)
             {
-                _stylePickerPanel.SetStyles(_blockadeLabsSkybox.StyleFamilies);
+                _stylePickerPanel.SetStyles(_blockadeLabsSkybox.StyleFamilies, _blockadeLabsSkybox.SelectedStyle);
             }
         }
 

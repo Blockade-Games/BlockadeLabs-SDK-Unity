@@ -35,6 +35,7 @@ namespace BlockadeLabsSDK.Editor
 
             var blockadeLabsSkybox = (BlockadeLabsSkybox)target;
 
+
             bool generating = blockadeLabsSkybox.CurrentState == BlockadeLabsSkybox.State.Generating;
             BlockadeGUI.DisableGroup(generating, () =>
             {
