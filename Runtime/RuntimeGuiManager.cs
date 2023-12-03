@@ -158,6 +158,22 @@ namespace BlockadeLabsSDK
             set { _negativeTextCharacterWarning = value; }
         }
 
+        [SerializeField]
+        private GameObject _remixPopup;
+        public GameObject RemixPopup
+        {
+            get { return _remixPopup; }
+            set { _remixPopup = value; }
+        }
+
+        [SerializeField]
+        private Toggle _remixPopupToggle;
+        public Toggle RemixPopupToggle
+        {
+            get { return _remixPopupToggle; }
+            set { _remixPopupToggle = value; }
+        }
+
         private float _createUnderlineOffset;
         private bool _anyStylePicked;
 
@@ -273,11 +289,16 @@ namespace BlockadeLabsSDK
         private void OnCreateButtonClicked()
         {
             _blockadeLabsSkybox.Remix = false;
+            _remixPopup.SetActive(false);
         }
 
         private void OnRemixButtonClicked()
         {
             _blockadeLabsSkybox.Remix = true;
+            if (!_remixPopupToggle.isOn)
+            {
+                _remixPopup.SetActive(true);
+            }
         }
 
         private void OnGenerateButtonClicked()
