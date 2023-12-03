@@ -32,6 +32,9 @@ namespace BlockadeLabsSDK
         [SerializeField]
         private GameObject _selectedIndicator;
 
+        private SkyboxStyle _style;
+        public SkyboxStyle Style => _style;
+
         public void SetStyle(SkyboxStyle style)
         {
             _nameText.text = style.name;
@@ -39,6 +42,8 @@ namespace BlockadeLabsSDK
             _premiumSticker.SetActive(style.premium);
             _experimentalSticker.SetActive(style.experimental);
             _nextChevron.SetActive(false);
+            _selectedIndicator.SetActive(false);
+            _style = style;
         }
 
         public void SetStyleFamily(SkyboxStyleFamily styleFamily)
@@ -48,6 +53,8 @@ namespace BlockadeLabsSDK
             _premiumSticker.SetActive(styleFamily.premium);
             _experimentalSticker.SetActive(styleFamily.experimental);
             _nextChevron.SetActive(styleFamily.items.Count > 1);
+            _selectedIndicator.SetActive(false);
+            _style = styleFamily;
         }
 
         public void SetSelected(bool selected)

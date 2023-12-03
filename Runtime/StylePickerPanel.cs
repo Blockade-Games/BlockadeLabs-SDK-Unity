@@ -40,36 +40,9 @@ namespace BlockadeLabsSDK
         [SerializeField]
         private TMP_Text _previewText;
 
-        public event Action<SkyboxStyle> OnStyleSelected;
+        public event Action<SkyboxStyle> OnStylePicked;
 
-        public void SetStyles(IReadOnlyList<SkyboxStyleFamily> styleFamilies, SkyboxStyle selectedStyle)
-        {
-            foreach (Transform child in _styleFamilyContainer)
-            {
-                Destroy(child.gameObject);
-            }
-
-            foreach (var styleFamily in styleFamilies)
-            {
-                var styleFamilyItem = Instantiate(_styleItemPrefab, _styleFamilyContainer);
-                styleFamilyItem.SetStyleFamily(styleFamily);
-
-                if (styleFamily.items.Count == 1)
-                {
-                    styleFamilyItem.SetStyle(styleFamily.items[0]);
-                    styleFamilyItem.Button.onClick.AddListener(() => SelectStyle(styleFamily.items[0]));
-                }
-                else
-                {
-                    styleFamilyItem.Button.onClick.AddListener(() => SelectStyleFamily(styleFamily));
-                }
-            }
-
-            if (selectedStyle != null)
-            {
-                SelectStyle(selectedStyle);
-            }
-        }
+        private SkyboxStyle _selectedStyle;
 
         private void OnEnable()
         {
@@ -89,7 +62,30 @@ namespace BlockadeLabsSDK
             _dismissButton.onClick.AddListener(() => gameObject.SetActive(false));
         }
 
-        private void SelectStyleFamily(SkyboxStyleFamily styleFamily)
+        public void SetStyles(IReadOnlyList<SkyboxStyleFamily> styleFamilies)
+        {
+            foreach (Transform child in _styleFamilyContainer)
+            {
+                Destroy(child.gameObject);
+            }
+
+            foreach (var styleFamily in styleFamilies)
+            {
+                var styleFamilyItem = Instantiate(_styleItemPrefab, _styleFamilyContainer);
+                styleFamilyItem.SetStyleFamily(styleFamily);
+
+                if (styleFamily.items.Count == 1)
+                {
+                    styleFamilyItem.Button.onClick.AddListener(() => SelectStyle(styleFamily.items[0]));
+                }
+                else
+                {
+                    styleFamilyItem.Button.onClick.AddListener(() => PickStyleFamily(styleFamily));
+                }
+            }
+        }
+
+        private void PickStyleFamily(SkyboxStyleFamily styleFamily)
         {
             _styleFamilyContainerRoot.gameObject.SetActive(false);
             _styleContainerRoot.gameObject.SetActive(true);
@@ -108,9 +104,21 @@ namespace BlockadeLabsSDK
             {
                 var styleItem = Instantiate(_styleItemPrefab, _styleContainer);
                 styleItem.SetStyle(style);
+                styleItem.SetSelected(style == _selectedStyle);
                 styleItem.Button.onClick.AddListener(() => SelectStyle(style));
                 styleItem.Hoverable.OnHover.AddListener(() => ShowPreview(style));
             }
+        }
+
+        public void SetSelectedStyle(SkyboxStyleFamily styleFamily, SkyboxStyle style)
+        {
+            foreach (Transform child in _styleFamilyContainer)
+            {
+                var styleFamilyItem = child.GetComponent<StyleItem>();
+                styleFamilyItem.SetSelected(styleFamilyItem.Style == styleFamily);
+            }
+
+            _selectedStyle = style;
         }
 
         private void ShowStyleFamilies()
@@ -122,7 +130,7 @@ namespace BlockadeLabsSDK
 
         private void SelectStyle(SkyboxStyle style)
         {
-            OnStyleSelected?.Invoke(style);
+            OnStylePicked?.Invoke(style);
             gameObject.SetActive(false);
         }
 

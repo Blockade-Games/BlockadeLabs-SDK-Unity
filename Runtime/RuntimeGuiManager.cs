@@ -178,7 +178,7 @@ namespace BlockadeLabsSDK
             _createUnderlineOffset = _createRemixUnderline.localPosition.x;
             _createButton.GetComponent<Hoverable>().OnHoverChanged.AddListener((_) => UpdateHintText());
             _remixButton.GetComponent<Hoverable>().OnHoverChanged.AddListener((_) => UpdateHintText());
-            _stylePickerPanel.OnStyleSelected += OnStyleSelected;
+            _stylePickerPanel.OnStylePicked += OnStyleSelected;
             _generateButton.onClick.AddListener(OnGenerateButtonClicked);
 
             await _blockadeLabsSkybox.LoadAsync();
@@ -199,6 +199,7 @@ namespace BlockadeLabsSDK
             if (_anyStyleSelected)
             {
                 _selectedStyleText.text = _blockadeLabsSkybox.SelectedStyle?.name ?? "Select a Style";
+                _stylePickerPanel.SetSelectedStyle(_blockadeLabsSkybox.SelectedStyleFamily, _blockadeLabsSkybox.SelectedStyle);
             }
         }
 
@@ -210,7 +211,7 @@ namespace BlockadeLabsSDK
 
             if (_blockadeLabsSkybox.CurrentState == BlockadeLabsSkybox.State.Ready)
             {
-                _stylePickerPanel.SetStyles(_blockadeLabsSkybox.StyleFamilies, _blockadeLabsSkybox.SelectedStyle);
+                _stylePickerPanel.SetStyles(_blockadeLabsSkybox.StyleFamilies);
             }
         }
 

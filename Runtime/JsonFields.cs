@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace BlockadeLabsSDK
@@ -43,6 +44,23 @@ namespace BlockadeLabsSDK
         public bool isNew;
         public bool experimental;
         public string status;
+
+        // Used for GUI
+        private bool _selected;
+        public bool selected
+        {
+            get => _selected;
+            set
+            {
+                if (_selected != value)
+                {
+                    _selected = value;
+                    OnSelectedChanged?.Invoke();
+                }
+            }
+        }
+
+        public event Action OnSelectedChanged;
     }
 
     [System.Serializable]
