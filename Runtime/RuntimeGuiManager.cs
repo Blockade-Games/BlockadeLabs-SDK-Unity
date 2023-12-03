@@ -159,7 +159,7 @@ namespace BlockadeLabsSDK
         }
 
         private float _createUnderlineOffset;
-        private bool _anyStyleSelected;
+        private bool _anyStylePicked;
 
         async void Start()
         {
@@ -178,7 +178,7 @@ namespace BlockadeLabsSDK
             _createUnderlineOffset = _createRemixUnderline.localPosition.x;
             _createButton.GetComponent<Hoverable>().OnHoverChanged.AddListener((_) => UpdateHintText());
             _remixButton.GetComponent<Hoverable>().OnHoverChanged.AddListener((_) => UpdateHintText());
-            _stylePickerPanel.OnStylePicked += OnStyleSelected;
+            _stylePickerPanel.OnStylePicked += OnStylePicked;
             _generateButton.onClick.AddListener(OnGenerateButtonClicked);
 
             await _blockadeLabsSkybox.LoadAsync();
@@ -196,7 +196,7 @@ namespace BlockadeLabsSDK
             _promptCharacterWarning.SetActive(false);
             _negativeTextCharacterWarning.SetActive(false);
 
-            if (_anyStyleSelected)
+            if (_anyStylePicked)
             {
                 _selectedStyleText.text = _blockadeLabsSkybox.SelectedStyle?.name ?? "Select a Style";
                 _stylePickerPanel.SetSelectedStyle(_blockadeLabsSkybox.SelectedStyleFamily, _blockadeLabsSkybox.SelectedStyle);
@@ -304,7 +304,7 @@ namespace BlockadeLabsSDK
                 return;
             }
 
-            if (!_anyStyleSelected)
+            if (!_anyStylePicked)
             {
                 _stylePickerPanel.gameObject.SetActive(true);
                 return;
@@ -313,9 +313,9 @@ namespace BlockadeLabsSDK
             _blockadeLabsSkybox.GenerateSkyboxAsync(true);
         }
 
-        private void OnStyleSelected(SkyboxStyle style)
+        private void OnStylePicked(SkyboxStyle style)
         {
-            _anyStyleSelected = true;
+            _anyStylePicked = true;
             _blockadeLabsSkybox.SelectedStyle = style;
         }
 

@@ -35,6 +35,14 @@ namespace BlockadeLabsSDK
         private SkyboxStyle _style;
         public SkyboxStyle Style => _style;
 
+        private void Awake()
+        {
+            var fontColor = _nameText.color;
+            var hoverable = GetComponent<Hoverable>();
+            hoverable.OnHover.AddListener(() => _nameText.color = Color.white);
+            hoverable.OnUnhover.AddListener(() => _nameText.color = fontColor);
+        }
+
         public void SetStyle(SkyboxStyle style)
         {
             _nameText.text = style.name;

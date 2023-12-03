@@ -44,6 +44,15 @@ namespace BlockadeLabsSDK
 
         private SkyboxStyle _selectedStyle;
 
+        private void Awake()
+        {
+            var backHoverable = _backButton.GetComponent<Hoverable>();
+            var backText = backHoverable.GetComponentInChildren<TMP_Text>();
+            var backTextColor = backText.color;
+            backHoverable.OnHover.AddListener(() => backText.color = Color.white);
+            backHoverable.OnUnhover.AddListener(() => backText.color = backTextColor);
+        }
+
         private void OnEnable()
         {
             ShowStyleFamilies();
@@ -92,7 +101,7 @@ namespace BlockadeLabsSDK
 
             foreach (Transform child in _styleContainer)
             {
-                if (child != _backButton.transform)
+                if (child.GetComponent<StyleItem>() != null)
                 {
                     Destroy(child.gameObject);
                 }
