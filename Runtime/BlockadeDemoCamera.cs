@@ -63,7 +63,6 @@ namespace BlockadeLabsSDK
 
         private enum State
         {
-            StayingStill,
             WaitingToAutoPan,
             AutoPanning,
             ManuallyMoving
@@ -74,16 +73,13 @@ namespace BlockadeLabsSDK
         private float _yaw;
         private float _pitch;
         private float _zoom;
-        private State _state = State.StayingStill;
+        private State _state = State.WaitingToAutoPan;
         private float _autoPanTimeStart;
 
         void Update()
         {
             switch (_state)
             {
-                case State.StayingStill:
-                    UpdateStayingStill();
-                    break;
                 case State.WaitingToAutoPan:
                     UpdateWaitingToAutoPan();
                     break;
@@ -107,26 +103,17 @@ namespace BlockadeLabsSDK
             transform.position = Vector3.Lerp(currentPos, _skyboxSphere.position + transform.rotation * Vector3.forward * _zoom, Time.deltaTime * _smooth);
         }
 
-        private void UpdateStayingStill()
-        {
-            if (Input.GetMouseButtonDown(0))
-            {
-                _state = State.ManuallyMoving;
-                _mousePosition = Input.mousePosition;
-            }
-            else if (_autoPan)
-            {
-                _state = State.WaitingToAutoPan;
-                _autoPanTimeStart = Time.time;
-            }
-        }
-
         private void UpdateWaitingToAutoPan()
         {
             if (!EventSystem.current.IsPointerOverGameObject() && Input.GetMouseButtonDown(0))
             {
                 _state = State.ManuallyMoving;
                 _mousePosition = Input.mousePosition;
+            }
+            else if (!_autoPan)
+            {
+                // Ensure auto-pan starts right away if it's enabled.
+                _autoPanTimeStart = 0;
             }
             else if (Time.time - _autoPanTimeStart > _autoPanDelay)
             {
@@ -136,7 +123,7 @@ namespace BlockadeLabsSDK
 
         private void UpdateAutoPanning()
         {
-            if (!EventSystem.current.IsPointerOverGameObject() && Input.GetMouseButtonDown(0))
+            if (!_autoPan || (!EventSystem.current.IsPointerOverGameObject() && Input.GetMouseButtonDown(0)))
             {
                 _state = State.ManuallyMoving;
                 _mousePosition = Input.mousePosition;
@@ -159,7 +146,8 @@ namespace BlockadeLabsSDK
             }
             else
             {
-                _state = State.StayingStill;
+                _state = State.WaitingToAutoPan;
+                _autoPanTimeStart = Time.time;
             }
         }
     }
