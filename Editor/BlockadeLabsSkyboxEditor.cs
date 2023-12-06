@@ -14,6 +14,7 @@ namespace BlockadeLabsSDK.Editor
         private SerializedProperty _selectedStyleIndex;
         private SerializedProperty _prompt;
         private SerializedProperty _negativeText;
+        private SerializedProperty _remix;
         private SerializedProperty _seed;
         private SerializedProperty _enhancePrompt;
 
@@ -25,6 +26,7 @@ namespace BlockadeLabsSDK.Editor
             _selectedStyleIndex = serializedObject.FindProperty("_selectedStyleIndex");
             _prompt = serializedObject.FindProperty("_prompt");
             _negativeText = serializedObject.FindProperty("_negativeText");
+            _remix = serializedObject.FindProperty("_remix");
             _seed = serializedObject.FindProperty("_seed");
             _enhancePrompt = serializedObject.FindProperty("_enhancePrompt");
         }
@@ -113,6 +115,7 @@ namespace BlockadeLabsSDK.Editor
 
             EditorGUILayout.PropertyField(_prompt, GUILayout.Height(EditorGUIUtility.singleLineHeight * 3));
             EditorGUILayout.PropertyField(_negativeText);
+            EditorGUILayout.PropertyField(_remix);
             EditorGUILayout.PropertyField(_seed);
             EditorGUILayout.PropertyField(_enhancePrompt);
         }
@@ -121,7 +124,7 @@ namespace BlockadeLabsSDK.Editor
         {
             BlockadeGUI.Horizontal(() =>
             {
-                EditorGUI.ProgressBar(EditorGUILayout.GetControlRect(), blockadeLabsSkybox.PercentageCompleted() / 100f, "Generating Skybox");
+                EditorGUI.ProgressBar(EditorGUILayout.GetControlRect(), blockadeLabsSkybox.PercentageCompleted / 100f, "Generating Skybox");
                 if (GUILayout.Button("Cancel", GUILayout.Width(80)))
                 {
                     blockadeLabsSkybox.Cancel();

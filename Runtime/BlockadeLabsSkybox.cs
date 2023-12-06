@@ -1,8 +1,10 @@
 using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEditor;
+using Newtonsoft.Json;
 
 namespace BlockadeLabsSDK
 {
@@ -137,9 +139,10 @@ namespace BlockadeLabsSDK
 
         public event Action OnPropertyChanged;
 
-        private string _imagineObfuscatedId = "";
-        private int _progressId;
-        private float percentageCompleted = -1;
+        private float _percentageCompleted = -1;
+        public float PercentageCompleted => _percentageCompleted;
+
+        private int _progressId = 0;
         private bool _isCancelled;
 
         public bool CheckApiKeyValid()
@@ -213,219 +216,255 @@ namespace BlockadeLabsSDK
             SetState(State.Ready);
         }
 
-        private List<SkyboxStyleField> CreateFields()
-        {
-            var fields = new List<SkyboxStyleField>();
-
-            // add the default fields
-            fields.AddRange(new List<SkyboxStyleField>
-            {
-                new SkyboxStyleField(
-                    new UserInput(
-                        "prompt",
-                        1,
-                        "Prompt",
-                        _prompt,
-                        "textarea"
-                    )
-                ),
-                new SkyboxStyleField(
-                    new UserInput(
-                        "negative_text",
-                        2,
-                        "Negative text",
-                        _negativeText,
-                        "text"
-                    )
-                ),
-                new SkyboxStyleField(
-                    new UserInput(
-                        "seed",
-                        3,
-                        "Seed",
-                        _seed.ToString(),
-                        "text"
-                    )
-                ),
-                new SkyboxStyleField(
-                    new UserInput(
-                        "enhance_prompt",
-                        4,
-                        "Enhance prompt",
-                        _enhancePrompt ? "true" : "false",
-                        "boolean"
-                    )
-                ),
-            });
-
-            return fields;
-        }
-
         public async void GenerateSkyboxAsync(bool runtime = false)
         {
+            if (string.IsNullOrWhiteSpace(_prompt))
+            {
+                SetError("Prompt is empty.");
+                return;
+            }
+
+            if (SelectedStyle == null)
+            {
+                SetError("No style selected.");
+                return;
+            }
+
+            var request = new CreateSkyboxRequest
+            {
+                prompt = _prompt,
+                negative_text = _negativeText,
+                seed = _seed,
+                enhance_prompt = _enhancePrompt,
+                skybox_style_id = SelectedStyle.id,
+            };
+
+            if (_remix && !TrySetRemixId(request))
+            {
+                return;
+            }
+
             ClearError();
             SetState(State.Generating);
             _isCancelled = false;
-            percentageCompleted = 1;
+            UpdateProgress(5);
 
-#if UNITY_EDITOR
-            _progressId = Progress.Start("Generating Skybox Assets");
-#endif
-
-            var createSkyboxObfuscatedId = await ApiRequests.GenerateSkyboxAsync(CreateFields(), SelectedStyle.id, _apiKey);
-
-            InitializeGetAssets(runtime, createSkyboxObfuscatedId);
-        }
-
-        private void InitializeGetAssets(bool runtime, string createImagineObfuscatedId)
-        {
-            if (createImagineObfuscatedId != "")
+            try
             {
-                _imagineObfuscatedId = createImagineObfuscatedId;
-                percentageCompleted = 33;
-                CalculateProgress();
+                var response = await ApiRequests.GenerateSkyboxAsync(request, _apiKey);
+                if (_isCancelled)
+                {
+                    return;
+                }
+
+                if (response == null)
+                {
+                    throw new Exception("Error generating skybox.");
+                }
+
+                if (response.status == "error")
+                {
+                    throw new Exception(response.error_message);
+                }
+
+                UpdateProgress(33);
 
                 var pusherManager = false;
 
-#if PUSHER_PRESENT
+    #if PUSHER_PRESENT
                 pusherManager = FindObjectOfType<PusherManager>();
-#endif
+    #endif
 
                 if (pusherManager && runtime)
                 {
-#if PUSHER_PRESENT
+    #if PUSHER_PRESENT
                     _ = PusherManager.instance.SubscribeToChannel(imagineObfuscatedId);
-#endif
+    #endif
                 }
                 else
                 {
-                    _ = GetAssetsAsync();
+                    await PollGenerateStatusAsync(response.obfuscated_id);
                 }
+            }
+            catch (Exception e)
+            {
+                SetGenerateFailed("Error generating skybox: " + e.Message);
             }
         }
 
-        public async Task GetAssetsAsync()
+        private void SetGenerateFailed(string message)
         {
-            var textureUrl = "";
-            var depthMapUrl = "";
-            var prompt = "";
-            var count = 0;
+            SetError(message);
+            UpdateProgress(-1);
+            SetState(State.Ready);
+        }
 
+        public bool TrySetRemixId(CreateSkyboxRequest request)
+        {
+            if (!TryGetComponent<Renderer>(out var renderer) || renderer.sharedMaterial == null || renderer.sharedMaterial.mainTexture == null)
+            {
+                SetError("Remix skybox requires a skybox texture to remix.");
+                return false;
+            }
+
+            var texturePath = AssetDatabase.GetAssetPath(renderer.sharedMaterial.mainTexture);
+            var resultPath = texturePath.Substring(0, texturePath.LastIndexOf('_')) + "_data.txt";
+            if (!File.Exists(resultPath))
+            {
+                SetError("Could not find skybox data file to remix: " + resultPath);
+                return false;
+            }
+
+            var result = JsonConvert.DeserializeObject<GetImagineResult>(File.ReadAllText(resultPath));
+            request.remix_imagine_id = result.request.id;
+            return true;
+        }
+
+        public async Task PollGenerateStatusAsync(string imagineObfuscatedId)
+        {
             while (!_isCancelled)
             {
-#if UNITY_EDITOR
-                EditorUtility.SetDirty(this);
-#endif
-
                 await Task.Delay(1000);
-
                 if (_isCancelled)
                 {
                     break;
                 }
 
-                count++;
-
-                var getImagineResult = await ApiRequests.GetImagineAsync(_imagineObfuscatedId, _apiKey);
-
-                if (getImagineResult.Count > 0)
+                var response = await ApiRequests.GetRequestStatusAsync(imagineObfuscatedId, _apiKey);
+                if (_isCancelled)
                 {
-                    percentageCompleted = 66;
-                    CalculateProgress();
-                    textureUrl = getImagineResult["textureUrl"];
-                    depthMapUrl = getImagineResult["depthMapUrl"];
-                    prompt = getImagineResult["prompt"];
+                    break;
+                }
+
+                if (response == null)
+                {
+                    SetGenerateFailed("Error generating skybox.");
+                    break;
+                }
+
+                var result = JsonConvert.DeserializeObject<GetImagineResult>(response);
+                if (result.request.status == "error")
+                {
+                    SetGenerateFailed(result.request.error_message);
+                    break;
+                }
+
+                if (result.request.status == "complete")
+                {
+                    UpdateProgress(66);
+                    await OnGenerateComplete(result, response);
                     break;
                 }
             }
+        }
 
-            if (_isCancelled)
+        private void DestroyTextures(Texture2D[] textures)
+        {
+            foreach (var texture in textures)
             {
-                percentageCompleted = -1;
-                _imagineObfuscatedId = "";
+                if (texture)
+                {
+                    if (Application.isPlaying)
+                    {
+                        Destroy(texture);
+                    }
+                    else
+                    {
+                        DestroyImmediate(texture);
+                    }
+                }
+            }
+        }
+
+        private async Task OnGenerateComplete(GetImagineResult result, string response)
+        {
+            var textureUrl = result.request.file_url;
+            var depthMapUrl = result.request.depth_map_url;
+            var prompt = result.request.prompt;
+
+            if (string.IsNullOrWhiteSpace(textureUrl))
+            {
+                SetGenerateFailed("Returned skybox texture url is empty.");
                 return;
             }
 
-            if (!string.IsNullOrWhiteSpace(textureUrl))
+            var tasks = new List<Task<Texture2D>>();
+            tasks.Add(ApiRequests.DownloadTextureAsync(textureUrl));
+            if (!string.IsNullOrWhiteSpace(depthMapUrl))
             {
-                var image = await ApiRequests.GetImagineImageAsync(textureUrl);
-                var texture = new Texture2D(1, 1, TextureFormat.RGB24, false);
-                texture.LoadImage(image);
-
-                percentageCompleted = 80;
-                CalculateProgress();
-
-                if (_assignToMaterial)
-                {
-                    var r = GetComponent<Renderer>();
-
-                    if (r != null)
-                    {
-                        if (r.sharedMaterial != null)
-                        {
-                            r.sharedMaterial.mainTexture = texture;
-                        }
-                    }
-                }
-
-                percentageCompleted = 90;
-                CalculateProgress();
-
-                texture.Compress(true);
-
-                var depthMapEmpty = string.IsNullOrWhiteSpace(depthMapUrl);
-                var depthMapTexture = new Texture2D(1, 1, TextureFormat.RGB24, false); ;
-
-                if (!depthMapEmpty)
-                {
-                    var depthMapImage = await ApiRequests.GetImagineImageAsync(depthMapUrl);
-                    depthMapTexture.LoadImage(depthMapImage);
-                    depthMapTexture.Compress(true);
-                }
-
-                SaveAssets(texture, prompt, depthMapEmpty, depthMapTexture);
+                tasks.Add(ApiRequests.DownloadTextureAsync(depthMapUrl));
             }
 
-            percentageCompleted = 100;
-            CalculateProgress();
+            var textures = await Task.WhenAll(tasks);
+            if (_isCancelled)
+            {
+                DestroyTextures(textures);
+                return;
+            }
+
+            foreach (var texture in textures)
+            {
+                if (!texture)
+                {
+                    DestroyTextures(textures);
+                    SetGenerateFailed("Error downloading textures.");
+                    return;
+                }
+            }
+
+            UpdateProgress(80);
+
+            if (_assignToMaterial && TryGetComponent<Renderer>(out var renderer) && renderer.sharedMaterial != null)
+            {
 #if UNITY_EDITOR
-            Progress.Remove(_progressId);
+                Undo.RecordObject(renderer.sharedMaterial, "Assign Skybox Texture");
 #endif
+                renderer.sharedMaterial.mainTexture = textures[0];
+            }
+
+#if UNITY_EDITOR
+            SaveAssets(textures[0], prompt, textures.Length > 1 ? textures[1] : null, response);
+#endif
+
+            UpdateProgress(100);
+
             SetState(State.Ready);
         }
 
-        private void SaveAssets(Texture2D texture, string prompt, bool depthMapEmpty, Texture2D depthMapTexture)
-        {
 #if UNITY_EDITOR
-            if (AssetDatabase.Contains(texture) || (!depthMapEmpty && AssetDatabase.Contains(depthMapTexture)))
+        private void SaveAssets(Texture2D texture, string prompt, Texture2D depthMapTexture, string response)
+        {
+            var generateFolder = "Blockade Labs SDK";
+            var pathFromAssets = "Assets/" + generateFolder;
+            if (!AssetDatabase.IsValidFolder(pathFromAssets))
             {
-                Debug.Log("Texture already in assets database.");
-                return;
-            }
-
-            if (!AssetDatabase.IsValidFolder("Assets/Blockade Labs SDK Assets"))
-            {
-                AssetDatabase.CreateFolder("Assets", "Blockade Labs SDK Assets");
+                AssetDatabase.CreateFolder("Assets", generateFolder);
             }
 
             var maxLength = 20;
-
             if (prompt.Length > maxLength)
             {
                 prompt = prompt.Substring(0, maxLength);
             }
 
-            var validatedPrompt = ValidateFilename(prompt);
-            var textureName = validatedPrompt + "_texture";
-            CreateAsset(textureName, texture);
+            var prefix = ValidateFilename(prompt);
 
-            if (!depthMapEmpty)
+            // Create a folder to store the new assets
+            var folderPath = AssetDatabase.GenerateUniqueAssetPath(pathFromAssets + "/" + prefix);
+            AssetDatabase.CreateFolder(pathFromAssets, prefix);
+
+            // Create the texture asset
+            AssetDatabase.CreateAsset(texture, folderPath + "/" + prefix + "_texture.asset");
+
+            if (depthMapTexture)
             {
-                var depthMapTextureName = validatedPrompt + "_depth_map_texture";
-                CreateAsset(depthMapTextureName, depthMapTexture);
+                // Create the depth map asset
+
+                AssetDatabase.CreateAsset(depthMapTexture, folderPath + "/" + prefix + "_depth_map_texture.asset");
             }
-#endif
-            _imagineObfuscatedId = "";
+
+            // Save the response so we can use it later to remix
+            File.WriteAllText(folderPath + "/" + prefix + "_data.txt", response);
         }
 
         private string ValidateFilename(string prompt)
@@ -442,47 +481,38 @@ namespace BlockadeLabsSDK
 
             return prompt.TrimStart('_').TrimEnd('_');
         }
+#endif
 
-        private void CalculateProgress()
+        private void UpdateProgress(float percentageCompleted)
         {
+            _percentageCompleted = percentageCompleted;
+
 #if UNITY_EDITOR
-            Progress.Report(_progressId, percentageCompleted / 100f);
+            bool showProgress = percentageCompleted >= 0 && percentageCompleted < 100;
+
+            if (showProgress && _progressId == 0)
+            {
+                _progressId = Progress.Start("Generating Skybox Assets");
+            }
+
+            if (_progressId != 0)
+            {
+                Progress.Report(_progressId, percentageCompleted / 100f);
+
+                if (!showProgress)
+                {
+                    Progress.Remove(_progressId);
+                    _progressId = 0;
+                }
+            }
 #endif
         }
-
-        public float PercentageCompleted() => percentageCompleted;
 
         public void Cancel()
         {
             _isCancelled = true;
-            percentageCompleted = -1;
-#if UNITY_EDITOR
-            Progress.Remove(_progressId);
-#endif
-        }
-
-        private void CreateAsset(string textureName, Texture2D texture)
-        {
-#if UNITY_EDITOR
-            var counter = 0;
-
-            while (true)
-            {
-                var modifiedTextureName = counter == 0 ? textureName : textureName + "_" + counter;
-
-                var textureAssets =
-                    AssetDatabase.FindAssets(modifiedTextureName, new[] { "Assets/Blockade Labs SDK Assets" });
-
-                if (textureAssets.Length > 0)
-                {
-                    counter++;
-                    continue;
-                }
-
-                AssetDatabase.CreateAsset(texture, "Assets/Blockade Labs SDK Assets/" + modifiedTextureName + ".asset");
-                break;
-            }
-#endif
+            UpdateProgress(-1);
+            SetState(State.Ready);
         }
 
         public void EditorPropertyChanged()

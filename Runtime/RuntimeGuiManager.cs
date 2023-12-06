@@ -346,7 +346,7 @@ namespace BlockadeLabsSDK
 
             if (_blockadeLabsSkybox.CurrentState == BlockadeLabsSkybox.State.Generating)
             {
-                tmpText.text = _blockadeLabsSkybox.PercentageCompleted() + "%";
+                tmpText.text = _blockadeLabsSkybox.PercentageCompleted + "%";
             }
             else if (_blockadeLabsSkybox.Remix)
             {

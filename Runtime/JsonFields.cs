@@ -4,25 +4,41 @@ using Newtonsoft.Json;
 
 namespace BlockadeLabsSDK
 {
+    public class CreateSkyboxRequest
+    {
+        public string prompt;
+        public string negative_text;
+        public bool enhance_prompt;
+        public int seed;
+        public int skybox_style_id;
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public int remix_imagine_id;
+    }
+
     [System.Serializable]
     public class CreateSkyboxResult
     {
-        public string id { get; set; }
-        public string obfuscated_id { get; set; }
+        public string id;
+        public string obfuscated_id;
+        public string status;
+        public string error_message;
     }
 
     [System.Serializable]
     public class GetImagineResult
     {
-        public GetImagineRequest request { get; set; }
+        public GetImagineRequest request;
     }
 
     public class GetImagineRequest
     {
-        public string file_url { get; set; }
-        public string depth_map_url { get; set; }
-        public string status { get; set; }
-        public string prompt { get; set; }
+        public int id;
+        public string obfuscated_id;
+        public string file_url;
+        public string depth_map_url;
+        public string status;
+        public string prompt;
+        public string error_message;
     }
 
     [System.Serializable]
@@ -85,24 +101,6 @@ namespace BlockadeLabsSDK
             this.name = name;
             this.placeholder = placeholder;
             this.type = type;
-        }
-    }
-
-    [System.Serializable]
-    public class SkyboxStyleField
-    {
-        public string key;
-        public string name;
-        public string value;
-        public string type;
-
-        // Constructor to initialize skybox style field with data from API response
-        public SkyboxStyleField(UserInput fieldData)
-        {
-            key = fieldData.key; // "prompt"
-            name = fieldData.name; // "Prompt"
-            value = fieldData.placeholder ?? "";
-            type = fieldData.type ?? "text";
         }
     }
 }
