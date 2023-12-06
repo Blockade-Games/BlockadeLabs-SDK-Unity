@@ -14,7 +14,7 @@ namespace BlockadeLabsSDK
         {
             _inputField = GetComponent<TMP_InputField>();
             _rectTransform = GetComponent<RectTransform>();
-            _padding = _rectTransform.rect.height - _inputField.textViewport.rect.height;
+            _padding = _rectTransform.rect.height - _inputField.placeholder.GetComponent<TMP_Text>().preferredHeight;
 
             if (_inputField != null)
             {
