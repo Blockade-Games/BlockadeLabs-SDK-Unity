@@ -190,6 +190,22 @@ namespace BlockadeLabsSDK
             set { _promptPanel = value; }
         }
 
+        [SerializeField]
+        private GameObject _errorPopup;
+        public GameObject ErrorPopup
+        {
+            get { return _errorPopup; }
+            set { _errorPopup = value; }
+        }
+
+        [SerializeField]
+        private TMP_Text _errorText;
+        public TMP_Text ErrorText
+        {
+            get { return _errorText; }
+            set { _errorText = value; }
+        }
+
         private float _createUnderlineOffset;
         private bool _anyStylePicked;
 
@@ -200,6 +216,9 @@ namespace BlockadeLabsSDK
 
             _blockadeLabsSkybox.OnStateChanged += OnStateChanged;
             OnStateChanged();
+
+            _blockadeLabsSkybox.OnErrorChanged += OnErrorChanged;
+            OnErrorChanged();
 
             _promptInput.onValueChanged.AddListener(OnPromptInputChanged);
             _negativeTextToggle.OnValueChanged.AddListener(OnNegativeTextToggleChanged);
@@ -257,6 +276,12 @@ namespace BlockadeLabsSDK
                 disabledColor.Disabled = _blockadeLabsSkybox.CurrentState != BlockadeLabsSkybox.State.Ready ||
                     (_blockadeLabsSkybox.CurrentState == BlockadeLabsSkybox.State.Generating && disabledColor.transform == _generateButton.transform);
             }
+        }
+
+        private void OnErrorChanged()
+        {
+            _errorPopup.SetActive(!string.IsNullOrEmpty(_blockadeLabsSkybox.LastError));
+            _errorText.text = _blockadeLabsSkybox.LastError;
         }
 
         private void OnPromptInputChanged(string newValue)
