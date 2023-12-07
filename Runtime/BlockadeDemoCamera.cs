@@ -91,7 +91,9 @@ namespace BlockadeLabsSDK
                     break;
             }
 
-            if (!EventSystem.current.IsPointerOverGameObject() && Input.mouseScrollDelta.y != 0)
+            bool mouseOverGameView = Input.mousePosition.x >= 0 && Input.mousePosition.x < Screen.width &&
+                Input.mousePosition.y >= 0 && Input.mousePosition.y < Screen.height;
+            if (!EventSystem.current.IsPointerOverGameObject() && Input.mouseScrollDelta.y != 0 && mouseOverGameView)
             {
                 _zoom += Input.mouseScrollDelta.y * _zoomSpeed * Time.deltaTime;
                 _zoom = Mathf.Clamp(_zoom, 0, 2);
@@ -141,8 +143,8 @@ namespace BlockadeLabsSDK
             {
                 var mouseDelta = Input.mousePosition - _mousePosition;
                 _mousePosition = Input.mousePosition;
-                _yaw += mouseDelta.x * _manualPanSpeed * Time.deltaTime;
-                _pitch -= mouseDelta.y * _manualPanSpeed * Time.deltaTime;
+                _yaw -= mouseDelta.x * _manualPanSpeed * Time.deltaTime;
+                _pitch += mouseDelta.y * _manualPanSpeed * Time.deltaTime;
             }
             else
             {

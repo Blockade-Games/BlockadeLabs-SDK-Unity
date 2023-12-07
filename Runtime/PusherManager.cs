@@ -1,15 +1,18 @@
-#if PUSHER_PRESENT // compile only is pusher package is installed
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using PusherClient;
 using UnityEngine;
+
+#if PUSHER_PRESENT // compile only is pusher package is installed
+using PusherClient;
+#endif
 
 namespace BlockadeLabsSDK
 {
     public class PusherManager : MonoBehaviour
     {
+#if PUSHER_PRESENT
         // A mutation of https://unity3d.com/learn/tutorials/projects/2d-roguelike-tutorial/writing-game-manager
         public static PusherManager instance = null;
         private Pusher _pusher;
@@ -17,7 +20,7 @@ namespace BlockadeLabsSDK
         private const string APP_CLUSTER = "mt1";
         private List<string> imagineObfuscatedIds = new List<string>();
         private int previousImagineCount = 0;
-        
+
         async Task Start()
         {
             if (instance == null)
@@ -132,6 +135,7 @@ namespace BlockadeLabsSDK
                 await _pusher.DisconnectAsync();
             }
         }
+#endif
     }
 
     // JSON fields representations
@@ -148,4 +152,3 @@ namespace BlockadeLabsSDK
         public string obfuscated_id { get; set; }
     }
 }
-#endif
