@@ -288,6 +288,7 @@ namespace BlockadeLabsSDK
             }
             catch (Exception e)
             {
+                Debug.LogException(e);
                 SetGenerateFailed("Error generating skybox: " + e.Message);
             }
         }
@@ -324,25 +325,23 @@ namespace BlockadeLabsSDK
         {
             while (!_isCancelled)
             {
+                if (_percentageCompleted < 80)
+                {
+                    UpdateProgress(_percentageCompleted + 2);
+                }
+
                 await Task.Delay(1000);
                 if (_isCancelled)
                 {
                     break;
                 }
 
-                var response = await ApiRequests.GetRequestStatusAsync(imagineObfuscatedId, _apiKey);
+                var result = await ApiRequests.GetRequestStatusAsync(imagineObfuscatedId, _apiKey);
                 if (_isCancelled)
                 {
                     break;
                 }
 
-                if (response == null)
-                {
-                    SetGenerateFailed("Error generating skybox.");
-                    break;
-                }
-
-                var result = JsonConvert.DeserializeObject<GetImagineResult>(response);
                 if (result.request.status == "error")
                 {
                     SetGenerateFailed(result.request.error_message);
@@ -351,8 +350,8 @@ namespace BlockadeLabsSDK
 
                 if (result.request.status == "complete")
                 {
-                    UpdateProgress(66);
-                    await OnGenerateComplete(result, response);
+                    UpdateProgress(80);
+                    await OnGenerateComplete(result);
                     break;
                 }
             }
@@ -376,7 +375,7 @@ namespace BlockadeLabsSDK
             }
         }
 
-        private async Task OnGenerateComplete(GetImagineResult result, string response)
+        private async Task OnGenerateComplete(GetImagineResult result)
         {
             var textureUrl = result.request.file_url;
             var depthMapUrl = result.request.depth_map_url;
@@ -417,7 +416,7 @@ namespace BlockadeLabsSDK
                 texture.Compress(true);
             }
 
-            UpdateProgress(80);
+            UpdateProgress(99);
 
             if (_assignToMaterial && TryGetComponent<Renderer>(out var renderer) && renderer.sharedMaterial != null)
             {
@@ -428,11 +427,12 @@ namespace BlockadeLabsSDK
             }
 
 #if UNITY_EDITOR
-            SaveAssets(textures[0], prompt, textures.Length > 1 ? textures[1] : null, response);
+            var resultJson = JsonConvert.SerializeObject(result);
+            var depthTexture = textures.Length > 1 ? textures[1] : null;
+            SaveAssets(textures[0], prompt, depthTexture, resultJson);
 #endif
 
-            UpdateProgress(100);
-
+            UpdateProgress(0);
             SetState(State.Ready);
         }
 

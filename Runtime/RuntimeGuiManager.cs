@@ -174,6 +174,14 @@ namespace BlockadeLabsSDK
             set { _remixPopupToggle = value; }
         }
 
+        [SerializeField]
+        private RectTransform _progressBar;
+        public RectTransform ProgressBar
+        {
+            get { return _progressBar; }
+            set { _progressBar = value; }
+        }
+
         private float _createUnderlineOffset;
         private bool _anyStylePicked;
 
@@ -303,6 +311,11 @@ namespace BlockadeLabsSDK
 
         private void OnGenerateButtonClicked()
         {
+            if (_blockadeLabsSkybox.CurrentState == BlockadeLabsSkybox.State.Generating)
+            {
+                _blockadeLabsSkybox.Cancel();
+                return;
+            }
 
             if (_blockadeLabsSkybox.Prompt.Length == 0)
             {
@@ -346,7 +359,7 @@ namespace BlockadeLabsSDK
 
             if (_blockadeLabsSkybox.CurrentState == BlockadeLabsSkybox.State.Generating)
             {
-                tmpText.text = _blockadeLabsSkybox.PercentageCompleted + "%";
+                tmpText.text = "CANCEL";
             }
             else if (_blockadeLabsSkybox.Remix)
             {
@@ -380,6 +393,8 @@ namespace BlockadeLabsSDK
                 new Vector3(_blockadeLabsSkybox.Remix ? _remixUnderlineOffset : _createUnderlineOffset,
                     _createRemixUnderline.localPosition.y,
                     _createRemixUnderline.localPosition.z), Time.deltaTime * 10);
+
+            _progressBar.anchorMax = new Vector2(_blockadeLabsSkybox.PercentageCompleted / 100f, 1);
         }
     }
 }

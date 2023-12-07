@@ -63,9 +63,9 @@ namespace BlockadeLabsSDK
             return JsonConvert.DeserializeObject<CreateSkyboxResult>(request.downloadHandler.text);
         }
 
-        public static async Task<string> GetRequestStatusAsync(string imagineObfuscatedId, string apiKey)
+        public static async Task<GetImagineResult> GetRequestStatusAsync(string imagineObfuscatedId, string apiKey)
         {
-            return await GetAsync<string>("imagine/requests/obfuscated-id/" + imagineObfuscatedId, apiKey);
+            return await GetAsync<GetImagineResult>("imagine/requests/obfuscated-id/" + imagineObfuscatedId, apiKey);
         }
 
         public static async Task<Texture2D> DownloadTextureAsync(string textureUrl)
