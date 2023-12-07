@@ -83,7 +83,7 @@ namespace BlockadeLabsSDK
             }
         }
 
-        [Tooltip("The seed for the random number generator. Use this to generate different skyboxes from the same prompt.")]
+        [Tooltip("The seed is a specific value that guides the randomness in the image creation process. While usually assigned randomly, fixing the seed can help achieve consistent results with minor variations, despite other sources of entropy. This allows for controlled iterations of a prompt, with the seed ensuring a degree of predictability in the otherwise random generation process.")]
         [SerializeField]
         private int _seed;
         public int Seed
@@ -109,7 +109,7 @@ namespace BlockadeLabsSDK
             }
         }
 
-        [Tooltip("Give your existing world a new style by describing it")]
+        [Tooltip("Give your existing world a new style by describing it.")]
         [SerializeField]
         private bool _remix = false;
         public bool Remix
