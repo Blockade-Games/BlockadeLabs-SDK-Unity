@@ -54,7 +54,7 @@ namespace BlockadeLabsSDK
 
         public virtual void OnPointerClick(PointerEventData eventData)
         {
-            if (eventData.button != PointerEventData.InputButton.Left)
+            if (eventData.button != PointerEventData.InputButton.Left || !interactable)
             {
                 return;
             }

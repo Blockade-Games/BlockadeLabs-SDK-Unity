@@ -182,6 +182,14 @@ namespace BlockadeLabsSDK
             set { _progressBar = value; }
         }
 
+        [SerializeField]
+        private GameObject _promptPanel;
+        public GameObject PromptPanel
+        {
+            get { return _promptPanel; }
+            set { _promptPanel = value; }
+        }
+
         private float _createUnderlineOffset;
         private bool _anyStylePicked;
 
@@ -229,22 +237,25 @@ namespace BlockadeLabsSDK
 
         private void OnStateChanged()
         {
-            // TODO: Let user know if they need to set the API key
-            SetInteractable(_blockadeLabsSkybox.CurrentState == BlockadeLabsSkybox.State.Ready);
             UpdateGenerateButtonText();
 
             if (_blockadeLabsSkybox.CurrentState == BlockadeLabsSkybox.State.Ready)
             {
                 _stylePickerPanel.SetStyles(_blockadeLabsSkybox.StyleFamilies);
             }
-        }
 
-        private void SetInteractable(bool interactable)
-        {
-            var selectables = GetComponentsInChildren<Selectable>();
+            var selectables = _promptPanel.GetComponentsInChildren<Selectable>();
             foreach (var selectable in selectables)
             {
-                selectable.interactable = interactable;
+                selectable.interactable = _blockadeLabsSkybox.CurrentState == BlockadeLabsSkybox.State.Ready ||
+                    (_blockadeLabsSkybox.CurrentState == BlockadeLabsSkybox.State.Generating && selectable == _generateButton);
+            }
+
+            var disabledColors = _promptPanel.GetComponentsInChildren<DisabledColor>();
+            foreach (var disabledColor in disabledColors)
+            {
+                disabledColor.Disabled = _blockadeLabsSkybox.CurrentState != BlockadeLabsSkybox.State.Ready ||
+                    (_blockadeLabsSkybox.CurrentState == BlockadeLabsSkybox.State.Generating && disabledColor.transform == _generateButton.transform);
             }
         }
 
