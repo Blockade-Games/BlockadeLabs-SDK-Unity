@@ -13,18 +13,18 @@ namespace BlockadeLabsSDK
 
         public static async Task<T> GetAsync<T>(string path, string apiKey)
         {
-            using (var request = UnityWebRequest.Get(ApiEndpoint + path + "?api_key=" + apiKey))
+            using var request = UnityWebRequest.Get(ApiEndpoint + path + "?api_key=" + apiKey);
+            LogVerbose("Get Request: " + request.url);
+            await request.SendWebRequest();
+
+            if (request.result != UnityWebRequest.Result.Success)
             {
-                await request.SendWebRequest();
-
-                if (request.result != UnityWebRequest.Result.Success)
-                {
-                    Debug.Log("Get error: " + request.error);
-                    return default(T);
-                }
-
-                return JsonConvert.DeserializeObject<T>(request.downloadHandler.text);
+                Debug.Log("Get error: " + request.error);
+                return default(T);
             }
+
+            LogVerbose("Get response: " + request.downloadHandler.text);
+            return JsonConvert.DeserializeObject<T>(request.downloadHandler.text);
         }
 
         public static async Task<List<SkyboxStyleFamily>> GetSkyboxStylesMenuAsync(string apiKey)
@@ -37,61 +37,59 @@ namespace BlockadeLabsSDK
             return await GetAsync<List<SkyboxStyle>>("skybox/styles", apiKey);
         }
 
-        public static async Task<CreateSkyboxResult> GenerateSkyboxAsync(CreateSkyboxRequest request, string apiKey)
+        public static async Task<CreateSkyboxResult> GenerateSkyboxAsync(CreateSkyboxRequest requestData, string apiKey)
         {
-            string requestJson = JsonConvert.SerializeObject(request);
-            using var createSkyboxRequest = new UnityWebRequest();
-            createSkyboxRequest.url = ApiEndpoint + "skybox?api_key=" + apiKey;
-            createSkyboxRequest.method = "POST";
-            createSkyboxRequest.downloadHandler = new DownloadHandlerBuffer();
-            createSkyboxRequest.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(requestJson));
-            createSkyboxRequest.timeout = 60;
-            createSkyboxRequest.SetRequestHeader("Accept", "application/json");
-            createSkyboxRequest.SetRequestHeader("Content-Type", "application/json; charset=UTF-8");
+            string requestJson = JsonConvert.SerializeObject(requestData);
+            using var request = new UnityWebRequest();
+            request.url = ApiEndpoint + "skybox?api_key=" + apiKey;
+            request.method = "POST";
+            request.downloadHandler = new DownloadHandlerBuffer();
+            request.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(requestJson));
+            request.timeout = 60;
+            request.SetRequestHeader("Accept", "application/json");
+            request.SetRequestHeader("Content-Type", "application/json; charset=UTF-8");
 
-            await createSkyboxRequest.SendWebRequest();
+            LogVerbose("Generate Skybox Request: " + request.url + "\n" + requestJson);
 
-            if (createSkyboxRequest.result != UnityWebRequest.Result.Success)
+            await request.SendWebRequest();
+
+            if (request.result != UnityWebRequest.Result.Success)
             {
-                Debug.LogError("Create Skybox Error: " + createSkyboxRequest.error);
+                Debug.LogError("Create Skybox Error: " + request.error);
                 return null;
             }
 
-            return JsonConvert.DeserializeObject<CreateSkyboxResult>(createSkyboxRequest.downloadHandler.text);
+            LogVerbose("Generate Skybox Response: " + request.downloadHandler.text);
+            return JsonConvert.DeserializeObject<CreateSkyboxResult>(request.downloadHandler.text);
         }
 
         public static async Task<string> GetRequestStatusAsync(string imagineObfuscatedId, string apiKey)
         {
-            using var getImagineRequest = UnityWebRequest.Get(
-                ApiEndpoint + "imagine/requests/obfuscated-id/" + imagineObfuscatedId + "?api_key=" + apiKey
-            );
-
-            await getImagineRequest.SendWebRequest();
-
-            if (getImagineRequest.result != UnityWebRequest.Result.Success)
-            {
-                Debug.LogError("Get Imagine Error: " + getImagineRequest.error);
-                return null;
-            }
-
-            return getImagineRequest.downloadHandler.text;
+            return await GetAsync<string>("imagine/requests/obfuscated-id/" + imagineObfuscatedId, apiKey);
         }
 
         public static async Task<Texture2D> DownloadTextureAsync(string textureUrl)
         {
+            LogVerbose("Start texture download: " + textureUrl);
             using var imagineImageRequest = UnityWebRequest.Get(textureUrl);
             imagineImageRequest.downloadHandler = new DownloadHandlerTexture(true);
             await imagineImageRequest.SendWebRequest();
 
             if (imagineImageRequest.result != UnityWebRequest.Result.Success)
             {
-                Debug.LogError("Get Imagine Image Error: " + imagineImageRequest.error);
+                Debug.LogError("Get Imagine Image Error: " + imagineImageRequest.downloadHandler.error);
                 return null;
             }
 
+            LogVerbose("Complete texture download: " + textureUrl);
             var texture = (imagineImageRequest.downloadHandler as DownloadHandlerTexture).texture;
-            texture.Compress(true);
             return texture;
+        }
+
+        [System.Diagnostics.Conditional("BLOCKADE_SDK_LOG")]
+        private static void LogVerbose(string log)
+        {
+            Debug.Log(log);
         }
     }
 }

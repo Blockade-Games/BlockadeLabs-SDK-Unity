@@ -412,6 +412,11 @@ namespace BlockadeLabsSDK
                 }
             }
 
+            foreach (var texture in textures)
+            {
+                texture.Compress(true);
+            }
+
             UpdateProgress(80);
 
             if (_assignToMaterial && TryGetComponent<Renderer>(out var renderer) && renderer.sharedMaterial != null)

@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Networking;
 using UnityEngine.UI;
 
 namespace BlockadeLabsSDK
@@ -43,6 +42,9 @@ namespace BlockadeLabsSDK
         public event Action<SkyboxStyle> OnStylePicked;
 
         private SkyboxStyle _selectedStyle;
+        private SkyboxStyle _previewStyle;
+
+        private Dictionary<string, Sprite> _previewCache = new Dictionary<string, Sprite>();
 
         private void Awake()
         {
@@ -61,7 +63,6 @@ namespace BlockadeLabsSDK
 
         private void OnDisable()
         {
-            StopAllCoroutines();
             _dismissButton.gameObject.SetActive(false);
         }
 
@@ -115,7 +116,7 @@ namespace BlockadeLabsSDK
                 styleItem.SetStyle(style);
                 styleItem.SetSelected(style == _selectedStyle);
                 styleItem.Button.onClick.AddListener(() => SelectStyle(style));
-                styleItem.Hoverable.OnHover.AddListener(() => ShowPreview(style));
+                styleItem.Hoverable.OnHover.AddListener(() => ShowPreviewAsync(style));
             }
         }
 
@@ -143,45 +144,31 @@ namespace BlockadeLabsSDK
             gameObject.SetActive(false);
         }
 
-        private void ShowPreview(SkyboxStyle style)
+        private async void ShowPreviewAsync(SkyboxStyle style)
         {
-            StopAllCoroutines();
-
-            // Doesn't currently work because Unity doesn't support webp files.
-            // StartCoroutine(DownloadImage(style.image, sprite =>
-            // {
-            //     _previewPanelRoot.SetActive(true);
-            //     _previewText.text = style.description;
-            //     _previewImage.sprite = sprite;
-            // }));
-
             _previewPanelRoot.SetActive(true);
             _previewText.text = style.description;
-        }
+            _previewStyle = style;
 
-        private Dictionary<string, Sprite> _imageCache = new Dictionary<string, Sprite>();
-
-        private IEnumerator DownloadImage(string url, Action<Sprite> callback)
-        {
-            if (_imageCache.TryGetValue(url, out var sprite))
+            if (_previewCache.TryGetValue(style.image_jpg, out var sprite))
             {
-                callback(sprite);
-                yield break;
+                _previewImage.sprite = sprite;
+                return;
             }
 
-            var req = UnityWebRequest.Get(url);
-            req.downloadHandler = new DownloadHandlerTexture();
-            yield return req.SendWebRequest();
-            if (req.result != UnityWebRequest.Result.Success)
-            {
-                Debug.Log("Download error: " + req.downloadHandler.error);
-                yield break;
-            }
+            // Ensure we only make one download request.
+            _previewCache.Add(style.image_jpg, null);
 
-            var texture = ((DownloadHandlerTexture)req.downloadHandler).texture;
+            // Download the image
+            var texture = await ApiRequests.DownloadTextureAsync(style.image_jpg);
             sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector2.zero);
-            _imageCache.Add(url, sprite);
-            callback(sprite);
+            _previewCache[style.image_jpg] = sprite;
+
+            // If we're still showing the style preview, update the preview image.
+            if (style == _previewStyle)
+            {
+                _previewImage.sprite = sprite;
+            }
         }
     }
 }

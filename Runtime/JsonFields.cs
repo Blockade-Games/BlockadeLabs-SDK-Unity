@@ -55,6 +55,7 @@ namespace BlockadeLabsSDK
         [JsonProperty("negative-text-max-char")]
         public int negativeTextMaxChar;
         public string image;
+        public string image_jpg;
         public bool premium;
         [JsonProperty("new")]
         public bool isNew;
