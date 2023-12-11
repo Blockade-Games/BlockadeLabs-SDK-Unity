@@ -481,7 +481,7 @@ namespace BlockadeLabsSDK
 
             _lastGeneratedId = result.request.id;
             _lastGeneratedTexture = textures[0];
-            UpdateProgress(0);
+            UpdateProgress(-1);
             SetState(State.Ready);
         }
 
