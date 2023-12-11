@@ -12284,7 +12284,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 80c37ee5440861a47884a14ba990aa23, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _apiKey: yRjYQs9SSAu6hOUG0ky753fuNsno0wmH8AFLeZ9ftZQ6jfGmCgCGdOruHHqX
+  _apiKey: 
   _assignToMaterial: 1
   _selectedStyleFamilyIndex: 3
   _selectedStyleIndex: 0
