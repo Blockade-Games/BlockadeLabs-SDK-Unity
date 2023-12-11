@@ -10700,8 +10700,9 @@ MonoBehaviour:
   _negativeTextCharacterLimit: {fileID: 1454639021}
   _promptCharacterWarning: {fileID: 62486403}
   _negativeTextCharacterWarning: {fileID: 1535867811}
+  _helpPopup: {fileID: 897809236}
   _remixPopup: {fileID: 1054441604}
-  _remixPopupToggle: {fileID: 2037097838}
+  _remixDontShowAgainToggle: {fileID: 2037097838}
   _progressBar: {fileID: 1361579313}
   _promptPanel: {fileID: 524145327}
   _errorPopup: {fileID: 1903893406}
@@ -11219,8 +11220,8 @@ MonoBehaviour:
   _autoPan: 1
   _autoPanSpeed: 10
   _autoPanDelay: 5
-  _manualPanSpeed: 40
-  _zoomSpeed: 80
+  _manualPanSpeed: 80
+  _zoomSpeed: 120
   _smooth: 5
 --- !u!1 &1761701232
 GameObject:

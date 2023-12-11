@@ -3,8 +3,11 @@ using System.IO;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
-using UnityEditor;
 using Newtonsoft.Json;
+
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace BlockadeLabsSDK
 {
@@ -65,8 +68,11 @@ namespace BlockadeLabsSDK
             get => _prompt;
             set
             {
-                _prompt = value;
-                OnPropertyChanged?.Invoke();
+                if (_prompt != value)
+                {
+                    _prompt = value;
+                    OnPropertyChanged?.Invoke();
+                }
             }
         }
 
@@ -78,8 +84,11 @@ namespace BlockadeLabsSDK
             get => _negativeText;
             set
             {
-                _negativeText = value;
-                OnPropertyChanged?.Invoke();
+                if (_negativeText != value)
+                {
+                    _negativeText = value;
+                    OnPropertyChanged?.Invoke();
+                }
             }
         }
 
@@ -91,8 +100,11 @@ namespace BlockadeLabsSDK
             get => _seed;
             set
             {
-                _seed = value;
-                OnPropertyChanged?.Invoke();
+                if (_seed != value)
+                {
+                    _seed = value;
+                    OnPropertyChanged?.Invoke();
+                }
             }
         }
 
@@ -104,8 +116,11 @@ namespace BlockadeLabsSDK
             get => _enhancePrompt;
             set
             {
-                _enhancePrompt = value;
-                OnPropertyChanged?.Invoke();
+                if (_enhancePrompt != value)
+                {
+                    _enhancePrompt = value;
+                    OnPropertyChanged?.Invoke();
+                }
             }
         }
 
@@ -117,8 +132,11 @@ namespace BlockadeLabsSDK
             get => _remix;
             set
             {
-                _remix = value;
-                OnPropertyChanged?.Invoke();
+                if (_remix != value)
+                {
+                    _remix = value;
+                    OnPropertyChanged?.Invoke();
+                }
             }
         }
 
@@ -142,8 +160,16 @@ namespace BlockadeLabsSDK
         private float _percentageCompleted = -1;
         public float PercentageCompleted => _percentageCompleted;
 
-        private int _progressId = 0;
         private bool _isCancelled;
+
+        private int _lastGeneratedId;
+        private Texture2D _lastGeneratedTexture;
+
+        public bool CanRemix => GetRemixId().HasValue;
+
+#if UNITY_EDITOR
+        private int _progressId = 0;
+#endif
 
         public bool CheckApiKeyValid()
         {
@@ -300,24 +326,45 @@ namespace BlockadeLabsSDK
             SetState(State.Ready);
         }
 
-        public bool TrySetRemixId(CreateSkyboxRequest request)
+        private int? GetRemixId()
         {
             if (!TryGetComponent<Renderer>(out var renderer) || renderer.sharedMaterial == null || renderer.sharedMaterial.mainTexture == null)
             {
-                SetError("Remix skybox requires a skybox texture to remix.");
-                return false;
+                return null;
             }
 
+            if (renderer.sharedMaterial.mainTexture.name == "default_skybox_texture")
+            {
+                return 0;
+            }
+
+            if (renderer.sharedMaterial.mainTexture == _lastGeneratedTexture)
+            {
+                return _lastGeneratedId;
+            }
+
+#if UNITY_EDITOR
+            // In editor, read the remix ID from the data file saved next to the texture.
             var texturePath = AssetDatabase.GetAssetPath(renderer.sharedMaterial.mainTexture);
             var resultPath = texturePath.Substring(0, texturePath.LastIndexOf('_')) + "_data.txt";
-            if (!File.Exists(resultPath))
+            if (File.Exists(resultPath))
             {
-                SetError("Could not find skybox data file to remix: " + resultPath);
+                return JsonConvert.DeserializeObject<GetImagineResult>(File.ReadAllText(resultPath)).request.id;
+            }
+#endif
+            return null;
+        }
+
+        private bool TrySetRemixId(CreateSkyboxRequest request)
+        {
+            var remixId = GetRemixId();
+            if (!remixId.HasValue)
+            {
+                SetError("Missing skybox ID. Please use a previously generated skybox or disable remix.");
                 return false;
             }
 
-            var result = JsonConvert.DeserializeObject<GetImagineResult>(File.ReadAllText(resultPath));
-            request.remix_imagine_id = result.request.id;
+            request.remix_imagine_id = remixId.Value;
             return true;
         }
 
@@ -432,6 +479,8 @@ namespace BlockadeLabsSDK
             SaveAssets(textures[0], prompt, depthTexture, resultJson);
 #endif
 
+            _lastGeneratedId = result.request.id;
+            _lastGeneratedTexture = textures[0];
             UpdateProgress(0);
             SetState(State.Ready);
         }

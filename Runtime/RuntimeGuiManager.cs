@@ -159,6 +159,14 @@ namespace BlockadeLabsSDK
         }
 
         [SerializeField]
+        private GameObject _helpPopup;
+        public GameObject HelpPopup
+        {
+            get { return _helpPopup; }
+            set { _helpPopup = value; }
+        }
+
+        [SerializeField]
         private GameObject _remixPopup;
         public GameObject RemixPopup
         {
@@ -167,11 +175,11 @@ namespace BlockadeLabsSDK
         }
 
         [SerializeField]
-        private Toggle _remixPopupToggle;
-        public Toggle RemixPopupToggle
+        private Toggle _remixDontShowAgainToggle;
+        public Toggle RemixDontShowAgainToggle
         {
-            get { return _remixPopupToggle; }
-            set { _remixPopupToggle = value; }
+            get { return _remixDontShowAgainToggle; }
+            set { _remixDontShowAgainToggle = value; }
         }
 
         [SerializeField]
@@ -241,7 +249,7 @@ namespace BlockadeLabsSDK
             _enhancePromptToggle.IsOn = _blockadeLabsSkybox.EnhancePrompt;
             _negativeTextInput.text = _blockadeLabsSkybox.NegativeText;
             UpdateHintText();
-            UpdateGenerateButtonText();
+            UpdateGenerateButton();
             UpdatePromptCharacterLimit();
             UpdateNegativeTextCharacterLimit();
             _promptCharacterWarning.SetActive(false);
@@ -256,8 +264,6 @@ namespace BlockadeLabsSDK
 
         private void OnStateChanged()
         {
-            UpdateGenerateButtonText();
-
             if (_blockadeLabsSkybox.CurrentState == BlockadeLabsSkybox.State.Ready)
             {
                 _stylePickerPanel.SetStyles(_blockadeLabsSkybox.StyleFamilies);
@@ -266,22 +272,44 @@ namespace BlockadeLabsSDK
             var selectables = _promptPanel.GetComponentsInChildren<Selectable>();
             foreach (var selectable in selectables)
             {
-                selectable.interactable = _blockadeLabsSkybox.CurrentState == BlockadeLabsSkybox.State.Ready ||
-                    (_blockadeLabsSkybox.CurrentState == BlockadeLabsSkybox.State.Generating && selectable == _generateButton);
+                selectable.interactable = _blockadeLabsSkybox.CurrentState == BlockadeLabsSkybox.State.Ready;
             }
 
             var disabledColors = _promptPanel.GetComponentsInChildren<DisabledColor>();
             foreach (var disabledColor in disabledColors)
             {
-                disabledColor.Disabled = _blockadeLabsSkybox.CurrentState != BlockadeLabsSkybox.State.Ready ||
-                    (_blockadeLabsSkybox.CurrentState == BlockadeLabsSkybox.State.Generating && disabledColor.transform == _generateButton.transform);
+                disabledColor.Disabled = _blockadeLabsSkybox.CurrentState != BlockadeLabsSkybox.State.Ready;
+            }
+
+            UpdateGenerateButton();
+            UpdateCanRemix();
+        }
+
+        private void UpdateCanRemix()
+        {
+            bool canRemix = _blockadeLabsSkybox.CanRemix;
+            _remixButton.interactable = _blockadeLabsSkybox.CurrentState == BlockadeLabsSkybox.State.Ready && canRemix;
+            _remixButton.GetComponentInChildren<DisabledColor>().Disabled = !_remixButton.interactable;
+
+            if (!canRemix)
+            {
+                _blockadeLabsSkybox.Remix = false;
             }
         }
 
         private void OnErrorChanged()
         {
-            _errorPopup.SetActive(!string.IsNullOrEmpty(_blockadeLabsSkybox.LastError));
-            _errorText.text = _blockadeLabsSkybox.LastError;
+            if (!string.IsNullOrEmpty(_blockadeLabsSkybox.LastError))
+            {
+                _helpPopup.SetActive(false);
+                _remixPopup.SetActive(false);
+                _errorPopup.SetActive(true);
+                _errorText.text = _blockadeLabsSkybox.LastError;
+            }
+            else
+            {
+                _errorPopup.SetActive(false);
+            }
         }
 
         private void OnPromptInputChanged(string newValue)
@@ -339,7 +367,7 @@ namespace BlockadeLabsSDK
         private void OnRemixButtonClicked()
         {
             _blockadeLabsSkybox.Remix = true;
-            if (!_remixPopupToggle.isOn)
+            if (!_remixDontShowAgainToggle.isOn)
             {
                 _remixPopup.SetActive(true);
             }
@@ -389,8 +417,10 @@ namespace BlockadeLabsSDK
             _blockadeLabsSkybox.SelectedStyle = style;
         }
 
-        private void UpdateGenerateButtonText()
+        private void UpdateGenerateButton()
         {
+            _generateButton.interactable = _blockadeLabsSkybox.CurrentState != BlockadeLabsSkybox.State.NeedApiKey;
+
             var tmpText = _generateButton.GetComponentInChildren<TMP_Text>();
 
             if (_blockadeLabsSkybox.CurrentState == BlockadeLabsSkybox.State.Generating)
