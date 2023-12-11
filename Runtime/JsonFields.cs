@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using UnityEngine.Scripting;
 
 namespace BlockadeLabsSDK
 {
-    public class CreateSkyboxRequest
+    [Preserve, Serializable]
+    internal class CreateSkyboxRequest
     {
         public string prompt;
         public string negative_text;
@@ -15,8 +17,8 @@ namespace BlockadeLabsSDK
         public int remix_imagine_id;
     }
 
-    [System.Serializable]
-    public class CreateSkyboxResult
+    [Preserve, Serializable]
+    internal class CreateSkyboxResult
     {
         public string id;
         public string obfuscated_id;
@@ -24,13 +26,14 @@ namespace BlockadeLabsSDK
         public string error_message;
     }
 
-    [System.Serializable]
-    public class GetImagineResult
+    [Preserve, Serializable]
+    internal class GetImagineResult
     {
         public GetImagineRequest request;
     }
 
-    public class GetImagineRequest
+    [Preserve, Serializable]
+    internal class GetImagineRequest
     {
         public int id;
         public string obfuscated_id;
@@ -41,7 +44,7 @@ namespace BlockadeLabsSDK
         public string error_message;
     }
 
-    [System.Serializable]
+    [Preserve, Serializable]
     public class SkyboxStyle
     {
         public string type;
@@ -61,47 +64,11 @@ namespace BlockadeLabsSDK
         public bool isNew;
         public bool experimental;
         public string status;
-
-        // Used for GUI
-        private bool _selected;
-        public bool selected
-        {
-            get => _selected;
-            set
-            {
-                if (_selected != value)
-                {
-                    _selected = value;
-                    OnSelectedChanged?.Invoke();
-                }
-            }
-        }
-
-        public event Action OnSelectedChanged;
     }
 
-    [System.Serializable]
+    [Preserve, Serializable]
     public class SkyboxStyleFamily : SkyboxStyle
     {
         public List<SkyboxStyle> items;
-    }
-
-    public class UserInput
-    {
-        public string key;
-        public int id;
-        public string name;
-        public string placeholder;
-        public string type;
-
-        // Constructor to initialize user input with data from API response
-        public UserInput(string key, int id, string name, string placeholder, string type)
-        {
-            this.key = key;
-            this.id = id;
-            this.name = name;
-            this.placeholder = placeholder;
-            this.type = type;
-        }
     }
 }

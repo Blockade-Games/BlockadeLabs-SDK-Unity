@@ -7,7 +7,7 @@ using UnityEngine.Networking;
 
 namespace BlockadeLabsSDK
 {
-    public class ApiRequests
+    internal class ApiRequests
     {
         private static readonly string ApiEndpoint = "https://backend.blockadelabs.com/api/v1/";
 
