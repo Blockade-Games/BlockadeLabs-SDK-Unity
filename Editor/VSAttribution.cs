@@ -4,7 +4,7 @@ using UnityEngine.Analytics;
 
 namespace BlockadeLabsSDK.Editor
 {
-    public static class VSAttribution
+    internal static class VSAttribution
     {
         const int k_VersionId = 4;
         const int k_MaxEventsPerHour = 10;

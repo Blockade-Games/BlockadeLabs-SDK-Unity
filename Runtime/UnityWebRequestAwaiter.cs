@@ -5,7 +5,7 @@ using UnityEngine.Networking;
 
 namespace BlockadeLabsSDK
 {
-    public class UnityWebRequestAwaiter : INotifyCompletion
+    internal class UnityWebRequestAwaiter : INotifyCompletion
     {
         private UnityWebRequestAsyncOperation asyncOp;
         private Action continuation;
@@ -31,7 +31,7 @@ namespace BlockadeLabsSDK
         }
     }
 
-    public static class ExtensionMethods
+    internal static class ExtensionMethods
     {
         public static UnityWebRequestAwaiter GetAwaiter(this UnityWebRequestAsyncOperation asyncOp)
         {

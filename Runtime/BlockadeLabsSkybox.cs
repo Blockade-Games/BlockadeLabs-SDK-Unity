@@ -368,7 +368,7 @@ namespace BlockadeLabsSDK
             return true;
         }
 
-        public async Task PollGenerateStatusAsync(string imagineObfuscatedId)
+        private async Task PollGenerateStatusAsync(string imagineObfuscatedId)
         {
             while (!_isCancelled)
             {

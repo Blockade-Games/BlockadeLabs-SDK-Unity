@@ -145,7 +145,8 @@ namespace BlockadeLabsSDK
         public string data { get; set; }
     }
 
-    public class PusherResponseData
+    [System.Serializable]
+    internal class PusherResponseData
     {
         public string status { get; set; }
         public int id { get; set; }
