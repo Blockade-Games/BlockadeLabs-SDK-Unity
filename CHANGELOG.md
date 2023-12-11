@@ -1,6 +1,12 @@
 ﻿# Changelog
 
-All notable changes to this project will be documented in this file.
+## 1.6.0 - December 11, 2023.
+
+- Reorganize package to more standard package format.
+- Overhaul the runtime UI to match the web interface.
+- Add 'remix' support.
+- Add "Move Scene Camera to Skybox" button to Blockade Labs Skybox component.
+- Improve stability and error reporting.
 
 ## 1.5.4 - October 11th, 2023.
 
