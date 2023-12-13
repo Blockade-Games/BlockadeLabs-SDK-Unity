@@ -24,6 +24,8 @@ namespace BlockadeLabsSDK
         public string obfuscated_id;
         public string status;
         public string error_message;
+        public string pusher_channel;
+        public string pusher_event;
     }
 
     [Preserve, Serializable]

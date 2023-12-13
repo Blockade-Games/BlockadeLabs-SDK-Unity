@@ -408,7 +408,7 @@ namespace BlockadeLabsSDK
                 return;
             }
 
-            _blockadeLabsSkybox.GenerateSkyboxAsync(true);
+            _blockadeLabsSkybox.GenerateSkyboxAsync();
         }
 
         private void OnStylePicked(SkyboxStyle style)

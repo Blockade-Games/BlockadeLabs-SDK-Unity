@@ -9,6 +9,10 @@ using Newtonsoft.Json;
 using UnityEditor;
 #endif
 
+#if PUSHER_PRESENT
+using PusherClient;
+#endif
+
 namespace BlockadeLabsSDK
 {
     public class BlockadeLabsSkybox : MonoBehaviour
@@ -242,7 +246,7 @@ namespace BlockadeLabsSDK
             SetState(State.Ready);
         }
 
-        public async void GenerateSkyboxAsync(bool runtime = false)
+        public async void GenerateSkyboxAsync()
         {
             if (string.IsNullOrWhiteSpace(_prompt))
             {
@@ -295,22 +299,19 @@ namespace BlockadeLabsSDK
 
                 UpdateProgress(33);
 
-                var pusherManager = false;
-
     #if PUSHER_PRESENT
-                pusherManager = FindObjectOfType<PusherManager>();
+                var result = await WaitForPusherResultAsync(response.pusher_channel, response.pusher_event);
+    #else
+                var result = await PollForResultAsync(response.obfuscated_id);
     #endif
+                if (_isCancelled)
+                {
+                    return;
+                }
 
-                if (pusherManager && runtime)
-                {
-    #if PUSHER_PRESENT
-                    _ = PusherManager.instance.SubscribeToChannel(imagineObfuscatedId);
-    #endif
-                }
-                else
-                {
-                    await PollGenerateStatusAsync(response.obfuscated_id);
-                }
+                UpdateProgress(80);
+
+                await DownloadResultAsync(result);
             }
             catch (Exception e)
             {
@@ -368,7 +369,72 @@ namespace BlockadeLabsSDK
             return true;
         }
 
-        private async Task PollGenerateStatusAsync(string imagineObfuscatedId)
+#if PUSHER_PRESENT
+        private async Task<GetImagineResult> WaitForPusherResultAsync(string pusherChannel, string pusherEvent)
+        {
+            const string key = "a6a7b7662238ce4494d5";
+            const string cluster = "mt1";
+
+            var pusher = new Pusher(key, new PusherOptions()
+            {
+                Cluster = cluster,
+                Encrypted = true
+            });
+
+            pusher.Error += (s, ex) => SetGenerateFailed("Pusher Exception: " + ex.Message);
+            pusher.ConnectionStateChanged += (s, state) => LogVerbose("Pusher Connection State Changed: " + state);
+
+            await pusher.ConnectAsync();
+
+            var channel = await pusher.SubscribeAsync(pusherChannel);
+            if (channel == null)
+            {
+                return null;
+            }
+
+            var tcs = new TaskCompletionSource<GetImagineRequest>();
+            channel.Bind(pusherEvent, (string evt) =>
+            {
+                LogVerbose("Pusher Event: " + evt);
+                var data = JsonConvert.DeserializeObject<PusherEvent>(evt).data;
+                var request = JsonConvert.DeserializeObject<GetImagineRequest>(data);
+                if (request.status == "error" || request.status == "complete")
+                {
+                    channel.Unbind(pusherEvent);
+                    tcs.SetResult(request);
+                }
+            });
+
+            LogVerbose("Waiting for Pusher event: " + pusherChannel + " " + pusherEvent);
+            while (!tcs.Task.IsCompleted && !_isCancelled)
+            {
+                await Task.Delay(1000);
+                if (_percentageCompleted < 80)
+                {
+                    UpdateProgress(_percentageCompleted + 2);
+                }
+            }
+
+            LogVerbose("Pusher received event.");
+            await pusher.DisconnectAsync();
+
+            var request = tcs.Task.Result;
+            if (request.status == "error")
+            {
+                SetGenerateFailed(request.error_message);
+                return null;
+            }
+
+            return new GetImagineResult { request = request };
+        }
+
+        private struct PusherEvent
+        {
+            public string data;
+        }
+#endif
+
+        private async Task<GetImagineResult> PollForResultAsync(string imagineObfuscatedId)
         {
             while (!_isCancelled)
             {
@@ -397,11 +463,11 @@ namespace BlockadeLabsSDK
 
                 if (result.request.status == "complete")
                 {
-                    UpdateProgress(80);
-                    await OnGenerateComplete(result);
-                    break;
+                    return result;
                 }
             }
+
+            return null;
         }
 
         private void DestroyTextures(Texture2D[] textures)
@@ -422,7 +488,7 @@ namespace BlockadeLabsSDK
             }
         }
 
-        private async Task OnGenerateComplete(GetImagineResult result)
+        private async Task DownloadResultAsync(GetImagineResult result)
         {
             var textureUrl = result.request.file_url;
             var depthMapUrl = result.request.depth_map_url;
@@ -572,6 +638,12 @@ namespace BlockadeLabsSDK
         public void EditorPropertyChanged()
         {
             OnPropertyChanged?.Invoke();
+        }
+
+        [System.Diagnostics.Conditional("BLOCKADE_SDK_LOG")]
+        private static void LogVerbose(string log)
+        {
+            Debug.Log(log);
         }
     }
 }
