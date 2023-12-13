@@ -71,19 +71,34 @@ namespace BlockadeLabsSDK
         public static async Task<Texture2D> DownloadTextureAsync(string textureUrl)
         {
             LogVerbose("Start texture download: " + textureUrl);
-            using var imagineImageRequest = UnityWebRequest.Get(textureUrl);
-            imagineImageRequest.downloadHandler = new DownloadHandlerTexture(true);
-            await imagineImageRequest.SendWebRequest();
+            using var request = UnityWebRequest.Get(textureUrl);
+            request.downloadHandler = new DownloadHandlerTexture(false);
+            await request.SendWebRequest();
 
-            if (imagineImageRequest.result != UnityWebRequest.Result.Success)
+            if (request.result != UnityWebRequest.Result.Success)
             {
-                Debug.LogError("Get Imagine Image Error: " + imagineImageRequest.downloadHandler.error);
+                Debug.LogError("Download error: " + request.downloadHandler.error);
                 return null;
             }
 
             LogVerbose("Complete texture download: " + textureUrl);
-            var texture = (imagineImageRequest.downloadHandler as DownloadHandlerTexture).texture;
+            var texture = (request.downloadHandler as DownloadHandlerTexture).texture;
             return texture;
+        }
+
+        public static async Task DownloadFileAsync(string url, string path)
+        {
+            LogVerbose("Start download: " + url + " to " + path);
+            using var request = UnityWebRequest.Get(url);
+            request.downloadHandler = new DownloadHandlerFile(path);
+            await request.SendWebRequest();
+
+            if (request.result != UnityWebRequest.Result.Success)
+            {
+                Debug.LogError("Download error: " + request.downloadHandler.error);
+            }
+
+            LogVerbose("Complete download: " + url);
         }
 
         [System.Diagnostics.Conditional("BLOCKADE_SDK_LOG")]

@@ -312,6 +312,20 @@ namespace BlockadeLabsSDK
                 UpdateProgress(80);
 
                 await DownloadResultAsync(result);
+
+                if (_isCancelled)
+                {
+                    return;
+                }
+
+                if (_assignToMaterial && TryGetComponent<Renderer>(out var renderer) && renderer.sharedMaterial != null)
+                {
+                    Undo.RecordObject(renderer.sharedMaterial, "Assign Skybox Texture");
+                    renderer.sharedMaterial.mainTexture = _lastGeneratedTexture;
+                }
+
+                UpdateProgress(-1);
+                SetState(State.Ready);
             }
             catch (Exception e)
             {
@@ -488,6 +502,23 @@ namespace BlockadeLabsSDK
             }
         }
 
+        private static string CreateGenerateFolder(string name)
+        {
+            var generateFolder = "Blockade Labs SDK";
+            var pathFromAssets = "Assets/" + generateFolder;
+            if (!AssetDatabase.IsValidFolder(pathFromAssets))
+            {
+                AssetDatabase.CreateFolder("Assets", generateFolder);
+            }
+
+            // Create a folder to store the new assets
+            var folderPath = AssetDatabase.GenerateUniqueAssetPath(pathFromAssets + "/" + name);
+            AssetDatabase.CreateFolder(pathFromAssets, folderPath.Substring(pathFromAssets.Length + 1));
+            return folderPath;
+        }
+
+
+#if UNITY_EDITOR
         private async Task DownloadResultAsync(GetImagineResult result)
         {
             var textureUrl = result.request.file_url;
@@ -500,67 +531,6 @@ namespace BlockadeLabsSDK
                 return;
             }
 
-            var tasks = new List<Task<Texture2D>>();
-            tasks.Add(ApiRequests.DownloadTextureAsync(textureUrl));
-            if (!string.IsNullOrWhiteSpace(depthMapUrl))
-            {
-                tasks.Add(ApiRequests.DownloadTextureAsync(depthMapUrl));
-            }
-
-            var textures = await Task.WhenAll(tasks);
-            if (_isCancelled)
-            {
-                DestroyTextures(textures);
-                return;
-            }
-
-            foreach (var texture in textures)
-            {
-                if (!texture)
-                {
-                    DestroyTextures(textures);
-                    SetGenerateFailed("Error downloading textures.");
-                    return;
-                }
-            }
-
-            foreach (var texture in textures)
-            {
-                texture.Compress(true);
-            }
-
-            UpdateProgress(99);
-
-            if (_assignToMaterial && TryGetComponent<Renderer>(out var renderer) && renderer.sharedMaterial != null)
-            {
-#if UNITY_EDITOR
-                Undo.RecordObject(renderer.sharedMaterial, "Assign Skybox Texture");
-#endif
-                renderer.sharedMaterial.mainTexture = textures[0];
-            }
-
-#if UNITY_EDITOR
-            var resultJson = JsonConvert.SerializeObject(result);
-            var depthTexture = textures.Length > 1 ? textures[1] : null;
-            SaveAssets(textures[0], prompt, depthTexture, resultJson);
-#endif
-
-            _lastGeneratedId = result.request.id;
-            _lastGeneratedTexture = textures[0];
-            UpdateProgress(-1);
-            SetState(State.Ready);
-        }
-
-#if UNITY_EDITOR
-        private void SaveAssets(Texture2D texture, string prompt, Texture2D depthMapTexture, string response)
-        {
-            var generateFolder = "Blockade Labs SDK";
-            var pathFromAssets = "Assets/" + generateFolder;
-            if (!AssetDatabase.IsValidFolder(pathFromAssets))
-            {
-                AssetDatabase.CreateFolder("Assets", generateFolder);
-            }
-
             var maxLength = 20;
             if (prompt.Length > maxLength)
             {
@@ -569,22 +539,38 @@ namespace BlockadeLabsSDK
 
             var prefix = ValidateFilename(prompt);
 
-            // Create a folder to store the new assets
-            var folderPath = AssetDatabase.GenerateUniqueAssetPath(pathFromAssets + "/" + prefix);
-            AssetDatabase.CreateFolder(pathFromAssets, prefix);
+            var folderPath = CreateGenerateFolder(prefix);
+            var texturePath = folderPath + "/" + prefix + "_texture.png";
+            var depthTexturePath = folderPath + "/" + prefix + "_depth_map_texture.png";
+            var resultsPath = folderPath + "/" + prefix + "_data.txt";
 
-            // Create the texture asset
-            AssetDatabase.CreateAsset(texture, folderPath + "/" + prefix + "_texture.asset");
-
-            if (depthMapTexture)
+            var tasks = new List<Task>();
+            tasks.Add(ApiRequests.DownloadFileAsync(textureUrl, texturePath));
+            if (!string.IsNullOrWhiteSpace(depthMapUrl))
             {
-                // Create the depth map asset
-
-                AssetDatabase.CreateAsset(depthMapTexture, folderPath + "/" + prefix + "_depth_map_texture.asset");
+                tasks.Add(ApiRequests.DownloadFileAsync(depthMapUrl, depthTexturePath));
             }
 
-            // Save the response so we can use it later to remix
-            File.WriteAllText(folderPath + "/" + prefix + "_data.txt", response);
+            tasks.Add(File.WriteAllTextAsync(resultsPath, JsonConvert.SerializeObject(result)));
+
+            await Task.WhenAll(tasks);
+            if (_isCancelled)
+            {
+                Directory.Delete(folderPath, true);
+                return;
+            }
+
+            UpdateProgress(99);
+
+            AssetDatabase.Refresh();
+
+            var importer = TextureImporter.GetAtPath(texturePath) as TextureImporter;
+            importer.maxTextureSize = 16384;
+
+            var colorTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(texturePath);
+
+            _lastGeneratedId = result.request.id;
+            _lastGeneratedTexture = colorTexture;
         }
 
         private string ValidateFilename(string prompt)
@@ -600,6 +586,11 @@ namespace BlockadeLabsSDK
             }
 
             return prompt.TrimStart('_').TrimEnd('_');
+        }
+#else
+        private async Task DownloadResultAsync(GetImagineResult result)
+        {
+            return await ApiRequests.DownloadTextureAsync(result.request.file_url);
         }
 #endif
 
