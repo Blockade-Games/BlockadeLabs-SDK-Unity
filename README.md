@@ -8,16 +8,41 @@ Get one at <a href="https://api.blockadelabs.com" target="_blank">https://api.bl
 
 ## Installation
 
-Option 1: Unity Asset Store
+Option 1: Install from the Unity Asset Store
 - Add this package to your assets from the Unity Asset Store.
 - Go to `Window > Package Manager`
 - Change the project scope to `My Assets`
 - Find `Blockade Labs SDK` and click `Install`.
 
-Option 2: git package
+Option 2: Install with OpenUPM-CLI:
+- `openupm add com.blockadelabs.sdk`
+
+Option 3: Install as a git package
 - Go to `Window > Package Manager`
 - `+ > Add package from git URL...`
 - Enter `https://github.com/Blockade-Games/BlockadeLabs-SDK-Unity.git`
+
+### Pusher Package
+The Blockade SDK can be used standalone or optionally together with a Pusher websockets package. If installed, the Pusher package will use websockets to listen for any changes in the Asset Generation Process on Runtime and make updates accordingly, which should improve performance for your games on Runtime.
+
+You can learn more about the Pusher package [here](https://github.com/pusher/pusher-websocket-unity).
+
+The Pusher library requires .NET Framework runtime:
+- Set `Edit > Project Settings > Player > Api Compatibility Level` to `.NET Framework`.
+
+Option 1: Install the Pusher package with git:
+- Go to `Window > Package Manager`
+- `+ > Add package from git URL...`
+- Enter `https://github.com/pusher/pusher-websocket-unity.git#upm`
+
+Option 2: Install the Pusher package with OpenUPM-CLI:
+- `openupm add com.pusher.pusherwebsocketunity`
+
+After installing the Pusher package on 2021.x.x versions you might get an error saying:
+
+`Assembly 'Packages/com.pusher.pusherwebsocketunity/Packages/PusherClient.2.1.0/lib/net472/PusherClient.dll' will not be loaded due to errors: PusherClient references strong named Newtonsoft.Json Assembly references: 12.0.0.0 Found in project: 13.0.0.0.`
+
+To resolve the issue go to `Edit > Project Settings > Player > Other Settings > Configuration > Assembly Version Validation` and disable `Version Validation`.
 
 ## Changelog
 Refer to the changelog file [here](CHANGELOG.md).
