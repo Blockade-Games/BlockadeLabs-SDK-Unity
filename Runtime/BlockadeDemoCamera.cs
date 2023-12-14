@@ -22,7 +22,7 @@ namespace BlockadeLabsSDK
         }
 
         [SerializeField]
-        private float _autoPanSpeed = 5.0f;
+        private float _autoPanSpeed = 10.0f;
         public float AutoPanSpeed
         {
             get { return _autoPanSpeed; }
@@ -38,7 +38,7 @@ namespace BlockadeLabsSDK
         }
 
         [SerializeField]
-        private float _manualPanSpeed = 40.0f;
+        private float _manualPanSpeed = 80.0f;
         public float ManualPanSpeed
         {
             get { return _manualPanSpeed; }
@@ -46,11 +46,19 @@ namespace BlockadeLabsSDK
         }
 
         [SerializeField]
-        private float _zoomSpeed = 40.0f;
+        private float _zoomSpeed = 120.0f;
         public float ZoomSpeed
         {
             get { return _zoomSpeed; }
             set { _zoomSpeed = value; }
+        }
+
+        [SerializeField]
+        private float _zoomMax = 2.0f;
+        public float ZoomMax
+        {
+            get { return _zoomMax; }
+            set { _zoomMax = value; }
         }
 
         [SerializeField]
@@ -96,13 +104,12 @@ namespace BlockadeLabsSDK
             if (!EventSystem.current.IsPointerOverGameObject() && Input.mouseScrollDelta.y != 0 && mouseOverGameView)
             {
                 _zoom += Input.mouseScrollDelta.y * _zoomSpeed * 0.001f;
-                _zoom = Mathf.Clamp(_zoom, 0, 2);
+                _zoom = Mathf.Clamp(_zoom, 0, _zoomMax);
             }
 
-            var currentPos = transform.position;
-            transform.position = Vector3.zero;
-            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.Euler(_pitch, _yaw, 0), Time.deltaTime * _smooth);
-            transform.position = Vector3.Lerp(currentPos, _skyboxSphere.position + transform.rotation * Vector3.forward * _zoom, Time.deltaTime * _smooth);
+            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.Euler(_pitch, _yaw, 0), _smooth * Time.deltaTime);
+            var distance = Vector3.Distance(transform.position, _skyboxSphere.position);
+            transform.position = _skyboxSphere.position + transform.rotation * Vector3.forward * Mathf.Lerp(distance, _zoom, _smooth * Time.deltaTime);
         }
 
         private void UpdateWaitingToAutoPan()
