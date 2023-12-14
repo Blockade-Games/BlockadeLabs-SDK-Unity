@@ -7,11 +7,11 @@ namespace BlockadeLabsSDK
     public class RuntimeGuiManager : MonoBehaviour
     {
         [SerializeField]
-        private BlockadeLabsSkybox _blockadeLabsSkybox;
-        public BlockadeLabsSkybox BlockadeLabsSkybox
+        private BlockadeLabsSkyboxGenerator _generator;
+        public BlockadeLabsSkyboxGenerator Generator
         {
-            get { return _blockadeLabsSkybox; }
-            set { _blockadeLabsSkybox = value; }
+            get { return _generator; }
+            set { _generator = value; }
         }
 
         [SerializeField]
@@ -219,13 +219,13 @@ namespace BlockadeLabsSDK
 
         async void Start()
         {
-            _blockadeLabsSkybox.OnPropertyChanged += OnPropertyChanged;
+            _generator.OnPropertyChanged += OnPropertyChanged;
             OnPropertyChanged();
 
-            _blockadeLabsSkybox.OnStateChanged += OnStateChanged;
+            _generator.OnStateChanged += OnStateChanged;
             OnStateChanged();
 
-            _blockadeLabsSkybox.OnErrorChanged += OnErrorChanged;
+            _generator.OnErrorChanged += OnErrorChanged;
             OnErrorChanged();
 
             _promptInput.onValueChanged.AddListener(OnPromptInputChanged);
@@ -240,14 +240,14 @@ namespace BlockadeLabsSDK
             _stylePickerPanel.OnStylePicked += OnStylePicked;
             _generateButton.onClick.AddListener(OnGenerateButtonClicked);
 
-            await _blockadeLabsSkybox.LoadAsync();
+            await _generator.LoadAsync();
         }
 
         private void OnPropertyChanged()
         {
-            _promptInput.text = _blockadeLabsSkybox.Prompt;
-            _enhancePromptToggle.IsOn = _blockadeLabsSkybox.EnhancePrompt;
-            _negativeTextInput.text = _blockadeLabsSkybox.NegativeText;
+            _promptInput.text = _generator.Prompt;
+            _enhancePromptToggle.IsOn = _generator.EnhancePrompt;
+            _negativeTextInput.text = _generator.NegativeText;
             UpdateHintText();
             UpdateGenerateButton();
             UpdatePromptCharacterLimit();
@@ -257,28 +257,28 @@ namespace BlockadeLabsSDK
 
             if (_anyStylePicked)
             {
-                _selectedStyleText.text = _blockadeLabsSkybox.SelectedStyle?.name ?? "Select a Style";
-                _stylePickerPanel.SetSelectedStyle(_blockadeLabsSkybox.SelectedStyleFamily, _blockadeLabsSkybox.SelectedStyle);
+                _selectedStyleText.text = _generator.SelectedStyle?.name ?? "Select a Style";
+                _stylePickerPanel.SetSelectedStyle(_generator.SelectedStyleFamily, _generator.SelectedStyle);
             }
         }
 
         private void OnStateChanged()
         {
-            if (_blockadeLabsSkybox.CurrentState == BlockadeLabsSkybox.State.Ready)
+            if (_generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Ready)
             {
-                _stylePickerPanel.SetStyles(_blockadeLabsSkybox.StyleFamilies);
+                _stylePickerPanel.SetStyles(_generator.StyleFamilies);
             }
 
             var selectables = _promptPanel.GetComponentsInChildren<Selectable>();
             foreach (var selectable in selectables)
             {
-                selectable.interactable = _blockadeLabsSkybox.CurrentState == BlockadeLabsSkybox.State.Ready;
+                selectable.interactable = _generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Ready;
             }
 
             var disabledColors = _promptPanel.GetComponentsInChildren<DisabledColor>();
             foreach (var disabledColor in disabledColors)
             {
-                disabledColor.Disabled = _blockadeLabsSkybox.CurrentState != BlockadeLabsSkybox.State.Ready;
+                disabledColor.Disabled = _generator.CurrentState != BlockadeLabsSkyboxGenerator.State.Ready;
             }
 
             UpdateGenerateButton();
@@ -287,24 +287,24 @@ namespace BlockadeLabsSDK
 
         private void UpdateCanRemix()
         {
-            bool canRemix = _blockadeLabsSkybox.CanRemix;
-            _remixButton.interactable = _blockadeLabsSkybox.CurrentState == BlockadeLabsSkybox.State.Ready && canRemix;
+            bool canRemix = _generator.CanRemix;
+            _remixButton.interactable = _generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Ready && canRemix;
             _remixButton.GetComponentInChildren<DisabledColor>().Disabled = !_remixButton.interactable;
 
             if (!canRemix)
             {
-                _blockadeLabsSkybox.Remix = false;
+                _generator.Remix = false;
             }
         }
 
         private void OnErrorChanged()
         {
-            if (!string.IsNullOrEmpty(_blockadeLabsSkybox.LastError))
+            if (!string.IsNullOrEmpty(_generator.LastError))
             {
                 _helpPopup.SetActive(false);
                 _remixPopup.SetActive(false);
                 _errorPopup.SetActive(true);
-                _errorText.text = _blockadeLabsSkybox.LastError;
+                _errorText.text = _generator.LastError;
             }
             else
             {
@@ -314,15 +314,15 @@ namespace BlockadeLabsSDK
 
         private void OnPromptInputChanged(string newValue)
         {
-            _blockadeLabsSkybox.Prompt = newValue;
+            _generator.Prompt = newValue;
         }
 
         private void UpdatePromptCharacterLimit()
         {
-            if (_blockadeLabsSkybox.SelectedStyle != null)
+            if (_generator.SelectedStyle != null)
             {
-                _promptCharacterLimit.text = _blockadeLabsSkybox.Prompt.Length + "/" + _blockadeLabsSkybox.SelectedStyle.maxChar;
-                _promptCharacterLimit.color = _blockadeLabsSkybox.Prompt.Length > _blockadeLabsSkybox.SelectedStyle.maxChar ? Color.red : Color.white;
+                _promptCharacterLimit.text = _generator.Prompt.Length + "/" + _generator.SelectedStyle.maxChar;
+                _promptCharacterLimit.color = _generator.Prompt.Length > _generator.SelectedStyle.maxChar ? Color.red : Color.white;
             }
             else
             {
@@ -332,15 +332,15 @@ namespace BlockadeLabsSDK
 
         private void OnNegativeTextToggleChanged(bool newValue)
         {
-            _blockadeLabsSkybox.NegativeText = newValue ? _negativeTextInput.text : "";
+            _generator.NegativeText = newValue ? _negativeTextInput.text : "";
         }
 
         private void UpdateNegativeTextCharacterLimit()
         {
-            if (_blockadeLabsSkybox.SelectedStyle != null)
+            if (_generator.SelectedStyle != null)
             {
-                _negativeTextCharacterLimit.text = _blockadeLabsSkybox.NegativeText.Length + "/" + _blockadeLabsSkybox.SelectedStyle.negativeTextMaxChar;
-                _negativeTextCharacterLimit.color = _blockadeLabsSkybox.NegativeText.Length > _blockadeLabsSkybox.SelectedStyle.negativeTextMaxChar ? Color.red : Color.white;
+                _negativeTextCharacterLimit.text = _generator.NegativeText.Length + "/" + _generator.SelectedStyle.negativeTextMaxChar;
+                _negativeTextCharacterLimit.color = _generator.NegativeText.Length > _generator.SelectedStyle.negativeTextMaxChar ? Color.red : Color.white;
             }
             else
             {
@@ -350,23 +350,23 @@ namespace BlockadeLabsSDK
 
         private void OnNegativeTextInputChanged(string newValue)
         {
-            _blockadeLabsSkybox.NegativeText = _negativeTextToggle.IsOn ? newValue : "";
+            _generator.NegativeText = _negativeTextToggle.IsOn ? newValue : "";
         }
 
         private void OnEnhancePromptToggleChanged(bool newValue)
         {
-            _blockadeLabsSkybox.EnhancePrompt = newValue;
+            _generator.EnhancePrompt = newValue;
         }
 
         private void OnCreateButtonClicked()
         {
-            _blockadeLabsSkybox.Remix = false;
+            _generator.Remix = false;
             _remixPopup.SetActive(false);
         }
 
         private void OnRemixButtonClicked()
         {
-            _blockadeLabsSkybox.Remix = true;
+            _generator.Remix = true;
             if (!_remixDontShowAgainToggle.isOn)
             {
                 _remixPopup.SetActive(true);
@@ -375,30 +375,30 @@ namespace BlockadeLabsSDK
 
         private void OnGenerateButtonClicked()
         {
-            if (_blockadeLabsSkybox.CurrentState == BlockadeLabsSkybox.State.Generating)
+            if (_generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Generating)
             {
-                _blockadeLabsSkybox.Cancel();
+                _generator.Cancel();
                 return;
             }
 
-            if (_blockadeLabsSkybox.Prompt.Length == 0)
+            if (_generator.Prompt.Length == 0)
             {
                 _promptCharacterWarning.SetActive(true);
                 _promptCharacterWarning.GetComponentInChildren<TMP_Text>().text = "Prompt cannot be empty";
                 return;
             }
 
-            if (_blockadeLabsSkybox.Prompt.Length > _blockadeLabsSkybox.SelectedStyle.maxChar)
+            if (_generator.Prompt.Length > _generator.SelectedStyle.maxChar)
             {
                 _promptCharacterWarning.SetActive(true);
-                _promptCharacterWarning.GetComponentInChildren<TMP_Text>().text = $"Prompt should be {_blockadeLabsSkybox.SelectedStyle.maxChar} characters or less";
+                _promptCharacterWarning.GetComponentInChildren<TMP_Text>().text = $"Prompt should be {_generator.SelectedStyle.maxChar} characters or less";
                 return;
             }
 
-            if (_blockadeLabsSkybox.NegativeText.Length > _blockadeLabsSkybox.SelectedStyle.negativeTextMaxChar)
+            if (_generator.NegativeText.Length > _generator.SelectedStyle.negativeTextMaxChar)
             {
                 _negativeTextCharacterWarning.SetActive(true);
-                _negativeTextCharacterWarning.GetComponentInChildren<TMP_Text>().text = $"Negative text should be {_blockadeLabsSkybox.SelectedStyle.negativeTextMaxChar} characters or less";
+                _negativeTextCharacterWarning.GetComponentInChildren<TMP_Text>().text = $"Negative text should be {_generator.SelectedStyle.negativeTextMaxChar} characters or less";
                 return;
             }
 
@@ -408,26 +408,26 @@ namespace BlockadeLabsSDK
                 return;
             }
 
-            _blockadeLabsSkybox.GenerateSkyboxAsync();
+            _generator.GenerateSkyboxAsync();
         }
 
         private void OnStylePicked(SkyboxStyle style)
         {
             _anyStylePicked = true;
-            _blockadeLabsSkybox.SelectedStyle = style;
+            _generator.SelectedStyle = style;
         }
 
         private void UpdateGenerateButton()
         {
-            _generateButton.interactable = _blockadeLabsSkybox.CurrentState != BlockadeLabsSkybox.State.NeedApiKey;
+            _generateButton.interactable = _generator.CurrentState != BlockadeLabsSkyboxGenerator.State.NeedApiKey;
 
             var tmpText = _generateButton.GetComponentInChildren<TMP_Text>();
 
-            if (_blockadeLabsSkybox.CurrentState == BlockadeLabsSkybox.State.Generating)
+            if (_generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Generating)
             {
                 tmpText.text = "CANCEL";
             }
-            else if (_blockadeLabsSkybox.Remix)
+            else if (_generator.Remix)
             {
                 tmpText.text = "REMIX THIS";
             }
@@ -449,18 +449,18 @@ namespace BlockadeLabsSDK
             }
             else
             {
-                _hintText.text = _blockadeLabsSkybox.Remix ? _remixHint : _createHint;
+                _hintText.text = _generator.Remix ? _remixHint : _createHint;
             }
         }
 
         private void Update()
         {
             _createRemixUnderline.localPosition = Vector3.Lerp(_createRemixUnderline.localPosition,
-                new Vector3(_blockadeLabsSkybox.Remix ? _remixUnderlineOffset : _createUnderlineOffset,
+                new Vector3(_generator.Remix ? _remixUnderlineOffset : _createUnderlineOffset,
                     _createRemixUnderline.localPosition.y,
                     _createRemixUnderline.localPosition.z), Time.deltaTime * 10);
 
-            _progressBar.anchorMax = new Vector2(_blockadeLabsSkybox.PercentageCompleted / 100f, 1);
+            _progressBar.anchorMax = new Vector2(_generator.PercentageCompleted / 100f, 1);
         }
     }
 }

@@ -1,7 +1,7 @@
 Shader "Blockade/EquirectDepth" {
     Properties {
         _MainTex ("Texture", 2D) = "white" {}
-        _Depth("Depth", 2D) = "white" {}
+        _DepthTex("Depth", 2D) = "white" {}
         _Scale("Depth Multiplier", float) = 1
         _Max("Max Depth Cutoff", float) = 1000
     }
@@ -18,7 +18,7 @@ Shader "Blockade/EquirectDepth" {
 
             sampler2D _MainTex;
             float4 _MainTex_ST;
-            sampler2D _Depth;
+            sampler2D _DepthTex;
 
             float _Min;
             float _Max;
@@ -46,7 +46,7 @@ Shader "Blockade/EquirectDepth" {
                 // mirror x because we render on the inside of a sphere
                 v.uv.x = 1 - v.uv.x;
 
-                float depth = tex2Dlod(_Depth, float4(v.uv, 0, 0));
+                float depth = tex2Dlod(_DepthTex, float4(v.uv, 0, 0));
                 depth = _Scale / depth;
                 depth = clamp(depth, 0, _Max * _Scale);
 
