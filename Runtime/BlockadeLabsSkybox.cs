@@ -566,6 +566,8 @@ namespace BlockadeLabsSDK
 
             var importer = TextureImporter.GetAtPath(texturePath) as TextureImporter;
             importer.maxTextureSize = 16384;
+            importer.compressionQuality = 100;
+            importer.SaveAndReimport();
 
             var colorTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(texturePath);
 

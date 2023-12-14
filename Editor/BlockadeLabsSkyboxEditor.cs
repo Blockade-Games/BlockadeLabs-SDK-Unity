@@ -37,7 +37,6 @@ namespace BlockadeLabsSDK.Editor
 
             var blockadeLabsSkybox = (BlockadeLabsSkybox)target;
 
-
             bool generating = blockadeLabsSkybox.CurrentState == BlockadeLabsSkybox.State.Generating;
             BlockadeGUI.DisableGroup(generating, () =>
             {
@@ -48,7 +47,7 @@ namespace BlockadeLabsSDK.Editor
                     EditorGUILayout.HelpBox(blockadeLabsSkybox.LastError, MessageType.Error);
                 }
 
-                if (blockadeLabsSkybox.CurrentState == BlockadeLabsSkybox.State.NeedApiKey)
+                if (blockadeLabsSkybox.CurrentState == BlockadeLabsSkybox.State.NeedApiKey || blockadeLabsSkybox.StyleFamilies?.Count == 0)
                 {
                     return;
                 }
