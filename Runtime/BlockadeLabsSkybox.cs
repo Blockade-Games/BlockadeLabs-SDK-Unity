@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.IO;
 using Newtonsoft.Json;
+using System;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -34,15 +35,38 @@ namespace BlockadeLabsSDK
             get => _meshDensity;
             set
             {
-                _meshDensity = value;
-                UpdateMesh();
+                if (_meshDensity != value)
+                {
+                    _meshDensity = value;
+                    UpdateMesh();
+                    OnPropertyChanged?.Invoke();
+                }
             }
         }
+
+        [SerializeField]
+        private float _depthScale = 0.0f;
+        public float DepthScale
+        {
+            get => _depthScale;
+            set
+            {
+                if (_depthScale != value)
+                {
+                    _depthScale = value;
+                    UpdateDepthScale();
+                    OnPropertyChanged?.Invoke();
+                }
+            }
+        }
+
+        public event Action OnPropertyChanged;
 
         private int _remixId;
         private MeshRenderer _meshRenderer;
         private MeshFilter _meshFilter;
         private Material _material;
+        private MaterialPropertyBlock _materialPropertyBlock;
 
         public void SetSkyboxMaterial(Material material, int remixId)
         {
@@ -95,6 +119,17 @@ namespace BlockadeLabsSDK
                     _meshFilter.sharedMesh = _highDensityMesh;
                     break;
             }
+        }
+
+        private void UpdateDepthScale()
+        {
+            if (_materialPropertyBlock == null)
+            {
+                _materialPropertyBlock = new MaterialPropertyBlock();
+            }
+
+            _materialPropertyBlock.SetFloat("_DepthScale", _depthScale);
+            _meshRenderer.SetPropertyBlock(_materialPropertyBlock);
         }
     }
 }

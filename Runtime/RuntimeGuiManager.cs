@@ -15,6 +15,14 @@ namespace BlockadeLabsSDK
         }
 
         [SerializeField]
+        private BlockadeLabsSkybox _skybox;
+        public BlockadeLabsSkybox Skybox
+        {
+            get { return _skybox; }
+            set { _skybox = value; }
+        }
+
+        [SerializeField]
         private TMP_InputField _promptInput;
         public TMP_InputField PromptInput
         {
@@ -214,13 +222,76 @@ namespace BlockadeLabsSDK
             set { _errorText = value; }
         }
 
+        [SerializeField]
+        private GameObject _meshCreator;
+        public GameObject MeshCreator
+        {
+            get { return _meshCreator; }
+            set { _meshCreator = value; }
+        }
+
+        [SerializeField]
+        private Button _meshCreatorButton;
+        public Button MeshCreatorButton
+        {
+            get { return _meshCreatorButton; }
+            set { _meshCreatorButton = value; }
+        }
+
+        [SerializeField]
+        private Button _meshCreatorBackButton;
+        public Button MeshCreatorBackButton
+        {
+            get { return _meshCreatorBackButton; }
+            set { _meshCreatorBackButton = value; }
+        }
+
+        [SerializeField]
+        private MultiToggle _lowDensityToggle;
+        public MultiToggle LowDensityToggle
+        {
+            get { return _lowDensityToggle; }
+            set { _lowDensityToggle = value; }
+        }
+
+        [SerializeField]
+        private MultiToggle _mediumDensityToggle;
+        public MultiToggle MediumDensityToggle
+        {
+            get { return _mediumDensityToggle; }
+            set { _mediumDensityToggle = value; }
+        }
+
+        [SerializeField]
+        private MultiToggle _highDensityToggle;
+        public MultiToggle HighDensityToggle
+        {
+            get { return _highDensityToggle; }
+            set { _highDensityToggle = value; }
+        }
+
+        [SerializeField]
+        private Slider _depthScaleSlider;
+        public Slider DepthScaleSlider
+        {
+            get { return _depthScaleSlider; }
+            set { _depthScaleSlider = value; }
+        }
+
         private float _createUnderlineOffset;
         private bool _anyStylePicked;
 
         async void Start()
         {
-            _generator.OnPropertyChanged += OnPropertyChanged;
-            OnPropertyChanged();
+            // Initialize values
+            _skybox.DepthScale = 0;
+
+            // Bind to property changes that will update the UI
+            _generator.OnPropertyChanged += OnGeneratorPropertyChanged;
+            OnGeneratorPropertyChanged();
+
+            _skybox.OnPropertyChanged += OnSkyboxPropertyChanged;
+            OnSkyboxPropertyChanged();
 
             _generator.OnStateChanged += OnStateChanged;
             OnStateChanged();
@@ -228,6 +299,7 @@ namespace BlockadeLabsSDK
             _generator.OnErrorChanged += OnErrorChanged;
             OnErrorChanged();
 
+            // Prompt Panel Controls
             _promptInput.onValueChanged.AddListener(OnPromptInputChanged);
             _negativeTextToggle.OnValueChanged.AddListener(OnNegativeTextToggleChanged);
             _negativeTextInput.onValueChanged.AddListener(OnNegativeTextInputChanged);
@@ -239,11 +311,19 @@ namespace BlockadeLabsSDK
             _remixButton.GetComponent<Hoverable>().OnHoverChanged.AddListener((_) => UpdateHintText());
             _stylePickerPanel.OnStylePicked += OnStylePicked;
             _generateButton.onClick.AddListener(OnGenerateButtonClicked);
+            _meshCreatorButton.onClick.AddListener(OnMeshCreatorButtonClicked);
+
+            // Mesh Creator Controls
+            _meshCreatorBackButton.onClick.AddListener(OnMeshCreatorBackButtonClicked);
+            _lowDensityToggle.OnValueChanged.AddListener((_) => _skybox.MeshDensity = MeshDensity.Low);
+            _mediumDensityToggle.OnValueChanged.AddListener((_) => _skybox.MeshDensity = MeshDensity.Medium);
+            _highDensityToggle.OnValueChanged.AddListener((_) => _skybox.MeshDensity = MeshDensity.High);
+            _depthScaleSlider.onValueChanged.AddListener((_) => _skybox.DepthScale = _depthScaleSlider.value);
 
             await _generator.LoadAsync();
         }
 
-        private void OnPropertyChanged()
+        private void OnGeneratorPropertyChanged()
         {
             _promptInput.text = _generator.Prompt;
             _enhancePromptToggle.IsOn = _generator.EnhancePrompt;
@@ -260,6 +340,14 @@ namespace BlockadeLabsSDK
                 _selectedStyleText.text = _generator.SelectedStyle?.name ?? "Select a Style";
                 _stylePickerPanel.SetSelectedStyle(_generator.SelectedStyleFamily, _generator.SelectedStyle);
             }
+        }
+
+        private void OnSkyboxPropertyChanged()
+        {
+            _lowDensityToggle.IsOn = _skybox.MeshDensity == MeshDensity.Low;
+            _mediumDensityToggle.IsOn = _skybox.MeshDensity == MeshDensity.Medium;
+            _highDensityToggle.IsOn = _skybox.MeshDensity == MeshDensity.High;
+            _depthScaleSlider.value = _skybox.DepthScale;
         }
 
         private void OnStateChanged()
@@ -409,6 +497,20 @@ namespace BlockadeLabsSDK
             }
 
             _generator.GenerateSkyboxAsync();
+        }
+
+        private void OnMeshCreatorButtonClicked()
+        {
+            _skybox.DepthScale = 1;
+            _promptPanel.SetActive(false);
+            _meshCreator.SetActive(true);
+        }
+
+        private void OnMeshCreatorBackButtonClicked()
+        {
+            _skybox.DepthScale = 0;
+            _promptPanel.SetActive(true);
+            _meshCreator.SetActive(false);
         }
 
         private void OnStylePicked(SkyboxStyle style)
