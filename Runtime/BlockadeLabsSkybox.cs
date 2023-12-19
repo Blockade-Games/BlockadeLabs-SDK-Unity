@@ -62,6 +62,8 @@ namespace BlockadeLabsSDK
 
         public event Action OnPropertyChanged;
 
+        public bool HasDepthTexture => _meshRenderer?.sharedMaterial?.GetTexture("_DepthMap") != null;
+
         private int _remixId;
         private MeshRenderer _meshRenderer;
         private MeshFilter _meshFilter;
@@ -72,6 +74,12 @@ namespace BlockadeLabsSDK
         {
             _meshRenderer = GetComponent<MeshRenderer>();
             _meshRenderer.sharedMaterial = material;
+        }
+
+        private void OnEnable()
+        {
+            UpdateMesh();
+            UpdateDepthScale();
         }
 
         public int? GetRemixId()
@@ -121,15 +129,23 @@ namespace BlockadeLabsSDK
             }
         }
 
-        private void UpdateDepthScale()
+        public void UpdateDepthScale()
         {
             if (_materialPropertyBlock == null)
             {
                 _materialPropertyBlock = new MaterialPropertyBlock();
             }
 
+            _meshRenderer = GetComponent<MeshRenderer>();
             _materialPropertyBlock.SetFloat("_DepthScale", _depthScale);
             _meshRenderer.SetPropertyBlock(_materialPropertyBlock);
+        }
+
+        public void EditorPropertyChanged()
+        {
+            UpdateMesh();
+            UpdateDepthScale();
+            OnPropertyChanged?.Invoke();
         }
     }
 }

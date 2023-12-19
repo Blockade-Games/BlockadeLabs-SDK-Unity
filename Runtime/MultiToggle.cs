@@ -11,6 +11,7 @@ namespace BlockadeLabsSDK
         public List<GameObject> OnObjects;
         public List<GameObject> OffObjects;
         public UnityEvent<bool> OnValueChanged;
+        public UnityEvent OnTurnedOn;
 
         [SerializeField]
         private bool _isOn;
@@ -24,8 +25,20 @@ namespace BlockadeLabsSDK
                     _isOn = value;
                     UpdateVisualState();
                     OnValueChanged.Invoke(_isOn);
+                    if (_isOn)
+                    {
+                        OnTurnedOn.Invoke();
+                    }
                 }
             }
+        }
+
+        [SerializeField]
+        private bool _canOnlyTurnOn;
+        public bool CanOnlyTurnOn
+        {
+            get => _canOnlyTurnOn;
+            set => _canOnlyTurnOn = value;
         }
 
         protected override void Awake()
@@ -59,7 +72,14 @@ namespace BlockadeLabsSDK
                 return;
             }
 
-            Toggle();
+            if (_canOnlyTurnOn)
+            {
+                IsOn = true;
+            }
+            else
+            {
+                Toggle();
+            }
         }
     }
 }

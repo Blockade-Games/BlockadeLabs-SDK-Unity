@@ -1,5 +1,3 @@
-using System;
-using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -12,6 +10,7 @@ namespace BlockadeLabsSDK.Editor
         private SerializedProperty _mediumDensityMesh;
         private SerializedProperty _highDensityMesh;
         private SerializedProperty _meshDensity;
+        private SerializedProperty _depthScale;
 
         private void OnEnable()
         {
@@ -19,6 +18,7 @@ namespace BlockadeLabsSDK.Editor
             _mediumDensityMesh = serializedObject.FindProperty("_mediumDensityMesh");
             _highDensityMesh = serializedObject.FindProperty("_highDensityMesh");
             _meshDensity = serializedObject.FindProperty("_meshDensity");
+            _depthScale = serializedObject.FindProperty("_depthScale");
         }
 
         public override void OnInspectorGUI()
@@ -28,10 +28,18 @@ namespace BlockadeLabsSDK.Editor
             EditorGUILayout.PropertyField(_mediumDensityMesh);
             EditorGUILayout.PropertyField(_highDensityMesh);
             EditorGUILayout.PropertyField(_meshDensity);
+            EditorGUILayout.PropertyField(_depthScale);
+
+            var skybox = (BlockadeLabsSkybox)target;
+
+            if (GUILayout.Button("Move Scene Camera to Skybox"))
+            {
+                SceneView.lastActiveSceneView.AlignViewToObject(skybox.transform);
+            }
+
             if (serializedObject.ApplyModifiedProperties())
             {
-                var skybox = (BlockadeLabsSkybox)target;
-                skybox.UpdateMesh();
+                skybox.EditorPropertyChanged();
             }
         }
     }

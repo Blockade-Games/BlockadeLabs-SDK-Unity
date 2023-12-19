@@ -72,11 +72,6 @@ namespace BlockadeLabsSDK.Editor
                 }
             });
 
-            if (GUILayout.Button("Move Scene Camera to Skybox"))
-            {
-                SceneView.lastActiveSceneView.AlignViewToObject(generator.transform);
-            }
-
             if (serializedObject.ApplyModifiedProperties())
             {
                 generator.EditorPropertyChanged();

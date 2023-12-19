@@ -315,9 +315,9 @@ namespace BlockadeLabsSDK
 
             // Mesh Creator Controls
             _meshCreatorBackButton.onClick.AddListener(OnMeshCreatorBackButtonClicked);
-            _lowDensityToggle.OnValueChanged.AddListener((_) => _skybox.MeshDensity = MeshDensity.Low);
-            _mediumDensityToggle.OnValueChanged.AddListener((_) => _skybox.MeshDensity = MeshDensity.Medium);
-            _highDensityToggle.OnValueChanged.AddListener((_) => _skybox.MeshDensity = MeshDensity.High);
+            _lowDensityToggle.OnTurnedOn.AddListener(() => _skybox.MeshDensity = MeshDensity.Low);
+            _mediumDensityToggle.OnTurnedOn.AddListener(() => _skybox.MeshDensity = MeshDensity.Medium);
+            _highDensityToggle.OnTurnedOn.AddListener(() => _skybox.MeshDensity = MeshDensity.High);
             _depthScaleSlider.onValueChanged.AddListener((_) => _skybox.DepthScale = _depthScaleSlider.value);
 
             await _generator.LoadAsync();
@@ -371,6 +371,7 @@ namespace BlockadeLabsSDK
 
             UpdateGenerateButton();
             UpdateCanRemix();
+            UpdateMeshCreatorButton();
         }
 
         private void UpdateCanRemix()
@@ -382,6 +383,16 @@ namespace BlockadeLabsSDK
             if (!canRemix)
             {
                 _generator.Remix = false;
+            }
+        }
+
+        private void UpdateMeshCreatorButton()
+        {
+            _meshCreatorButton.interactable = _skybox.HasDepthTexture && _generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Ready;
+            var disabledColors = _meshCreatorButton.GetComponentsInChildren<DisabledColor>();
+            foreach (var disabledColor in disabledColors)
+            {
+                disabledColor.Disabled = !_meshCreatorButton.interactable;
             }
         }
 
