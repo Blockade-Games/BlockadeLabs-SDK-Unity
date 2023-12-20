@@ -18,7 +18,7 @@ namespace BlockadeLabsSDK
         Epic
     }
 
-    [RequireComponent(typeof(MeshRenderer))]
+    [ExecuteAlways, RequireComponent(typeof(MeshRenderer))]
     public class BlockadeLabsSkybox : MonoBehaviour
     {
         [SerializeField]
@@ -72,6 +72,7 @@ namespace BlockadeLabsSDK
 
         private void OnEnable()
         {
+            _meshDensity = MeshDensity.Medium;
             UpdateMesh();
             UpdateDepthScale();
         }
@@ -133,23 +134,9 @@ namespace BlockadeLabsSDK
             }
 
             mesh = TetrahedronMesh.GenerateMesh(subdivisions);
+            mesh.hideFlags = HideFlags.DontSave;
             _meshes.Add(subdivisions, mesh);
             return mesh;
-        }
-
-        private void OnDisable()
-        {
-#if UNITY_EDITOR
-            foreach (var mesh in _meshes.Values)
-            {
-                if (mesh != null && string.IsNullOrWhiteSpace(AssetDatabase.GetAssetPath(mesh)))
-                {
-                    DestroyImmediate(mesh);
-                }
-            }
-
-            _meshes.Clear();
-#endif
         }
 
         public void UpdateDepthScale()

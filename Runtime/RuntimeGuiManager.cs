@@ -271,6 +271,14 @@ namespace BlockadeLabsSDK
         }
 
         [SerializeField]
+        private MultiToggle _epicDensityToggle;
+        public MultiToggle EpicDensityToggle
+        {
+            get { return _epicDensityToggle; }
+            set { _epicDensityToggle = value; }
+        }
+
+        [SerializeField]
         private Slider _depthScaleSlider;
         public Slider DepthScaleSlider
         {
@@ -318,6 +326,7 @@ namespace BlockadeLabsSDK
             _lowDensityToggle.OnTurnedOn.AddListener(() => _skybox.MeshDensity = MeshDensity.Low);
             _mediumDensityToggle.OnTurnedOn.AddListener(() => _skybox.MeshDensity = MeshDensity.Medium);
             _highDensityToggle.OnTurnedOn.AddListener(() => _skybox.MeshDensity = MeshDensity.High);
+            _epicDensityToggle.OnTurnedOn.AddListener(() => _skybox.MeshDensity = MeshDensity.Epic);
             _depthScaleSlider.onValueChanged.AddListener((_) => _skybox.DepthScale = _depthScaleSlider.value);
 
             await _generator.LoadAsync();
@@ -347,6 +356,7 @@ namespace BlockadeLabsSDK
             _lowDensityToggle.IsOn = _skybox.MeshDensity == MeshDensity.Low;
             _mediumDensityToggle.IsOn = _skybox.MeshDensity == MeshDensity.Medium;
             _highDensityToggle.IsOn = _skybox.MeshDensity == MeshDensity.High;
+            _epicDensityToggle.IsOn = _skybox.MeshDensity == MeshDensity.Epic;
             _depthScaleSlider.value = _skybox.DepthScale;
         }
 
