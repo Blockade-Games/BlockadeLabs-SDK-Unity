@@ -284,7 +284,7 @@ namespace BlockadeLabsSDK
         async void Start()
         {
             // Initialize values
-            _skybox.DepthScale = 0;
+            _skybox.DepthScale = _depthScaleSlider.minValue;
 
             // Bind to property changes that will update the UI
             _generator.OnPropertyChanged += OnGeneratorPropertyChanged;
@@ -512,14 +512,14 @@ namespace BlockadeLabsSDK
 
         private void OnMeshCreatorButtonClicked()
         {
-            _skybox.DepthScale = 1;
+            _skybox.DepthScale = _depthScaleSlider.minValue + (_depthScaleSlider.maxValue - _depthScaleSlider.minValue) / 3f;
             _promptPanel.SetActive(false);
             _meshCreator.SetActive(true);
         }
 
         private void OnMeshCreatorBackButtonClicked()
         {
-            _skybox.DepthScale = 0;
+            _skybox.DepthScale = _depthScaleSlider.minValue;
             _promptPanel.SetActive(true);
             _meshCreator.SetActive(false);
         }

@@ -69,7 +69,7 @@ Material:
     - _BumpScale: 1
     - _Cutoff: 0.5
     - _DepthCurve: 5
-    - _DepthScale: 0
+    - _DepthScale: 100
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
     - _GlossMapScale: 1

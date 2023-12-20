@@ -2,6 +2,7 @@ using UnityEngine;
 using System.IO;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -13,21 +14,13 @@ namespace BlockadeLabsSDK
     {
         Low,
         Medium,
-        High
+        High,
+        Epic
     }
 
     [RequireComponent(typeof(MeshRenderer))]
     public class BlockadeLabsSkybox : MonoBehaviour
     {
-        [SerializeField]
-        private Mesh _lowDensityMesh;
-
-        [SerializeField]
-        private Mesh _mediumDensityMesh;
-
-        [SerializeField]
-        private Mesh _highDensityMesh;
-
         [SerializeField]
         private MeshDensity _meshDensity = MeshDensity.Medium;
         public MeshDensity MeshDensity
@@ -69,6 +62,7 @@ namespace BlockadeLabsSDK
         private MeshFilter _meshFilter;
         private Material _material;
         private MaterialPropertyBlock _materialPropertyBlock;
+        private Dictionary<int, Mesh> _meshes = new Dictionary<int, Mesh>();
 
         public void SetSkyboxMaterial(Material material, int remixId)
         {
@@ -114,19 +108,48 @@ namespace BlockadeLabsSDK
         public void UpdateMesh()
         {
             _meshFilter = GetComponent<MeshFilter>();
-
             switch (_meshDensity)
             {
                 case MeshDensity.Low:
-                    _meshFilter.sharedMesh = _lowDensityMesh;
+                    _meshFilter.sharedMesh = GetOrCreateMesh(64);
                     break;
                 case MeshDensity.Medium:
-                    _meshFilter.sharedMesh = _mediumDensityMesh;
+                    _meshFilter.sharedMesh = GetOrCreateMesh(128);
                     break;
                 case MeshDensity.High:
-                    _meshFilter.sharedMesh = _highDensityMesh;
+                    _meshFilter.sharedMesh = GetOrCreateMesh(256);
+                    break;
+                case MeshDensity.Epic:
+                    _meshFilter.sharedMesh = GetOrCreateMesh(768);
                     break;
             }
+        }
+
+        private Mesh GetOrCreateMesh(int subdivisions)
+        {
+            if (_meshes.TryGetValue(subdivisions, out var mesh))
+            {
+                return mesh;
+            }
+
+            mesh = TetrahedronMesh.GenerateMesh(subdivisions);
+            _meshes.Add(subdivisions, mesh);
+            return mesh;
+        }
+
+        private void OnDisable()
+        {
+#if UNITY_EDITOR
+            foreach (var mesh in _meshes.Values)
+            {
+                if (mesh != null && string.IsNullOrWhiteSpace(AssetDatabase.GetAssetPath(mesh)))
+                {
+                    DestroyImmediate(mesh);
+                }
+            }
+
+            _meshes.Clear();
+#endif
         }
 
         public void UpdateDepthScale()

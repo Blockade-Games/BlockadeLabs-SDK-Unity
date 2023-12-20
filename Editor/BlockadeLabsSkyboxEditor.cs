@@ -6,17 +6,11 @@ namespace BlockadeLabsSDK.Editor
     [CustomEditor(typeof(BlockadeLabsSkybox))]
     public class BlockadeLabsSkyboxEditor : UnityEditor.Editor
     {
-        private SerializedProperty _lowDensityMesh;
-        private SerializedProperty _mediumDensityMesh;
-        private SerializedProperty _highDensityMesh;
         private SerializedProperty _meshDensity;
         private SerializedProperty _depthScale;
 
         private void OnEnable()
         {
-            _lowDensityMesh = serializedObject.FindProperty("_lowDensityMesh");
-            _mediumDensityMesh = serializedObject.FindProperty("_mediumDensityMesh");
-            _highDensityMesh = serializedObject.FindProperty("_highDensityMesh");
             _meshDensity = serializedObject.FindProperty("_meshDensity");
             _depthScale = serializedObject.FindProperty("_depthScale");
         }
@@ -24,9 +18,6 @@ namespace BlockadeLabsSDK.Editor
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
-            EditorGUILayout.PropertyField(_lowDensityMesh);
-            EditorGUILayout.PropertyField(_mediumDensityMesh);
-            EditorGUILayout.PropertyField(_highDensityMesh);
             EditorGUILayout.PropertyField(_meshDensity);
             EditorGUILayout.PropertyField(_depthScale);
 
@@ -35,6 +26,28 @@ namespace BlockadeLabsSDK.Editor
             if (GUILayout.Button("Move Scene Camera to Skybox"))
             {
                 SceneView.lastActiveSceneView.AlignViewToObject(skybox.transform);
+            }
+
+            var meshFilter = skybox.GetComponent<MeshFilter>();
+            if (meshFilter != null)
+            {
+                bool hasUnsavedMesh = meshFilter.sharedMesh != null &&
+                    string.IsNullOrWhiteSpace(AssetDatabase.GetAssetPath(meshFilter.sharedMesh));
+
+                if (hasUnsavedMesh)
+                {
+                    if (GUILayout.Button("Save Mesh"))
+                    {
+                        var path = EditorUtility.SaveFilePanelInProject("Save mesh", meshFilter.sharedMesh.name, "asset", "Save mesh");
+                        if (string.IsNullOrEmpty(path))
+                        {
+                            return;
+                        }
+
+                        AssetDatabase.CreateAsset(meshFilter.sharedMesh, path);
+                        AssetDatabase.SaveAssets();
+                    }
+                }
             }
 
             if (serializedObject.ApplyModifiedProperties())

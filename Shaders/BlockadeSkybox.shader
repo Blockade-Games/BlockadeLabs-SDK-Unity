@@ -4,8 +4,7 @@ Shader "Custom/BlockadeSkybox"
     {
         _MainTex ("Texture", 2D) = "white" {}
         _DepthMap ("Depth Map", 2D) = "white" {}
-        _DepthScale ("Depth Scale", Float) = 1.0
-        _DepthCurve ("Depth Curve", Float) = 2.0
+        _DepthScale ("Depth Scale", Range(3, 10)) = 5.3
     }
     SubShader
     {
@@ -34,7 +33,6 @@ Shader "Custom/BlockadeSkybox"
             sampler2D _MainTex;
             sampler2D _DepthMap;
             float _DepthScale;
-            float _DepthCurve;
 
             v2f vert (appdata v)
             {
@@ -45,16 +43,13 @@ Shader "Custom/BlockadeSkybox"
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
 
                 o.uv = v.uv;
-                o.uv.y = 1 - o.uv.y;
 
                 float4 uvLOD = float4(o.uv, 0, 0);
+                float depth = tex2Dlod(_DepthMap, uvLOD).g;
 
-                float depth = 1 - tex2Dlod(_DepthMap, uvLOD).r;
+                depth = clamp(1.0 / depth + 10 / _DepthScale, 0, _DepthScale);
 
-                depth = pow(depth, _DepthCurve);
-
-                float3 norm = normalize(v.vertex.xyz);
-                v.vertex.xyz += norm * depth * _DepthScale;
+                v.vertex.xyz = normalize(v.vertex.xyz) * depth;
 
                 o.vertex = UnityObjectToClipPos(v.vertex);
                 return o;
