@@ -57,36 +57,39 @@ After importing the package, open `Packages > Blockade Labs SDK > Scenes > Skybo
 
 **Note**: Demo scene uses Text Mesh Pro elements for runtime UI. If you haven't imported TMP Essentials
 you will be prompted to do so after you load the scene. When you are done importing TMP Essentials,
-reload the scene by either right clicking on it in the `Assets/Samples/Blockade Labs SDK/x.x.x/Scenes`
-folder and selecting `Reimport` or by loading some other scene and then loading the Skybox Scene again.
+reload the scene by either double clicking on it in the `Assets/Samples/Blockade Labs SDK/Scenes`.
 
 ## Generating Skyboxes in Edit Mode
 
-You will now see a gameObjects named `Skybox Sphere`.
-The Sphere has a Mesh Renderer component which uses a sample `Skybox Material` which in turn uses a
-shader of type `Skybox/Panoramic`. A texture generated with this package is assigned to the shader.
+The scene contains two notable gameObjects:
+- `Blockade Labs Skybox Generator` generates skybox textures and materials.
+- `Blockade Labs Skybox` generates a mesh to display the skybox.
 
-You can generate a new texture that will replace the existing one on the sphere by following these steps.
+You can generate a new skybox that will replace the existing one by following these steps.
 
-1. Select the Skybox Sphere gameObject.
-2. Locate the `Blockade Labs Skybox` component.
-3. Add your Blockade Labs' `API key` in the designated field.
-4. Click the `Apply` button.
-5. After the plugin is successfully initialized, some additional fields will become available.
-6. You'll notice that the object has an option `Assign to Material` ticked. Leave it as it is.
-7. Select the desired style.
-8. Fill in the `Prompt` field.
-9. Click the `Generate Skybox` Button.
-10. In about 20-30 seconds your texture will be replaced with a new texture you just created, and a folder located in `Assets/Blockade Labs SDK` will now hold your newly created texture.
-11. You should see your new skybox in the game view. You can also click `Move Scene Camera to Skybox` to see the skybox in the scene view.
+1. Select the `Blockade Labs Skybox Generator` gameObject.
+2. Add your Blockade Labs' `API key` in the designated inspector field.
+3. Click the `Apply` button.
+4. After the plugin is successfully initialized, some additional fields will become available.
+5. Select the desired style.
+6. Fill in the `Prompt` field.
+7. Click the `Generate Skybox` Button.
+8. In about 20-30 seconds a new material will be generated and assigned to the `Blockade Labs Skybox` gameObject. You will also find a folder located in `Assets/Blockade Labs SDK` that holds the generated textures and materials.
+9. You should see your new skybox in the game view. You can also click `Move Scene Camera to Skybox` to see the skybox in the scene view.
 
 ## Generating Skyboxes at Runtime
 
 To be able to generate assets on runtime you just need to follow these simple steps:
 
-1. Select the Skybox Sphere gameObject.
-2. Locate the `Blockade Labs Skybox` component.
-3. Add your Blockade Labs' `API key` in the designated field.
-4. The SkyboxScene already has the necessary elements to display the UI for Skybox generation on runtime.
-5. After you run the game UI will become active on top of your Game view.
-6. Use the runtime UI in the same manner as you would in the editor (`Enter Prompt > Select a style > Generate`).
+1. Select the `Blockade Labs Skybox Generator` gameObject.
+2. Add your Blockade Labs' `API key` in the designated field.
+3. Play the scene. You will see the necessary elements to generate a new skybox. You can look around by clicking and dragging the mouse and zoom with the scroll wheel.
+5. Use the runtime UI in the same manner as you would in the editor: enter a prompt, select a style, click generate.
+
+## Mesh Creator
+
+The `Blockade Labs Skybox Generator` component generates a color texture and a depth texture, which are assigned to the skybox material.
+
+The `Blockade Labs Skybox` component generates a Tetrahedron mesh to apply this material. You can configure the `Mesh Density` and `Depth Scale` fields. The mesh and material will be configured to apply the generated depth map to deform the mesh.
+
+Try zooming in and out with the scroll wheel in play mode to see the effect of the depth scale!

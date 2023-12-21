@@ -1,5 +1,13 @@
 ﻿# Changelog
 
+## 1.6.1 - December 21, 2023.
+
+- Added Mesh Creator mode, which uses a new shader to display the depth map.
+- Blockade Labs Skybox is split into two components:
+  `Blockade Labs Skybox Generator` generates the textures and material.
+  `Blockade Labs Skybox` generates a mesh and configures the shader for Mesh Creator mode.
+  See README for details.
+
 ## 1.6.0 - December 11, 2023.
 
 - Reorganize package to more standard package format.
