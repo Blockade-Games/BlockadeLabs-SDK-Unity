@@ -520,7 +520,8 @@ namespace BlockadeLabsSDK
                 tasks.Add(ApiRequests.DownloadFileAsync(depthMapUrl, depthTexturePath));
             }
 
-            tasks.Add(File.WriteAllTextAsync(resultsPath, JsonConvert.SerializeObject(result)));
+            // WriteAllTextAsync not defined in Unity 20202.3
+            File.WriteAllText(resultsPath, JsonConvert.SerializeObject(result));
 
             await Task.WhenAll(tasks);
             if (_isCancelled)
@@ -542,7 +543,7 @@ namespace BlockadeLabsSDK
 
             var material = new Material(_material);
             material.mainTexture = colorTexture;
-            if (material.HasTexture("_DepthMap"))
+            if (material.HasProperty("_DepthMap"))
             {
                 var depthTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(depthTexturePath);
                 material.SetTexture("_DepthMap", depthTexture);

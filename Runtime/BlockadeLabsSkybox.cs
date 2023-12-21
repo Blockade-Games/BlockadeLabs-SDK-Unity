@@ -37,8 +37,8 @@ namespace BlockadeLabsSDK
             }
         }
 
-        [SerializeField]
-        private float _depthScale = 0.0f;
+        [SerializeField, Range(3.0f, 10.0f)]
+        private float _depthScale = 3.0f;
         public float DepthScale
         {
             get => _depthScale;
