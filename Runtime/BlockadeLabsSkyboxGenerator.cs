@@ -542,10 +542,10 @@ namespace BlockadeLabsSDK
 
             var material = new Material(_material);
             material.mainTexture = colorTexture;
-            if (material.HasTexture("_DepthTex"))
+            if (material.HasTexture("_DepthMap"))
             {
                 var depthTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(depthTexturePath);
-                material.SetTexture("_DepthTex", depthTexture);
+                material.SetTexture("_DepthMap", depthTexture);
             }
 
             AssetDatabase.CreateAsset(material, folderPath + "/" + prefix + "_material.mat");

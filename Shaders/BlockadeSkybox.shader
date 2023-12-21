@@ -1,4 +1,4 @@
-Shader "Custom/BlockadeSkybox"
+Shader "BlockadeLabsSDK/BlockadeSkybox"
 {
     Properties
     {
@@ -6,9 +6,84 @@ Shader "Custom/BlockadeSkybox"
         _DepthMap ("Depth Map", 2D) = "white" {}
         _DepthScale ("Depth Scale", Range(3, 10)) = 5.3
     }
+
+    // Universal Render Pipeline
     SubShader
     {
-        Tags { "RenderType"="Opaque" }
+        Tags
+        {
+            "RenderType" = "Opaque"
+            "RenderPipeline" = "UniversalPipeline"
+            "Queue" = "AlphaTest+51"
+        }
+
+        LOD 100
+
+        Pass
+        {
+            PackageRequirements
+            {
+                "com.unity.render-pipelines.universal": "10.2.1"
+            }
+
+            HLSLPROGRAM
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+
+            #pragma vertex vert
+            #pragma fragment frag
+
+            struct Attributes
+            {
+                float4 positionOS : POSITION;
+                float2 uv : TEXCOORD0;
+            };
+
+            struct Varyings
+            {
+                float4 positionCS : SV_POSITION;
+                float2 uv : TEXCOORD0;
+            };
+
+            TEXTURE2D(_MainTex);
+            TEXTURE2D(_DepthMap);
+            SAMPLER(sampler_MainTex);
+            SAMPLER(sampler_DepthMap);
+            float _DepthScale;
+
+            Varyings vert(Attributes IN)
+            {
+                Varyings OUT;
+
+                OUT.uv = IN.uv;
+
+                float4 uvLOD = float4(OUT.uv, 0, 0);
+                float depth = SAMPLE_TEXTURE2D_LOD(_DepthMap, sampler_DepthMap, uvLOD, 0).g;
+                depth = clamp(1.0 / depth + 10 / _DepthScale, 0, _DepthScale);
+
+                IN.positionOS.xyz = normalize(IN.positionOS.xyz) * depth;
+                OUT.positionCS = TransformObjectToHClip(IN.positionOS.xyz);
+
+                return OUT;
+            }
+
+            half4 frag(Varyings IN) : SV_Target
+            {
+                half4 col = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv);
+                return col;
+            }
+            ENDHLSL
+        }
+    }
+
+    // Built-in render pipeline (and works in HDRP apparently)
+    SubShader
+    {
+        Tags
+        {
+            "RenderType" = "Opaque"
+            "RenderPipeline" = ""
+        }
+
         LOD 100
 
         Pass
