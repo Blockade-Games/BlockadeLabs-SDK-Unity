@@ -93,6 +93,11 @@ namespace BlockadeLabsSDK
         private float _autoPanTimeStart;
         private float _previousZoom;
 
+        public void SetZoom(float zoom)
+        {
+            _zoom = zoom;
+        }
+
         void Update()
         {
             switch (_state)

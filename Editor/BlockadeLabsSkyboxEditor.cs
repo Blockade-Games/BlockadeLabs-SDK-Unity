@@ -44,6 +44,7 @@ namespace BlockadeLabsSDK.Editor
                             return;
                         }
 
+                        meshFilter.sharedMesh.hideFlags = HideFlags.None;
                         AssetDatabase.CreateAsset(meshFilter.sharedMesh, path);
                         AssetDatabase.SaveAssets();
                     }

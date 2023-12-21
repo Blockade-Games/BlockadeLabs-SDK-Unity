@@ -1,4 +1,5 @@
-﻿using TMPro;
+﻿using System.Collections;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -20,6 +21,14 @@ namespace BlockadeLabsSDK
         {
             get { return _skybox; }
             set { _skybox = value; }
+        }
+
+        [SerializeField]
+        private BlockadeDemoCamera _demoCamera;
+        public BlockadeDemoCamera DemoCamera
+        {
+            get { return _demoCamera; }
+            set { _demoCamera = value; }
         }
 
         [SerializeField]
@@ -520,16 +529,34 @@ namespace BlockadeLabsSDK
             _generator.GenerateSkyboxAsync();
         }
 
+        private IEnumerator CoAnimateDepthScale(float target)
+        {
+            var start = _skybox.DepthScale;
+            var time = 0.0f;
+            var duration = 0.1f;
+
+            while (time < duration)
+            {
+                time += Time.deltaTime;
+                _skybox.DepthScale = Mathf.Lerp(start, target, time / duration);
+                yield return null;
+            }
+
+            _skybox.DepthScale = target;
+        }
+
         private void OnMeshCreatorButtonClicked()
         {
-            _skybox.DepthScale = _depthScaleSlider.minValue + (_depthScaleSlider.maxValue - _depthScaleSlider.minValue) / 3f;
+            StartCoroutine(CoAnimateDepthScale(_depthScaleSlider.minValue + (_depthScaleSlider.maxValue - _depthScaleSlider.minValue) / 3f));
+            _demoCamera.SetZoom(-0.5f);
             _promptPanel.SetActive(false);
             _meshCreator.SetActive(true);
         }
 
         private void OnMeshCreatorBackButtonClicked()
         {
-            _skybox.DepthScale = _depthScaleSlider.minValue;
+            StartCoroutine(CoAnimateDepthScale(_depthScaleSlider.minValue));
+            _demoCamera.SetZoom(0.0f);
             _promptPanel.SetActive(true);
             _meshCreator.SetActive(false);
         }

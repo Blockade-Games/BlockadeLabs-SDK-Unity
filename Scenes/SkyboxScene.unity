@@ -13935,6 +13935,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _generator: {fileID: 1954151757}
   _skybox: {fileID: 1946445123}
+  _demoCamera: {fileID: 1759603986}
   _promptInput: {fileID: 2009891780}
   _createButton: {fileID: 761611430}
   _remixButton: {fileID: 1671294358}
@@ -14458,7 +14459,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1759603982}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.95, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -14484,6 +14485,7 @@ MonoBehaviour:
   _manualPanSpeed: 80
   _zoomSpeed: 120
   _zoomMax: 2.75
+  _zoomMin: -2
   _smooth: 5
 --- !u!1 &1761701232
 GameObject:
@@ -15625,7 +15627,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1946445118}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.95, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -15680,7 +15682,7 @@ MonoBehaviour:
   _material: {fileID: 2100000, guid: 8bbc7111fd83de745beb42d92e974968, type: 2}
   _selectedStyleFamilyIndex: 3
   _selectedStyleIndex: 1
-  _prompt: End of the world
+  _prompt: 
   _negativeText: 
   _seed: 0
   _enhancePrompt: 0

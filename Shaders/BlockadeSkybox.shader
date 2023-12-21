@@ -56,8 +56,7 @@ Shader "BlockadeLabsSDK/BlockadeSkybox"
 
                 OUT.uv = IN.uv;
 
-                float4 uvLOD = float4(OUT.uv, 0, 0);
-                float depth = SAMPLE_TEXTURE2D_LOD(_DepthMap, sampler_DepthMap, uvLOD, 0).g;
+                float depth = SAMPLE_TEXTURE2D_LOD(_DepthMap, sampler_DepthMap, IN.uv, 0).g;
                 depth = clamp(1.0 / depth + 10 / _DepthScale, 0, _DepthScale);
 
                 IN.positionOS.xyz = normalize(IN.positionOS.xyz) * depth;

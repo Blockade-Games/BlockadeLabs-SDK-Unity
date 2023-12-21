@@ -471,6 +471,7 @@ namespace BlockadeLabsSDK
             }
         }
 
+#if UNITY_EDITOR
         private static string CreateGenerateFolder(string name)
         {
             var generateFolder = "Blockade Labs SDK";
@@ -486,8 +487,6 @@ namespace BlockadeLabsSDK
             return folderPath;
         }
 
-
-#if UNITY_EDITOR
         private async Task DownloadResultAsync(GetImagineResult result)
         {
             var textureUrl = result.request.file_url;
@@ -540,21 +539,11 @@ namespace BlockadeLabsSDK
             importer.SaveAndReimport();
 
             var colorTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(texturePath);
+            var depthTexture = tasks.Count > 1 ? AssetDatabase.LoadAssetAtPath<Texture2D>(depthTexturePath) : null;
 
-            var material = new Material(_material);
-            material.mainTexture = colorTexture;
-            if (material.HasProperty("_DepthMap"))
-            {
-                var depthTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(depthTexturePath);
-                material.SetTexture("_DepthMap", depthTexture);
-            }
+            var material = CreateMaterial(colorTexture, depthTexture, result.request.id);
 
             AssetDatabase.CreateAsset(material, folderPath + "/" + prefix + "_material.mat");
-
-            if (_skybox)
-            {
-                _skybox.SetSkyboxMaterial(material, result.request.id);
-            }
         }
 
         private string ValidateFilename(string prompt)
@@ -574,9 +563,41 @@ namespace BlockadeLabsSDK
 #else
         private async Task DownloadResultAsync(GetImagineResult result)
         {
-            return await ApiRequests.DownloadTextureAsync(result.request.file_url);
+            var tasks = new List<Task<Texture2D>>();
+            tasks.Add(ApiRequests.DownloadTextureAsync(result.request.file_url));
+            if (!string.IsNullOrWhiteSpace(result.request.depth_map_url))
+            {
+                tasks.Add(ApiRequests.DownloadTextureAsync(result.request.depth_map_url));
+            }
+
+            var textures = await Task.WhenAll(tasks);
+
+            if (_isCancelled)
+            {
+                DestroyTextures(textures);
+                return;
+            }
+
+            CreateMaterial(textures[0], textures.Length > 1 ? textures[1] : null, result.request.id);
         }
 #endif
+
+        private Material CreateMaterial(Texture2D texture, Texture2D depthTexture, int remixId)
+        {
+            var material = new Material(_material);
+            material.mainTexture = texture;
+            if (material.HasProperty("_DepthMap"))
+            {
+                material.SetTexture("_DepthMap", depthTexture);
+            }
+
+            if (_skybox)
+            {
+                _skybox.SetSkyboxMaterial(material, remixId);
+            }
+
+            return material;
+        }
 
         private void UpdateProgress(float percentageCompleted)
         {
