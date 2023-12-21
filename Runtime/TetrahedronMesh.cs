@@ -28,7 +28,7 @@ namespace BlockadeLabsSDK
 
             // Make it a sphere
             for (var i = 0; i < vertexBuffer.Count; i++) {
-                vertexBuffer[i] = Vector3.Normalize(vertexBuffer[i]) * 5;
+                vertexBuffer[i] = Vector3.Normalize(vertexBuffer[i]);
 			}
 
             vertexBuffer.Reverse();
@@ -43,6 +43,10 @@ namespace BlockadeLabsSDK
             {
                 triangles[i] = i;
             }
+
+            mesh.indexFormat = (vertexBuffer.Count > 65535) ?
+                UnityEngine.Rendering.IndexFormat.UInt32 :
+                UnityEngine.Rendering.IndexFormat.UInt16;
 
             mesh.SetTriangles(triangles, 0);
 
@@ -117,7 +121,7 @@ namespace BlockadeLabsSDK
             {
                 for (var j = 0; j < 2 * (cols - i) - 1; j++)
                 {
-                    var k = Mathf.FloorToInt(j / 2);
+                    var k = Mathf.FloorToInt(j / 2f);
                     if (j % 2 == 0)
                     {
                         vertexBuffer.Add(v[i][k + 1]);

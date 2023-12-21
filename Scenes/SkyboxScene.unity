@@ -15644,7 +15644,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 86b6b12deafaac649a9cb00122bc91dc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _meshDensity: 0
+  _meshDensity: 1
   _depthScale: 3
 --- !u!1 &1954151756
 GameObject:
