@@ -75,6 +75,7 @@ namespace BlockadeLabsSDK
             _meshDensity = MeshDensity.Medium;
             UpdateMesh();
             UpdateDepthScale();
+            HDRPCameraFix();
         }
 
         public int? GetRemixId()
@@ -156,6 +157,29 @@ namespace BlockadeLabsSDK
             UpdateMesh();
             UpdateDepthScale();
             OnPropertyChanged?.Invoke();
+        }
+
+        private void HDRPCameraFix()
+        {
+            // If using HDRP, and this is the default scene, set the camera environment volume mask to nothing
+            // So the camera isn't affected by the default volume and we can see the skybox properly.
+#if UNITY_HDRP && UNITY_EDITOR
+            bool isHDRP = UnityEngine.Rendering.GraphicsSettings.renderPipelineAsset.GetType().Name == "HDRenderPipelineAsset";
+            bool isDefaultScene = AssetDatabase.GUIDFromAssetPath(gameObject.scene.path).ToString() == "d9b6ab5207db7f8438e56b4c66ea03aa";
+            if (isHDRP && isDefaultScene)
+            {
+                var components = Camera.main.GetComponents<MonoBehaviour>();
+                foreach (var component in components)
+                {
+                    if (component.GetType().Name == "HDAdditionalCameraData")
+                    {
+                        var field = component.GetType().GetField("volumeLayerMask");
+                        LayerMask mask = 0;
+                        field.SetValue(component, mask);
+                    }
+                }
+            }
+#endif
         }
     }
 }
