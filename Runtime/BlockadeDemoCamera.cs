@@ -62,6 +62,14 @@ namespace BlockadeLabsSDK
         }
 
         [SerializeField]
+        private float _zoomMin = -2.0f;
+        public float ZoomMin
+        {
+            get { return _zoomMin; }
+            set { _zoomMin = value; }
+        }
+
+        [SerializeField]
         private float _smooth = 5.0f;
         public float Smooth
         {
@@ -83,6 +91,7 @@ namespace BlockadeLabsSDK
         private float _zoom;
         private State _state = State.WaitingToAutoPan;
         private float _autoPanTimeStart;
+        private float _previousZoom;
 
         void Update()
         {
@@ -104,12 +113,13 @@ namespace BlockadeLabsSDK
             if (!EventSystem.current.IsPointerOverGameObject() && Input.mouseScrollDelta.y != 0 && mouseOverGameView)
             {
                 _zoom += Input.mouseScrollDelta.y * _zoomSpeed * 0.001f;
-                _zoom = Mathf.Clamp(_zoom, 0, _zoomMax);
+                _zoom = Mathf.Clamp(_zoom, _zoomMin, _zoomMax);
             }
 
             transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.Euler(_pitch, _yaw, 0), _smooth * Time.deltaTime);
-            var distance = Vector3.Distance(transform.position, _skyboxSphere.position);
-            transform.position = _skyboxSphere.position + transform.rotation * Vector3.forward * Mathf.Lerp(distance, _zoom, _smooth * Time.deltaTime);
+            var newZoom = Mathf.Lerp(_previousZoom, _zoom, _smooth * Time.deltaTime);
+            transform.position = _skyboxSphere.position + transform.forward * newZoom;
+            _previousZoom = newZoom;
         }
 
         private void UpdateWaitingToAutoPan()

@@ -28,7 +28,7 @@ namespace BlockadeLabsSDK
 
             // Make it a sphere
             for (var i = 0; i < vertexBuffer.Count; i++) {
-                vertexBuffer[i] = Vector3.Normalize(vertexBuffer[i]);
+                vertexBuffer[i] = Vector3.Normalize(vertexBuffer[i]) * 3;
 			}
 
             vertexBuffer.Reverse();
