@@ -1,321 +1,185 @@
+using UnityEngine;
+using System.IO;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+
+#if UNITY_EDITOR
 using UnityEditor;
-using UnityEngine;
+#endif
 
 namespace BlockadeLabsSDK
 {
+    public enum MeshDensity
+    {
+        Low,
+        Medium,
+        High,
+        Epic
+    }
+
+    [ExecuteAlways, RequireComponent(typeof(MeshRenderer))]
     public class BlockadeLabsSkybox : MonoBehaviour
     {
-        [Tooltip("API Key from Blockade Labs. Get one at api.blockadelabs.com")] 
         [SerializeField]
-        public string apiKey = "API key needed. Get one at api.blockadelabs.com";
-
-        [Tooltip("Specifies if the result should automatically be assigned as the texture of the current game objects renderer material")]
-        [SerializeField]
-        public bool assignToMaterial = true;
-
-        public List<SkyboxStyleField> skyboxStyleFields;
-        public List<SkyboxStyle> skyboxStyles;
-        public string[] skyboxStyleOptions;
-        public int skyboxStyleOptionsIndex = 0;
-        public string imagineObfuscatedId = "";
-        private int progressId;
-        GUIStyle guiStyle;
-
-        [HideInInspector] private float percentageCompleted = -1;
-        private bool isCancelled;
-
-        public async Task GetSkyboxStyleOptions()
+        private MeshDensity _meshDensity = MeshDensity.Medium;
+        public MeshDensity MeshDensity
         {
-            if (string.IsNullOrWhiteSpace(apiKey) || apiKey.Contains("api.blockadelabs.com"))
+            get => _meshDensity;
+            set
             {
-                Debug.LogError("You need to provide an API Key in API options. Get one at api.blockadelabs.com");
-                throw new Exception("You need to provide an API Key in API options. Get one at api.blockadelabs.com");
-            }
-            
-            skyboxStyles = await ApiRequests.GetSkyboxStyles(apiKey);
-            
-            if (skyboxStyles == null)
-            {
-                Debug.LogError("Something went wrong. Please recheck you API key.");
-                throw new Exception("Something went wrong. Please recheck you API key.");
-            }
-            
-            skyboxStyleOptions = skyboxStyles.Select(s => s.name).ToArray();
-            
-            GetSkyboxStyleFields();
-        }
-
-        public void GetSkyboxStyleFields()
-        {
-            skyboxStyleFields = new List<SkyboxStyleField>(); 
-
-            // add the default fields
-            skyboxStyleFields.AddRange(new List<SkyboxStyleField>
-            {
-                new SkyboxStyleField(
-                    new UserInput(
-                        "prompt",
-                        1,
-                        "Prompt",
-                        "",
-                        "textarea"
-                    )
-                ),
-                new SkyboxStyleField(
-                    new UserInput(
-                        "negative_text",
-                        2,
-                        "Negative text",
-                        "",
-                        "text"
-                    )
-                ),
-                new SkyboxStyleField(
-                    new UserInput(
-                        "seed",
-                        3,
-                        "Seed",
-                        "0",
-                        "text"
-                    )
-                ),
-                new SkyboxStyleField(
-                    new UserInput(
-                        "enhance_prompt",
-                        4,
-                        "Enhance prompt",
-                        "false",
-                        "boolean"
-                    )
-                ),
-            });
-        }
-
-        public async Task CreateSkybox(List<SkyboxStyleField> skyboxStyleFields, int id, bool runtime = false)
-        {
-            isCancelled = false;
-            percentageCompleted = 1;
-
-            #if UNITY_EDITOR
-                progressId = Progress.Start("Generating Skybox Assets");
-            #endif
-
-            var createSkyboxObfuscatedId = await ApiRequests.CreateSkybox(skyboxStyleFields, id, apiKey);
-
-            InitializeGetAssets(runtime, createSkyboxObfuscatedId);
-        }
-
-        private void InitializeGetAssets(bool runtime, string createImagineObfuscatedId)
-        {
-            if (createImagineObfuscatedId != "")
-            {
-                imagineObfuscatedId = createImagineObfuscatedId;
-                percentageCompleted = 33;
-                CalculateProgress();
-
-                var pusherManager = false;
-
-                #if PUSHER_PRESENT
-                    pusherManager = FindObjectOfType<PusherManager>();
-                #endif
-
-                if (pusherManager && runtime)
+                if (_meshDensity != value)
                 {
-                    #if PUSHER_PRESENT
-                        _ = PusherManager.instance.SubscribeToChannel(imagineObfuscatedId);
-                    #endif
-                }
-                else
-                {
-                    _ = GetAssets();
+                    _meshDensity = value;
+                    UpdateMesh();
+                    OnPropertyChanged?.Invoke();
                 }
             }
         }
 
-        public async Task GetAssets()
+        [SerializeField, Range(3.0f, 10.0f)]
+        private float _depthScale = 3.0f;
+        public float DepthScale
         {
-            var textureUrl = "";
-            var depthMapUrl = "";
-            var prompt = "";
-            var count = 0;
-
-            while (!isCancelled)
+            get => _depthScale;
+            set
             {
-                #if UNITY_EDITOR
-                    EditorUtility.SetDirty(this);
-                #endif
-
-                await Task.Delay(1000);
-
-                if (isCancelled)
+                if (_depthScale != value)
                 {
+                    _depthScale = value;
+                    UpdateDepthScale();
+                    OnPropertyChanged?.Invoke();
+                }
+            }
+        }
+
+        public event Action OnPropertyChanged;
+
+        public bool HasDepthTexture => _meshRenderer?.sharedMaterial?.GetTexture("_DepthMap") != null;
+
+        private int _remixId;
+        private MeshRenderer _meshRenderer;
+        private MeshFilter _meshFilter;
+        private Material _material;
+        private MaterialPropertyBlock _materialPropertyBlock;
+        private Dictionary<int, Mesh> _meshes = new Dictionary<int, Mesh>();
+
+        public void SetSkyboxMaterial(Material material, int remixId)
+        {
+            _meshRenderer = GetComponent<MeshRenderer>();
+            _meshRenderer.sharedMaterial = material;
+        }
+
+        private void OnEnable()
+        {
+            _meshDensity = MeshDensity.Medium;
+            UpdateMesh();
+            UpdateDepthScale();
+            HDRPCameraFix();
+        }
+
+        public int? GetRemixId()
+        {
+            if (!TryGetComponent<Renderer>(out var renderer) || renderer.sharedMaterial == null || renderer.sharedMaterial.mainTexture == null)
+            {
+                return null;
+            }
+
+            if (renderer.sharedMaterial.mainTexture.name == "default_skybox_texture")
+            {
+                return 0;
+            }
+
+            if (renderer.sharedMaterial == _material)
+            {
+                return _remixId;
+            }
+
+#if UNITY_EDITOR
+            // In editor, read the remix ID from the data file saved next to the texture.
+            var texturePath = AssetDatabase.GetAssetPath(renderer.sharedMaterial.mainTexture);
+            var resultPath = texturePath.Substring(0, texturePath.LastIndexOf('_')) + "_data.txt";
+            if (File.Exists(resultPath))
+            {
+                return JsonConvert.DeserializeObject<GetImagineResult>(File.ReadAllText(resultPath)).request.id;
+            }
+#endif
+            return null;
+        }
+
+        public void UpdateMesh()
+        {
+            _meshFilter = GetComponent<MeshFilter>();
+            switch (_meshDensity)
+            {
+                case MeshDensity.Low:
+                    _meshFilter.sharedMesh = GetOrCreateMesh(64);
                     break;
-                }
-
-                count++;
-
-                var getImagineResult = await ApiRequests.GetImagine(imagineObfuscatedId, apiKey);
-
-                if (getImagineResult.Count > 0)
-                {
-                    percentageCompleted = 66;
-                    CalculateProgress();
-                    textureUrl = getImagineResult["textureUrl"];
-                    depthMapUrl = getImagineResult["depthMapUrl"];
-                    prompt = getImagineResult["prompt"];
+                case MeshDensity.Medium:
+                    _meshFilter.sharedMesh = GetOrCreateMesh(128);
                     break;
-                }
+                case MeshDensity.High:
+                    _meshFilter.sharedMesh = GetOrCreateMesh(256);
+                    break;
+                case MeshDensity.Epic:
+                    _meshFilter.sharedMesh = GetOrCreateMesh(768);
+                    break;
+            }
+        }
+
+        private Mesh GetOrCreateMesh(int subdivisions)
+        {
+            if (_meshes.TryGetValue(subdivisions, out var mesh))
+            {
+                return mesh;
             }
 
-            if (isCancelled)
+            mesh = TetrahedronMesh.GenerateMesh(subdivisions);
+            mesh.hideFlags = HideFlags.DontSave;
+            _meshes.Add(subdivisions, mesh);
+            return mesh;
+        }
+
+        public void UpdateDepthScale()
+        {
+            if (_materialPropertyBlock == null)
             {
-                percentageCompleted = -1;
-                imagineObfuscatedId = "";
-                return;
+                _materialPropertyBlock = new MaterialPropertyBlock();
             }
 
-            if (!string.IsNullOrWhiteSpace(textureUrl))
+            _meshRenderer = GetComponent<MeshRenderer>();
+            _materialPropertyBlock.SetFloat("_DepthScale", _depthScale);
+            _meshRenderer.SetPropertyBlock(_materialPropertyBlock);
+        }
+
+        public void EditorPropertyChanged()
+        {
+            UpdateMesh();
+            UpdateDepthScale();
+            OnPropertyChanged?.Invoke();
+        }
+
+        private void HDRPCameraFix()
+        {
+            // If using HDRP, and this is the default scene, set the camera environment volume mask to nothing
+            // So the camera isn't affected by the default volume and we can see the skybox properly.
+#if UNITY_HDRP && UNITY_EDITOR
+            bool isHDRP = UnityEngine.Rendering.GraphicsSettings.renderPipelineAsset.GetType().Name == "HDRenderPipelineAsset";
+            bool isDefaultScene = AssetDatabase.GUIDFromAssetPath(gameObject.scene.path).ToString() == "d9b6ab5207db7f8438e56b4c66ea03aa";
+            if (isHDRP && isDefaultScene)
             {
-                var image = await ApiRequests.GetImagineImage(textureUrl);
-                var texture = new Texture2D(1, 1, TextureFormat.RGB24, false);
-                texture.LoadImage(image);
-
-                percentageCompleted = 80;
-                CalculateProgress();
-
-                if (assignToMaterial)
+                var components = Camera.main.GetComponents<MonoBehaviour>();
+                foreach (var component in components)
                 {
-                    var r = GetComponent<Renderer>();
-                    
-                    if (r != null)
+                    if (component.GetType().Name == "HDAdditionalCameraData")
                     {
-                        if (r.sharedMaterial != null)
-                        {
-                            r.sharedMaterial.mainTexture = texture;
-                        }
+                        var field = component.GetType().GetField("volumeLayerMask");
+                        LayerMask mask = 0;
+                        field.SetValue(component, mask);
                     }
                 }
-
-                percentageCompleted = 90;
-                CalculateProgress();
-
-                texture.Compress(true);
-
-                var depthMapEmpty = string.IsNullOrWhiteSpace(depthMapUrl);
-                var depthMapTexture = new Texture2D(1, 1, TextureFormat.RGB24, false);;
-                
-                if (!depthMapEmpty)
-                {
-                    var depthMapImage = await ApiRequests.GetImagineImage(depthMapUrl);
-                    depthMapTexture.LoadImage(depthMapImage);
-                    depthMapTexture.Compress(true);
-                }
-                
-                SaveAssets(texture, prompt, depthMapEmpty, depthMapTexture);
             }
-
-            percentageCompleted = 100;
-            CalculateProgress();
-            #if UNITY_EDITOR
-                Progress.Remove(progressId);
-            #endif
-        }
-
-        private void SaveAssets(Texture2D texture, string prompt, bool depthMapEmpty, Texture2D depthMapTexture)
-        {
-            #if UNITY_EDITOR
-                if (AssetDatabase.Contains(texture) || (!depthMapEmpty && AssetDatabase.Contains(depthMapTexture)))
-                {
-                    Debug.Log("Texture already in assets database.");
-                    return;
-                }
-
-                if (!AssetDatabase.IsValidFolder("Assets/Blockade Labs SDK Assets"))
-                {
-                    AssetDatabase.CreateFolder("Assets", "Blockade Labs SDK Assets");
-                }
-
-                var maxLength = 20;
-
-                if (prompt.Length > maxLength)
-                {
-                    prompt = prompt.Substring(0, maxLength);
-                }
-
-                var validatedPrompt = ValidateFilename(prompt);
-                var textureName = validatedPrompt + "_texture";
-                CreateAsset(textureName, texture);
-                
-                if (!depthMapEmpty)
-                {
-                    var depthMapTextureName = validatedPrompt + "_depth_map_texture";
-                    CreateAsset(depthMapTextureName, depthMapTexture);
-                }
-                
-            #endif
-
-            imagineObfuscatedId = "";
-        }
-
-        private string ValidateFilename(string prompt)
-        {
-            foreach (char c in System.IO.Path.GetInvalidFileNameChars())
-            {
-                prompt = prompt.Replace(c, '_');
-            }
-
-            while (prompt.Contains("__"))
-            {
-                prompt = prompt.Replace("__", "_");
-            }
-
-            return prompt.TrimStart('_').TrimEnd('_');
-        }
-
-        private void CalculateProgress()
-        {
-            #if UNITY_EDITOR
-                Progress.Report(progressId, percentageCompleted / 100f);
-            #endif
-        }
-
-        public float PercentageCompleted() => percentageCompleted;
-
-        public void Cancel()
-        {
-            isCancelled = true;
-            percentageCompleted = -1;
-            #if UNITY_EDITOR
-                Progress.Remove(progressId);
-            #endif
-        }
-
-        private void CreateAsset(string textureName, Texture2D texture)
-        {
-            #if UNITY_EDITOR
-                var counter = 0;
-                
-                while (true)
-                {
-                    var modifiedTextureName = counter == 0 ? textureName : textureName + "_" + counter;
-
-                    var textureAssets =
-                        AssetDatabase.FindAssets(modifiedTextureName, new[] { "Assets/Blockade Labs SDK Assets" });
-
-                    if (textureAssets.Length > 0)
-                    {
-                        counter++;
-                        continue;
-                    }
-
-                    AssetDatabase.CreateAsset(texture, "Assets/Blockade Labs SDK Assets/" + modifiedTextureName + ".asset");
-                    break;
-                }
-            #endif
+#endif
         }
     }
 }

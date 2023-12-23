@@ -1,0 +1,27 @@
+{
+    "name": "BlockadeLabsSDK.Runtime",
+    "rootNamespace": "",
+    "references": [
+        "Unity.TextMeshPro"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.pusher.pusherwebsocketunity",
+            "expression": "2.1.0",
+            "define": "PUSHER_PRESENT"
+        },
+        {
+            "name": "com.unity.render-pipelines.high-definition",
+            "expression": "10.4.0",
+            "define": "UNITY_HDRP"
+        }
+    ],
+    "noEngineReferences": false
+}

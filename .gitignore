@@ -6,3 +6,6 @@
 
 # Idea directory
 .idea/
+
+# vscode configuration
+.vscode

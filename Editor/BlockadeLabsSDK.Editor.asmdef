@@ -1,0 +1,24 @@
+{
+    "name": "BlockadeLabsSDK.Editor",
+    "rootNamespace": "",
+    "references": [
+        "BlockadeLabsSDK.Runtime"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.pusher.pusherwebsocketunity",
+            "expression": "2.1.0",
+            "define": "PUSHER_PRESENT"
+        }
+    ],
+    "noEngineReferences": false
+}

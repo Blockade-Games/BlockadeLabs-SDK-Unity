@@ -1,67 +1,76 @@
-﻿namespace BlockadeLabsSDK
+﻿using System;
+using System.Collections.Generic;
+using Newtonsoft.Json;
+using UnityEngine.Scripting;
+
+namespace BlockadeLabsSDK
 {
-    [System.Serializable]
-    public class CreateSkyboxResult
+    [Preserve, Serializable]
+    internal class CreateSkyboxRequest
     {
-        public string id { get; set; }
-        public string obfuscated_id { get; set; }
+        public string prompt;
+        public string negative_text;
+        public bool enhance_prompt;
+        public int seed;
+        public int skybox_style_id;
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public int remix_imagine_id;
     }
 
-    [System.Serializable]
-    public class GetImagineResult
+    [Preserve, Serializable]
+    internal class CreateSkyboxResult
     {
-        public GetImagineRequest request { get; set; }
-    }
-    
-    public class GetImagineRequest
-    {
-        public string file_url { get; set; }
-        public string depth_map_url { get; set; }
-        public string status { get; set; }
-        public string prompt { get; set; }
+        public string id;
+        public string obfuscated_id;
+        public string status;
+        public string error_message;
+        public string pusher_channel;
+        public string pusher_event;
     }
 
-    [System.Serializable]
+    [Preserve, Serializable]
+    internal class GetImagineResult
+    {
+        public GetImagineRequest request;
+    }
+
+    [Preserve, Serializable]
+    internal class GetImagineRequest
+    {
+        public int id;
+        public string obfuscated_id;
+        public string file_url;
+        public string depth_map_url;
+        public string status;
+        public string prompt;
+        public string error_message;
+    }
+
+    [Preserve, Serializable]
     public class SkyboxStyle
     {
+        public string type;
         public int id;
         public string name;
+        [JsonProperty("sort_order")]
+        public int sortOrder;
+        public string description;
+        [JsonProperty("max-char")]
+        public int maxChar;
+        [JsonProperty("negative-text-max-char")]
+        public int negativeTextMaxChar;
+        public string image;
+        public string image_jpg;
+        public bool premium;
+        [JsonProperty("new")]
+        public bool isNew;
+        public bool experimental;
+        public string status;
     }
-    
-    public class UserInput
-    {
-        public string key;
-        public int id;
-        public string name;
-        public string placeholder;
-        public string type;
 
-        // Constructor to initialize user input with data from API response
-        public UserInput(string key, int id, string name, string placeholder, string type)
-        {
-            this.key = key; 
-            this.id = id; 
-            this.name = name;
-            this.placeholder = placeholder;
-            this.type = type;
-        }
-    }
-    
-    [System.Serializable]
-    public class SkyboxStyleField
+    [Preserve, Serializable]
+    public class SkyboxStyleFamily : SkyboxStyle
     {
-        public string key;
-        public string name;
-        public string value;
-        public string type;
-
-        // Constructor to initialize skybox style field with data from API response
-        public SkyboxStyleField(UserInput fieldData)
-        {
-            key = fieldData.key; // "prompt"
-            name = fieldData.name; // "Prompt"
-            value = fieldData.placeholder ?? "";
-            type = fieldData.type ?? "text";
-        }
+        public List<SkyboxStyle> items;
     }
 }
