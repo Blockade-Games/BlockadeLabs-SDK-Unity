@@ -68,6 +68,8 @@ namespace BlockadeLabsSDK
         {
             _meshRenderer = GetComponent<MeshRenderer>();
             _meshRenderer.sharedMaterial = material;
+            _material = material;
+            _remixId = remixId;
         }
 
         private void OnEnable()
@@ -87,7 +89,8 @@ namespace BlockadeLabsSDK
 
             if (renderer.sharedMaterial.mainTexture.name == "default_skybox_texture")
             {
-                return 0;
+                // Should be 0, but currently getting 404 errors.
+                return null;
             }
 
             if (renderer.sharedMaterial == _material)
