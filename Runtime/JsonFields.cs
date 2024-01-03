@@ -13,8 +13,8 @@ namespace BlockadeLabsSDK
         public bool enhance_prompt;
         public int seed;
         public int skybox_style_id;
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public int remix_imagine_id;
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public int? remix_imagine_id;
     }
 
     [Preserve, Serializable]
