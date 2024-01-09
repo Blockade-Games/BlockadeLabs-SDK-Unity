@@ -18,7 +18,7 @@ namespace BlockadeLabsSDK
         Epic
     }
 
-    [ExecuteAlways, RequireComponent(typeof(MeshRenderer))]
+    [ExecuteAlways, RequireComponent(typeof(MeshRenderer)), RequireComponent(typeof(MeshFilter))]
     public class BlockadeLabsSkybox : MonoBehaviour
     {
         [SerializeField]
@@ -89,8 +89,7 @@ namespace BlockadeLabsSDK
 
             if (renderer.sharedMaterial.mainTexture.name == "default_skybox_texture")
             {
-                // Should be 0, but currently getting 404 errors.
-                return null;
+                return 0;
             }
 
             if (renderer.sharedMaterial == _material)
