@@ -32,17 +32,15 @@ namespace BlockadeLabsSDK
         {
             var currentHeight = _rectTransform.rect.height;
             var newHeight = _inputField.textComponent.preferredHeight + _padding;
-            var heightDifference = newHeight - currentHeight;
-            if (heightDifference != 0)
+            if (currentHeight != newHeight)
             {
                 _rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, newHeight);
 
-                // Since the layout adjusts to the new rect size, the text and caret need to be moved too
-                if (heightDifference > 0)
-                {
-                    _inputField.textComponent.GetComponent<RectTransform>().anchoredPosition -= new Vector2(0, heightDifference);
-                    _inputField.textViewport.Find("Caret").GetComponent<RectTransform>().anchoredPosition -= new Vector2(0, heightDifference);
-                }
+                var textPos = _inputField.textComponent.rectTransform.anchoredPosition;
+                _inputField.textComponent.rectTransform.offsetMin = Vector2.zero;
+                _inputField.textComponent.rectTransform.offsetMax = Vector2.zero;
+                var textMovement = _inputField.textComponent.rectTransform.anchoredPosition - textPos;
+                _inputField.textViewport.Find("Caret").GetComponent<RectTransform>().anchoredPosition += textMovement;
             }
         }
     }

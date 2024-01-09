@@ -301,6 +301,13 @@ namespace BlockadeLabsSDK
                     throw new Exception(response.error_message);
                 }
 
+                if (_enhancePrompt)
+                {
+                    _prompt = response.prompt;
+                    _enhancePrompt = false;
+                    OnPropertyChanged?.Invoke();
+                }
+
                 UpdateProgress(33);
 
     #if PUSHER_PRESENT
