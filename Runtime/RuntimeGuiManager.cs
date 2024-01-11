@@ -7,7 +7,7 @@ namespace BlockadeLabsSDK
 {
     public class RuntimeGuiManager : MonoBehaviour
     {
-        [SerializeField]
+        [SerializeField, Header("Core Components")]
         private BlockadeLabsSkyboxGenerator _generator;
         public BlockadeLabsSkyboxGenerator Generator
         {
@@ -31,7 +31,7 @@ namespace BlockadeLabsSDK
             set { _demoCamera = value; }
         }
 
-        [SerializeField]
+        [SerializeField, Header("Skybox Generator")]
         private TMP_InputField _promptInput;
         public TMP_InputField PromptInput
         {
@@ -53,14 +53,6 @@ namespace BlockadeLabsSDK
         {
             get { return _remixButton; }
             set { _remixButton = value; }
-        }
-
-        [SerializeField]
-        private GameObject _viewButton;
-        public GameObject ViewButton
-        {
-            get { return _viewButton; }
-            set { _viewButton = value; }
         }
 
         [SerializeField]
@@ -184,38 +176,6 @@ namespace BlockadeLabsSDK
         }
 
         [SerializeField]
-        private GameObject _helloPopup;
-        public GameObject HelloPopup
-        {
-            get { return _helloPopup; }
-            set { _helloPopup = value; }
-        }
-
-        [SerializeField]
-        private GameObject _helpPopup;
-        public GameObject HelpPopup
-        {
-            get { return _helpPopup; }
-            set { _helpPopup = value; }
-        }
-
-        [SerializeField]
-        private GameObject _remixPopup;
-        public GameObject RemixPopup
-        {
-            get { return _remixPopup; }
-            set { _remixPopup = value; }
-        }
-
-        [SerializeField]
-        private Toggle _remixDontShowAgainToggle;
-        public Toggle RemixDontShowAgainToggle
-        {
-            get { return _remixDontShowAgainToggle; }
-            set { _remixDontShowAgainToggle = value; }
-        }
-
-        [SerializeField]
         private RectTransform _progressBar;
         public RectTransform ProgressBar
         {
@@ -223,31 +183,7 @@ namespace BlockadeLabsSDK
             set { _progressBar = value; }
         }
 
-        [SerializeField]
-        private GameObject _promptPanel;
-        public GameObject PromptPanel
-        {
-            get { return _promptPanel; }
-            set { _promptPanel = value; }
-        }
-
-        [SerializeField]
-        private GameObject _errorPopup;
-        public GameObject ErrorPopup
-        {
-            get { return _errorPopup; }
-            set { _errorPopup = value; }
-        }
-
-        [SerializeField]
-        private TMP_Text _errorText;
-        public TMP_Text ErrorText
-        {
-            get { return _errorText; }
-            set { _errorText = value; }
-        }
-
-        [SerializeField]
+        [SerializeField, Header("Mesh Creator")]
         private GameObject _meshCreator;
         public GameObject MeshCreator
         {
@@ -309,6 +245,70 @@ namespace BlockadeLabsSDK
         {
             get { return _depthScaleSlider; }
             set { _depthScaleSlider = value; }
+        }
+
+        [SerializeField, Header("Popups")]
+        private GameObject _helloPopup;
+        public GameObject HelloPopup
+        {
+            get { return _helloPopup; }
+            set { _helloPopup = value; }
+        }
+
+        [SerializeField]
+        private GameObject _helpPopup;
+        public GameObject HelpPopup
+        {
+            get { return _helpPopup; }
+            set { _helpPopup = value; }
+        }
+
+        [SerializeField]
+        private GameObject _remixPopup;
+        public GameObject RemixPopup
+        {
+            get { return _remixPopup; }
+            set { _remixPopup = value; }
+        }
+
+        [SerializeField]
+        private Toggle _remixDontShowAgainToggle;
+        public Toggle RemixDontShowAgainToggle
+        {
+            get { return _remixDontShowAgainToggle; }
+            set { _remixDontShowAgainToggle = value; }
+        }
+
+        [SerializeField]
+        private GameObject _promptPanel;
+        public GameObject PromptPanel
+        {
+            get { return _promptPanel; }
+            set { _promptPanel = value; }
+        }
+
+        [SerializeField]
+        private GameObject _errorPopup;
+        public GameObject ErrorPopup
+        {
+            get { return _errorPopup; }
+            set { _errorPopup = value; }
+        }
+
+        [SerializeField]
+        private TMP_Text _errorText;
+        public TMP_Text ErrorText
+        {
+            get { return _errorText; }
+            set { _errorText = value; }
+        }
+
+        [SerializeField, Header("Titlebar")]
+        private GameObject _viewButton;
+        public GameObject ViewButton
+        {
+            get { return _viewButton; }
+            set { _viewButton = value; }
         }
 
         private float _createUnderlineOffset;
