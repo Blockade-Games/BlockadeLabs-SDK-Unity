@@ -1,4 +1,4 @@
-using UnityEditor;
+﻿using UnityEditor;
 using UnityEngine;
 
 namespace BlockadeLabsSDK.Editor
@@ -26,29 +26,6 @@ namespace BlockadeLabsSDK.Editor
             if (GUILayout.Button("Move Scene Camera to Skybox"))
             {
                 SceneView.lastActiveSceneView.AlignViewToObject(skybox.transform);
-            }
-
-            var meshFilter = skybox.GetComponent<MeshFilter>();
-            if (meshFilter != null)
-            {
-                bool hasUnsavedMesh = meshFilter.sharedMesh != null &&
-                    string.IsNullOrWhiteSpace(AssetDatabase.GetAssetPath(meshFilter.sharedMesh));
-
-                if (hasUnsavedMesh)
-                {
-                    if (GUILayout.Button("Save Mesh"))
-                    {
-                        var path = EditorUtility.SaveFilePanelInProject("Save mesh", meshFilter.sharedMesh.name, "asset", "Save mesh");
-                        if (string.IsNullOrEmpty(path))
-                        {
-                            return;
-                        }
-
-                        meshFilter.sharedMesh.hideFlags = HideFlags.None;
-                        AssetDatabase.CreateAsset(meshFilter.sharedMesh, path);
-                        AssetDatabase.SaveAssets();
-                    }
-                }
             }
 
             if (serializedObject.ApplyModifiedProperties())

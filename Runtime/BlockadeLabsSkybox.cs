@@ -136,8 +136,23 @@ namespace BlockadeLabsSDK
                 return mesh;
             }
 
+#if UNITY_EDITOR
+            // Look for a mesh in the project
+            var folder = AssetUtils.GetOrCreateFolder("Meshes");
+            var meshPath = $"{folder}/Tetrahedron_{subdivisions}.asset";
+            mesh = AssetDatabase.LoadAssetAtPath<Mesh>(meshPath);
+            if (mesh != null)
+            {
+                _meshes.Add(subdivisions, mesh);
+                return mesh;
+            }
+#endif
+
             mesh = TetrahedronMesh.GenerateMesh(subdivisions);
-            mesh.hideFlags = HideFlags.DontSave;
+#if UNITY_EDITOR
+            AssetDatabase.CreateAsset(mesh, meshPath);
+            AssetDatabase.SaveAssets();
+#endif
             _meshes.Add(subdivisions, mesh);
             return mesh;
         }

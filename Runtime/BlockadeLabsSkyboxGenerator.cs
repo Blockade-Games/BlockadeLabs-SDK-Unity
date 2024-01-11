@@ -479,21 +479,6 @@ namespace BlockadeLabsSDK
         }
 
 #if UNITY_EDITOR
-        private static string CreateGenerateFolder(string name)
-        {
-            var generateFolder = "Blockade Labs SDK";
-            var pathFromAssets = "Assets/" + generateFolder;
-            if (!AssetDatabase.IsValidFolder(pathFromAssets))
-            {
-                AssetDatabase.CreateFolder("Assets", generateFolder);
-            }
-
-            // Create a folder to store the new assets
-            var folderPath = AssetDatabase.GenerateUniqueAssetPath(pathFromAssets + "/" + name);
-            AssetDatabase.CreateFolder(pathFromAssets, folderPath.Substring(pathFromAssets.Length + 1));
-            return folderPath;
-        }
-
         private async Task DownloadResultAsync(GetImagineResult result)
         {
             var textureUrl = result.request.file_url;
@@ -512,9 +497,8 @@ namespace BlockadeLabsSDK
                 prompt = prompt.Substring(0, maxLength);
             }
 
-            var prefix = ValidateFilename(prompt);
-
-            var folderPath = CreateGenerateFolder(prefix);
+            var prefix = AssetUtils.CreateValidFilename(prompt);
+            var folderPath = AssetUtils.GetOrCreateFolder(prefix);
             var texturePath = folderPath + "/" + prefix + "_texture.png";
             var depthTexturePath = folderPath + "/" + prefix + "_depth_map_texture.png";
             var resultsPath = folderPath + "/" + prefix + "_data.txt";
