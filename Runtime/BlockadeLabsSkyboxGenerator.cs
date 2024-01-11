@@ -535,6 +535,7 @@ namespace BlockadeLabsSDK
             var material = CreateMaterial(colorTexture, depthTexture, result.request.id);
 
             AssetDatabase.CreateAsset(material, folderPath + "/" + prefix + "_material.mat");
+            EditorGUIUtility.PingObject(material);
         }
 
         private string ValidateFilename(string prompt)

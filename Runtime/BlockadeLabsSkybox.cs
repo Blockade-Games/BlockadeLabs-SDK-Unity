@@ -30,6 +30,7 @@ namespace BlockadeLabsSDK
             {
                 if (_meshDensity != value)
                 {
+                    _somethingChangedSinceSave = true;
                     _meshDensity = value;
                     UpdateMesh();
                     OnPropertyChanged?.Invoke();
@@ -46,12 +47,19 @@ namespace BlockadeLabsSDK
             {
                 if (_depthScale != value)
                 {
+                    _somethingChangedSinceSave = true;
                     _depthScale = value;
                     UpdateDepthScale();
                     OnPropertyChanged?.Invoke();
                 }
             }
         }
+
+        private bool _somethingChangedSinceSave = true;
+
+        public bool CanSave => _meshRenderer && _meshFilter && _meshRenderer.sharedMaterial &&
+            _meshRenderer.sharedMaterial.mainTexture && _meshFilter.sharedMesh && _somethingChangedSinceSave &&
+            _meshRenderer.sharedMaterial.mainTexture.name != "default_skybox_texture";
 
         public event Action OnPropertyChanged;
 
@@ -70,6 +78,7 @@ namespace BlockadeLabsSDK
             _meshRenderer.sharedMaterial = material;
             _material = material;
             _remixId = remixId;
+            _somethingChangedSinceSave = true;
         }
 
         private void OnEnable()
@@ -173,6 +182,7 @@ namespace BlockadeLabsSDK
         {
             UpdateMesh();
             UpdateDepthScale();
+            _somethingChangedSinceSave = true;
             OnPropertyChanged?.Invoke();
         }
 
@@ -196,6 +206,32 @@ namespace BlockadeLabsSDK
                     }
                 }
             }
+#endif
+        }
+
+        public void SavePrefab()
+        {
+#if UNITY_EDITOR
+            if (!CanSave)
+            {
+                return;
+            }
+
+            var materialPath = AssetDatabase.GetAssetPath(_meshRenderer.sharedMaterial);
+            var folder = materialPath.Substring(0, materialPath.LastIndexOf('/'));
+            var name = _meshRenderer.sharedMaterial.name;
+            if (name.EndsWith("_material"))
+            {
+                name = name.Substring(0, name.Length - 9);
+            }
+
+            var prefabPath = AssetDatabase.GenerateUniqueAssetPath($"{folder}/{name}.prefab");
+            var clone = Instantiate(gameObject);
+            var prefab = PrefabUtility.SaveAsPrefabAsset(clone, prefabPath);
+            DestroyImmediate(clone);
+            EditorGUIUtility.PingObject(prefab);
+            _somethingChangedSinceSave = false;
+            OnPropertyChanged?.Invoke();
 #endif
         }
     }

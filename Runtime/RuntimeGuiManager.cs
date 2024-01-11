@@ -247,6 +247,14 @@ namespace BlockadeLabsSDK
             set { _depthScaleSlider = value; }
         }
 
+        [SerializeField]
+        private Button _savePrefabButton;
+        public Button SavePrefabButton
+        {
+            get { return _savePrefabButton; }
+            set { _savePrefabButton = value; }
+        }
+
         [SerializeField, Header("Popups")]
         private GameObject _helloPopup;
         public GameObject HelloPopup
@@ -358,6 +366,7 @@ namespace BlockadeLabsSDK
             _highDensityToggle.OnTurnedOn.AddListener(() => _skybox.MeshDensity = MeshDensity.High);
             _epicDensityToggle.OnTurnedOn.AddListener(() => _skybox.MeshDensity = MeshDensity.Epic);
             _depthScaleSlider.onValueChanged.AddListener((_) => _skybox.DepthScale = _depthScaleSlider.value);
+            _savePrefabButton.onClick.AddListener(() => _skybox.SavePrefab());
 
             await _generator.LoadAsync();
         }
@@ -388,6 +397,10 @@ namespace BlockadeLabsSDK
             _highDensityToggle.IsOn = _skybox.MeshDensity == MeshDensity.High;
             _epicDensityToggle.IsOn = _skybox.MeshDensity == MeshDensity.Epic;
             _depthScaleSlider.value = _skybox.DepthScale;
+            _savePrefabButton.interactable = _skybox.CanSave;
+#if !UNITY_EDITOR
+            _savePrefabButton.gameObject.active = false;
+#endif
         }
 
         private void OnStateChanged()
