@@ -15360,16 +15360,16 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: '1. Go to api.blockadelabs.com to get your API key.
+  m_text: '<line-height=20px>1. Go to api.blockadelabs.com to get your API key.
 
 
-    2.  Select the
-    "Blockade Labs Skybox Generator" gameObject and enter your API key.
+    2. 
+    Select the "Blockade Labs Skybox Generator" gameObject and enter your API key.
 
 
     3.
-    Generate a skybox by filling out the fields, or try our immersive experience
-    by playing this scene!'
+    Enter play mode to start generating in our immersive experience or use the component
+    in edit mode if you prefer.'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: b3bd6c68239f4e743aaae6ab0ff401a5, type: 2}
   m_sharedMaterial: {fileID: -1966353908474157421, guid: b3bd6c68239f4e743aaae6ab0ff401a5, type: 2}
