@@ -56,6 +56,14 @@ namespace BlockadeLabsSDK
         }
 
         [SerializeField]
+        private GameObject _viewButton;
+        public GameObject ViewButton
+        {
+            get { return _viewButton; }
+            set { _viewButton = value; }
+        }
+
+        [SerializeField]
         private Transform _createRemixUnderline;
         public Transform CreateRemixUnderline
         {
@@ -173,6 +181,14 @@ namespace BlockadeLabsSDK
         {
             get { return _negativeTextCharacterWarning; }
             set { _negativeTextCharacterWarning = value; }
+        }
+
+        [SerializeField]
+        private GameObject _helloPopup;
+        public GameObject HelloPopup
+        {
+            get { return _helloPopup; }
+            set { _helloPopup = value; }
         }
 
         [SerializeField]
@@ -300,6 +316,11 @@ namespace BlockadeLabsSDK
 
         async void Start()
         {
+            _helloPopup.SetActive(false);
+            _helpPopup.SetActive(true);
+            _viewButton.SetActive(true);
+            _promptPanel.SetActive(true);
+
             // Initialize values
             _skybox.DepthScale = _depthScaleSlider.minValue;
 
