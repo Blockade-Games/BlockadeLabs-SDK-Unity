@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.UI;
 
 namespace BlockadeLabsSDK
@@ -183,6 +184,22 @@ namespace BlockadeLabsSDK
             set { _progressBar = value; }
         }
 
+        [SerializeField]
+        private MultiToggle _showSpheresToggle;
+        public MultiToggle ShowSpheresToggle
+        {
+            get { return _showSpheresToggle; }
+            set { _showSpheresToggle = value; }
+        }
+
+        [SerializeField]
+        private GameObject _spheres;
+        public GameObject Spheres
+        {
+            get { return _spheres; }
+            set { _spheres = value; }
+        }
+
         [SerializeField, Header("Mesh Creator")]
         private GameObject _meshCreator;
         public GameObject MeshCreator
@@ -358,6 +375,7 @@ namespace BlockadeLabsSDK
             _stylePickerPanel.OnStylePicked += OnStylePicked;
             _generateButton.onClick.AddListener(OnGenerateButtonClicked);
             _meshCreatorButton.onClick.AddListener(OnMeshCreatorButtonClicked);
+            _showSpheresToggle.OnValueChanged.AddListener(OnShowSpheresToggleChanged);
 
             // Mesh Creator Controls
             _meshCreatorBackButton.onClick.AddListener(OnMeshCreatorBackButtonClicked);
@@ -425,6 +443,11 @@ namespace BlockadeLabsSDK
             UpdateGenerateButton();
             UpdateCanRemix();
             UpdateMeshCreatorButton();
+
+            if (_generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Ready)
+            {
+                UpdateSpheres();
+            }
         }
 
         private void UpdateCanRemix()
@@ -582,17 +605,58 @@ namespace BlockadeLabsSDK
         private void OnMeshCreatorButtonClicked()
         {
             StartCoroutine(CoAnimateDepthScale(_depthScaleSlider.minValue + (_depthScaleSlider.maxValue - _depthScaleSlider.minValue) / 3f));
-            _demoCamera.SetZoom(-0.5f);
             _promptPanel.SetActive(false);
             _meshCreator.SetActive(true);
+            UpdateSpheres();
+            UpdateCamera();
+        }
+
+        private void OnShowSpheresToggleChanged(bool toggleOn)
+        {
+            UpdateSpheres();
+            UpdateCamera();
         }
 
         private void OnMeshCreatorBackButtonClicked()
         {
             StartCoroutine(CoAnimateDepthScale(_depthScaleSlider.minValue));
-            _demoCamera.SetZoom(0.0f);
             _promptPanel.SetActive(true);
             _meshCreator.SetActive(false);
+            UpdateSpheres();
+            UpdateCamera();
+        }
+
+        private void UpdateCamera()
+        {
+            if (_meshCreator.activeSelf)
+            {
+                _demoCamera.SetMode(BlockadeDemoCamera.Mode.MeshCreator);
+            }
+            else if (_showSpheresToggle.IsOn)
+            {
+                _demoCamera.SetMode(BlockadeDemoCamera.Mode.CenterOrbit);
+            }
+            else
+            {
+                _demoCamera.SetMode(BlockadeDemoCamera.Mode.SkyboxDefault);
+            }
+        }
+
+        private void UpdateSpheres()
+        {
+            if (_meshCreator.activeSelf || !_showSpheresToggle.IsOn)
+            {
+                _spheres.SetActive(false);
+                return;
+            }
+
+            _spheres.SetActive(true);
+
+            foreach (var reflectionProbe in FindObjectsOfType<ReflectionProbe>())
+            {
+                reflectionProbe.mode = ReflectionProbeMode.Realtime;
+                reflectionProbe.RenderProbe();
+            }
         }
 
         private void OnStylePicked(SkyboxStyle style)

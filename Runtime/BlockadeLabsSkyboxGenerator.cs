@@ -612,11 +612,6 @@ namespace BlockadeLabsSDK
             var material = new Material(_skyboxMaterial);
             material.mainTexture = texture;
             RenderSettings.skybox = material;
-            foreach (var reflectionProbe in FindObjectsOfType<ReflectionProbe>())
-            {
-                reflectionProbe.RenderProbe();
-            }
-
             return material;
         }
 

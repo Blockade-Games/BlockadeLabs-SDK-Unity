@@ -46,6 +46,22 @@ namespace BlockadeLabsSDK
         }
 
         [SerializeField]
+        private float _zoomDefault = 0.0f;
+        public float ZoomDefault
+        {
+            get { return _zoomDefault; }
+            set { _zoomDefault = value; }
+        }
+
+        [SerializeField]
+        private float _meshCreatorZoomDefault = -0.5f;
+        public float MeshCreatorZoomDefault
+        {
+            get { return _meshCreatorZoomDefault; }
+            set { _meshCreatorZoomDefault = value; }
+        }
+
+        [SerializeField]
         private float _zoomSpeed = 120.0f;
         public float ZoomSpeed
         {
@@ -70,6 +86,14 @@ namespace BlockadeLabsSDK
         }
 
         [SerializeField]
+        private float _sphereOrbitZoomMax = -2.0f;
+        public float SphereOrbitZoomMax
+        {
+            get { return _sphereOrbitZoomMax; }
+            set { _sphereOrbitZoomMax = value; }
+        }
+
+        [SerializeField]
         private float _smooth = 5.0f;
         public float Smooth
         {
@@ -84,6 +108,12 @@ namespace BlockadeLabsSDK
             ManuallyMoving
         }
 
+        public enum Mode
+        {
+            SkyboxDefault,
+            CenterOrbit,
+            MeshCreator
+        }
 
         private Vector3 _mousePosition;
         private float _yaw;
@@ -92,10 +122,23 @@ namespace BlockadeLabsSDK
         private State _state = State.WaitingToAutoPan;
         private float _autoPanTimeStart;
         private float _previousZoom;
+        private Mode _mode;
 
-        public void SetZoom(float zoom)
+        public void SetMode(Mode mode)
         {
-            _zoom = zoom;
+            _mode = mode;
+            switch (mode)
+            {
+                case Mode.SkyboxDefault:
+                    _zoom = _zoomDefault;
+                    break;
+                case Mode.CenterOrbit:
+                    _zoom = _zoomMin;
+                    break;
+                case Mode.MeshCreator:
+                    _zoom = _meshCreatorZoomDefault;
+                    break;
+            }
         }
 
         void Update()
@@ -118,7 +161,7 @@ namespace BlockadeLabsSDK
             if (!EventSystem.current.IsPointerOverGameObject() && Input.mouseScrollDelta.y != 0 && mouseOverGameView)
             {
                 _zoom += Input.mouseScrollDelta.y * _zoomSpeed * 0.001f;
-                _zoom = Mathf.Clamp(_zoom, _zoomMin, _zoomMax);
+                _zoom = Mathf.Clamp(_zoom, _zoomMin, _mode == Mode.CenterOrbit ? _sphereOrbitZoomMax : _zoomMax);
             }
 
             transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.Euler(_pitch, _yaw, 0), _smooth * Time.deltaTime);
@@ -165,6 +208,12 @@ namespace BlockadeLabsSDK
             {
                 var mouseDelta = Input.mousePosition - _mousePosition;
                 _mousePosition = Input.mousePosition;
+
+                if (_mode == Mode.CenterOrbit)
+                {
+                    mouseDelta = -mouseDelta;
+                }
+
                 _yaw -= mouseDelta.x * _manualPanSpeed * 0.001f;
                 _pitch += mouseDelta.y * _manualPanSpeed * 0.001f;
             }
