@@ -54,6 +54,14 @@ namespace BlockadeLabsSDK
         }
 
         [SerializeField]
+        private float _sphereOrbitZoomDefault = -1f;
+        public float SphereOrbitZoomDefault
+        {
+            get { return _sphereOrbitZoomDefault; }
+            set { _sphereOrbitZoomDefault = value; }
+        }
+
+        [SerializeField]
         private float _meshCreatorZoomDefault = -0.5f;
         public float MeshCreatorZoomDefault
         {
@@ -133,7 +141,7 @@ namespace BlockadeLabsSDK
                     _zoom = _zoomDefault;
                     break;
                 case Mode.CenterOrbit:
-                    _zoom = _zoomMin;
+                    _zoom = _sphereOrbitZoomDefault;
                     break;
                 case Mode.MeshCreator:
                     _zoom = _meshCreatorZoomDefault;
