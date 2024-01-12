@@ -10,7 +10,8 @@ namespace BlockadeLabsSDK.Editor
     {
         private SerializedProperty _apiKey;
         private SerializedProperty _skybox;
-        private SerializedProperty _material;
+        private SerializedProperty _skyboxMaterial;
+        private SerializedProperty _depthMaterial;
         private SerializedProperty _selectedStyleFamilyIndex;
         private SerializedProperty _selectedStyleIndex;
         private SerializedProperty _prompt;
@@ -23,7 +24,8 @@ namespace BlockadeLabsSDK.Editor
         {
             _apiKey = serializedObject.FindProperty("_apiKey");
             _skybox = serializedObject.FindProperty("_skybox");
-            _material = serializedObject.FindProperty("_material");
+            _skyboxMaterial = serializedObject.FindProperty("_skyboxMaterial");
+            _depthMaterial = serializedObject.FindProperty("_depthMaterial");
             _selectedStyleFamilyIndex = serializedObject.FindProperty("_selectedStyleFamilyIndex");
             _selectedStyleIndex = serializedObject.FindProperty("_selectedStyleIndex");
             _prompt = serializedObject.FindProperty("_prompt");
@@ -45,7 +47,8 @@ namespace BlockadeLabsSDK.Editor
                 DrawApiKey(generator);
 
                 EditorGUILayout.PropertyField(_skybox);
-                EditorGUILayout.PropertyField(_material);
+                EditorGUILayout.PropertyField(_skyboxMaterial);
+                EditorGUILayout.PropertyField(_depthMaterial);
 
                 if (!string.IsNullOrWhiteSpace(generator.LastError))
                 {

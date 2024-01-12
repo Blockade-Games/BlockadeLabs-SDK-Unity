@@ -7,10 +7,11 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Blockade Skybox Material
-  m_Shader: {fileID: 4800000, guid: 4ce4c0666f071e1478d991d550d73d50, type: 3}
+  m_Name: Skybox Material
+  m_Shader: {fileID: 108, guid: 0000000000000000f000000000000000, type: 0}
   m_ValidKeywords: []
-  m_InvalidKeywords: []
+  m_InvalidKeywords:
+  - _MAPPING_LATITUDE_LONGITUDE_LAYOUT
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -72,14 +73,20 @@ Material:
     - _DepthScale: 3
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
+    - _Exposure: 1
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
+    - _ImageType: 0
+    - _Layout: 0
+    - _Mapping: 1
     - _Max: 1000
     - _Metallic: 0
+    - _MirrorOnBack: 0
     - _Mode: 0
     - _OcclusionStrength: 1
     - _Parallax: 0.02
+    - _Rotation: 180
     - _Scale: 1
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
@@ -89,4 +96,5 @@ Material:
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+    - _Tint: {r: 0.5, g: 0.5, b: 0.5, a: 0.5}
   m_BuildTextureStacks: []

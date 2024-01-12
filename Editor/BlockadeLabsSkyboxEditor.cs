@@ -28,12 +28,13 @@ namespace BlockadeLabsSDK.Editor
                 SceneView.lastActiveSceneView.AlignViewToObject(skybox.transform);
             }
 
-            EditorGUI.BeginDisabledGroup(!skybox.CanSave);
-            if (GUILayout.Button("Save Prefab"))
+            BlockadeGUI.DisableGroup(!skybox.CanSave, () =>
             {
-                skybox.SavePrefab();
-            }
-            EditorGUI.EndDisabledGroup();
+                if (GUILayout.Button("Save Prefab"))
+                {
+                    skybox.SavePrefab();
+                }
+            });
 
             if (serializedObject.ApplyModifiedProperties())
             {

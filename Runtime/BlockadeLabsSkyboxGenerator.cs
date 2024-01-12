@@ -35,11 +35,19 @@ namespace BlockadeLabsSDK
         }
 
         [SerializeField]
-        private Material _material;
-        public Material Material
+        private Material _skyboxMaterial;
+        public Material SkyboxMaterial
         {
-            get => _material;
-            set => _material = value;
+            get => _skyboxMaterial;
+            set => _skyboxMaterial = value;
+        }
+
+        [SerializeField]
+        private Material _depthMaterial;
+        public Material DepthMaterial
+        {
+            get => _depthMaterial;
+            set => _depthMaterial = value;
         }
 
         private List<SkyboxStyleFamily> _styleFamilies;
@@ -527,15 +535,18 @@ namespace BlockadeLabsSDK
             var importer = TextureImporter.GetAtPath(texturePath) as TextureImporter;
             importer.maxTextureSize = 16384;
             importer.compressionQuality = 100;
+            importer.mipmapEnabled = false;
             importer.SaveAndReimport();
 
             var colorTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(texturePath);
             var depthTexture = tasks.Count > 1 ? AssetDatabase.LoadAssetAtPath<Texture2D>(depthTexturePath) : null;
 
-            var material = CreateMaterial(colorTexture, depthTexture, result.request.id);
+            var depthMaterial = CreateDepthMaterial(colorTexture, depthTexture, result.request.id);
+            AssetDatabase.CreateAsset(depthMaterial, folderPath + "/" + prefix + "_depth_material.mat");
 
-            AssetDatabase.CreateAsset(material, folderPath + "/" + prefix + "_material.mat");
-            EditorGUIUtility.PingObject(material);
+            var skyboxMaterial = CreateSkyboxMaterial(colorTexture);
+            AssetDatabase.CreateAsset(skyboxMaterial, folderPath + "/" + prefix + "_material.mat");
+            EditorGUIUtility.PingObject(skyboxMaterial);
         }
 
         private string ValidateFilename(string prompt)
@@ -571,12 +582,17 @@ namespace BlockadeLabsSDK
             }
 
             CreateMaterial(textures[0], textures.Length > 1 ? textures[1] : null, result.request.id);
+
+            var panoramicMaterial = CreatePanoramicMaterial();
+
+            // set the material on the scene camera
+            Camera.main.GetComponent<Skybox>().material = panoramicMaterial;
         }
 #endif
 
-        private Material CreateMaterial(Texture2D texture, Texture2D depthTexture, int remixId)
+        private Material CreateDepthMaterial(Texture2D texture, Texture2D depthTexture, int remixId)
         {
-            var material = new Material(_material);
+            var material = new Material(_depthMaterial);
             material.mainTexture = texture;
             if (material.HasProperty("_DepthMap"))
             {
@@ -586,6 +602,19 @@ namespace BlockadeLabsSDK
             if (_skybox)
             {
                 _skybox.SetSkyboxMaterial(material, remixId);
+            }
+
+            return material;
+        }
+
+        private Material CreateSkyboxMaterial(Texture2D texture)
+        {
+            var material = new Material(_skyboxMaterial);
+            material.mainTexture = texture;
+            RenderSettings.skybox = material;
+            foreach (var reflectionProbe in FindObjectsOfType<ReflectionProbe>())
+            {
+                reflectionProbe.RenderProbe();
             }
 
             return material;

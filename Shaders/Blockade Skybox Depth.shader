@@ -1,4 +1,4 @@
-Shader "BlockadeLabsSDK/BlockadeSkybox"
+Shader "BlockadeLabsSDK/BlockadeSkyboxDepth"
 {
     Properties
     {
