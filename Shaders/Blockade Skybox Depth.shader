@@ -2,8 +2,8 @@ Shader "BlockadeLabsSDK/BlockadeSkyboxDepth"
 {
     Properties
     {
-        _MainTex ("Texture", 2D) = "white" {}
-        _DepthMap ("Depth Map", 2D) = "white" {}
+        _MainTex ("Texture", Cube) = "white" {}
+        _DepthMap ("Depth Map", 2D ) = "white" {}
         _DepthScale ("Depth Scale", Range(3, 10)) = 5.3
     }
 
@@ -41,10 +41,10 @@ Shader "BlockadeLabsSDK/BlockadeSkyboxDepth"
             struct Varyings
             {
                 float4 positionCS : SV_POSITION;
-                float2 uv : TEXCOORD0;
+                float3 viewDir : TEXCOORD0;
             };
 
-            TEXTURE2D(_MainTex);
+            TEXTURECUBE(_MainTex);
             TEXTURE2D(_DepthMap);
             SAMPLER(sampler_MainTex);
             SAMPLER(sampler_DepthMap);
@@ -54,20 +54,21 @@ Shader "BlockadeLabsSDK/BlockadeSkyboxDepth"
             {
                 Varyings OUT;
 
-                OUT.uv = IN.uv;
-
                 float depth = SAMPLE_TEXTURE2D_LOD(_DepthMap, sampler_DepthMap, IN.uv, 0).g;
                 depth = clamp(1.0 / depth + 10 / _DepthScale, 0, _DepthScale);
 
                 IN.positionOS.xyz = normalize(IN.positionOS.xyz) * depth;
                 OUT.positionCS = TransformObjectToHClip(IN.positionOS.xyz);
 
+                // Rotate 90 deg to match depth UV
+                float3 rotated = float3(IN.positionOS.z, IN.positionOS.y, -IN.positionOS.x);
+                OUT.viewDir = normalize(rotated);
                 return OUT;
             }
 
             half4 frag(Varyings IN) : SV_Target
             {
-                half4 col = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv);
+                half4 col = SAMPLE_TEXTURECUBE(_MainTex, sampler_MainTex, IN.viewDir);
                 return col;
             }
             ENDHLSL
@@ -100,11 +101,11 @@ Shader "BlockadeLabsSDK/BlockadeSkyboxDepth"
 
             struct v2f
             {
-                float2 uv : TEXCOORD0;
+                float3 viewDir : TEXCOORD0;
                 float4 vertex : SV_POSITION;
             };
 
-            sampler2D _MainTex;
+            samplerCUBE _MainTex;
             sampler2D _DepthMap;
             float _DepthScale;
 
@@ -116,23 +117,22 @@ Shader "BlockadeLabsSDK/BlockadeSkyboxDepth"
                 UNITY_INITIALIZE_OUTPUT(v2f, o);
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
 
-                o.uv = v.uv;
-
-                float4 uvLOD = float4(o.uv, 0, 0);
+                float4 uvLOD = float4(v.uv, 0, 0);
                 float depth = tex2Dlod(_DepthMap, uvLOD).g;
 
                 depth = clamp(1.0 / depth + 10 / _DepthScale, 0, _DepthScale);
-
                 v.vertex.xyz = normalize(v.vertex.xyz) * depth;
 
-                o.vertex = UnityObjectToClipPos(v.vertex);
+                o.vertex = UnityObjectToClipPos(v.vertex.xyz);
+                // Rotate 90 deg to match depth UV
+                float3 rotated = float3(v.vertex.z, v.vertex.y, -v.vertex.x);
+                o.viewDir = normalize(rotated);
                 return o;
             }
 
             fixed4 frag (v2f i) : SV_Target
             {
-                fixed4 col = tex2D(_MainTex, i.uv);
-                return col;
+                return texCUBE(_MainTex, i.viewDir);
             }
             ENDCG
         }

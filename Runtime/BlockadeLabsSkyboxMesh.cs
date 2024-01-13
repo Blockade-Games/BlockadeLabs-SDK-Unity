@@ -19,7 +19,7 @@ namespace BlockadeLabsSDK
     }
 
     [ExecuteAlways, RequireComponent(typeof(MeshRenderer)), RequireComponent(typeof(MeshFilter))]
-    public class BlockadeLabsSkybox : MonoBehaviour
+    public class BlockadeLabsSkyboxMesh : MonoBehaviour
     {
         [SerializeField]
         private MeshDensity _meshDensity = MeshDensity.Medium;
@@ -72,7 +72,7 @@ namespace BlockadeLabsSDK
         private MaterialPropertyBlock _materialPropertyBlock;
         private Dictionary<int, Mesh> _meshes = new Dictionary<int, Mesh>();
 
-        public void SetSkyboxMaterial(Material material, int remixId)
+        public void SetSkyboxDepthMaterial(Material material, int remixId)
         {
             _meshRenderer = GetComponent<MeshRenderer>();
             _meshRenderer.sharedMaterial = material;
@@ -86,7 +86,6 @@ namespace BlockadeLabsSDK
             _meshDensity = MeshDensity.Medium;
             UpdateMesh();
             UpdateDepthScale();
-            HDRPCameraFix();
         }
 
         public int? GetRemixId()
@@ -184,29 +183,6 @@ namespace BlockadeLabsSDK
             UpdateDepthScale();
             _somethingChangedSinceSave = true;
             OnPropertyChanged?.Invoke();
-        }
-
-        private void HDRPCameraFix()
-        {
-            // If using HDRP, and this is the default scene, set the camera environment volume mask to nothing
-            // So the camera isn't affected by the default volume and we can see the skybox properly.
-#if UNITY_HDRP && UNITY_EDITOR
-            bool isHDRP = UnityEngine.Rendering.GraphicsSettings.renderPipelineAsset.GetType().Name == "HDRenderPipelineAsset";
-            bool isDefaultScene = AssetDatabase.GUIDFromAssetPath(gameObject.scene.path).ToString() == "d9b6ab5207db7f8438e56b4c66ea03aa";
-            if (isHDRP && isDefaultScene)
-            {
-                var components = Camera.main.GetComponents<MonoBehaviour>();
-                foreach (var component in components)
-                {
-                    if (component.GetType().Name == "HDAdditionalCameraData")
-                    {
-                        var field = component.GetType().GetField("volumeLayerMask");
-                        LayerMask mask = 0;
-                        field.SetValue(component, mask);
-                    }
-                }
-            }
-#endif
         }
 
         public void SavePrefab()

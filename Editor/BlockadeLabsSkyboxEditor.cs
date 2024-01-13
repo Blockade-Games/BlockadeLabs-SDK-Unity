@@ -3,8 +3,8 @@ using UnityEngine;
 
 namespace BlockadeLabsSDK.Editor
 {
-    [CustomEditor(typeof(BlockadeLabsSkybox))]
-    public class BlockadeLabsSkyboxEditor : UnityEditor.Editor
+    [CustomEditor(typeof(BlockadeLabsSkyboxMesh))]
+    public class BlockadeLabsSkyboxMeshEditor : UnityEditor.Editor
     {
         private SerializedProperty _meshDensity;
         private SerializedProperty _depthScale;
@@ -21,7 +21,7 @@ namespace BlockadeLabsSDK.Editor
             EditorGUILayout.PropertyField(_meshDensity);
             EditorGUILayout.PropertyField(_depthScale);
 
-            var skybox = (BlockadeLabsSkybox)target;
+            var skybox = (BlockadeLabsSkyboxMesh)target;
 
             if (GUILayout.Button("Move Scene Camera to Skybox"))
             {

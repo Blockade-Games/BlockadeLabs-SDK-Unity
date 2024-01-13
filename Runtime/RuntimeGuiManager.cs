@@ -17,8 +17,8 @@ namespace BlockadeLabsSDK
         }
 
         [SerializeField]
-        private BlockadeLabsSkybox _skybox;
-        public BlockadeLabsSkybox Skybox
+        private BlockadeLabsSkyboxMesh _skybox;
+        public BlockadeLabsSkyboxMesh Skybox
         {
             get { return _skybox; }
             set { _skybox = value; }

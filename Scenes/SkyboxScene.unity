@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.28666875, g: 0.15825412, b: 0.18284418, a: 1}
+  m_IndirectSpecularColor: {r: 0.2867003, g: 0.15831643, b: 0.18289882, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -8384,7 +8384,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_UiScaleMode: 0
   m_ReferencePixelsPerUnit: 100
-  m_ScaleFactor: 1
+  m_ScaleFactor: 1.5
   m_ReferenceResolution: {x: 1280, y: 1080}
   m_ScreenMatchMode: 1
   m_MatchWidthOrHeight: 0
@@ -11145,6 +11145,55 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1281054699}
   m_CullTransparentMesh: 1
+--- !u!1 &1297566022
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1297566024}
+  - component: {fileID: 1297566023}
+  m_Layer: 0
+  m_Name: Global Volume
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1297566023
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1297566022}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 172515602e62fb746b5d573b38a5fe58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_IsGlobal: 1
+  priority: 0
+  blendDistance: 0
+  weight: 1
+  sharedProfile: {fileID: 11400000, guid: 0b478194c970ff9418e805599ea5b1c6, type: 2}
+--- !u!4 &1297566024
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1297566022}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 8
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1324224183
 GameObject:
   m_ObjectHideFlags: 0
@@ -11306,6 +11355,7 @@ GameObject:
   - component: {fileID: 1328739245}
   - component: {fileID: 1328739244}
   - component: {fileID: 1328739243}
+  - component: {fileID: 1328739246}
   m_Layer: 0
   m_Name: Reflective Sphere
   m_TagString: Untagged
@@ -11321,8 +11371,8 @@ MeshRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1328739241}
   m_Enabled: 1
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
+  m_CastShadows: 0
+  m_ReceiveShadows: 0
   m_DynamicOccludee: 1
   m_StaticShadowCaster: 0
   m_MotionVectors: 1
@@ -11378,6 +11428,21 @@ Transform:
   m_Father: {fileID: 1749343047}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1328739246
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1328739241}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e5bed69c2f411545abae6cce092d5d9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Standard: {fileID: 2100000, guid: 1f7da3afa71f79746b155cce8adc3814, type: 2}
+  URP: {fileID: 2100000, guid: 0a8b2d771cc014140aafed9ddca5f4e3, type: 2}
+  HDRP: {fileID: 2100000, guid: 2b2e91de1bec1364da5c8b0af7cc8691, type: 2}
 --- !u!1 &1344200160
 GameObject:
   m_ObjectHideFlags: 0
@@ -16580,6 +16645,7 @@ GameObject:
   - component: {fileID: 1879005371}
   - component: {fileID: 1879005374}
   - component: {fileID: 1879005373}
+  - component: {fileID: 1879005375}
   m_Layer: 0
   m_Name: Metallic Sphere
   m_TagString: Untagged
@@ -16610,8 +16676,8 @@ MeshRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1879005370}
   m_Enabled: 1
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
+  m_CastShadows: 0
+  m_ReceiveShadows: 0
   m_DynamicOccludee: 1
   m_StaticShadowCaster: 0
   m_MotionVectors: 1
@@ -16652,6 +16718,21 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1879005370}
   m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1879005375
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1879005370}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e5bed69c2f411545abae6cce092d5d9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Standard: {fileID: 2100000, guid: d8022719f59796e488cf3a186cb6a708, type: 2}
+  URP: {fileID: 2100000, guid: 8bb7c7324ab660443a94f630781c80f3, type: 2}
+  HDRP: {fileID: 2100000, guid: a33a9f212df0efa49861b934d17e160f, type: 2}
 --- !u!1 &1895989955
 GameObject:
   m_ObjectHideFlags: 0
@@ -17139,7 +17220,7 @@ GameObject:
   - component: {fileID: 1946445120}
   - component: {fileID: 1946445123}
   m_Layer: 0
-  m_Name: Blockade Labs Skybox
+  m_Name: Blockade Labs Skybox Mesh
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -17153,8 +17234,8 @@ MeshRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1946445118}
   m_Enabled: 1
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
+  m_CastShadows: 0
+  m_ReceiveShadows: 0
   m_DynamicOccludee: 1
   m_StaticShadowCaster: 0
   m_MotionVectors: 1
@@ -17223,7 +17304,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _meshDensity: 1
-  _depthScale: 6.5
+  _depthScale: 3
 --- !u!1 &1952513587
 GameObject:
   m_ObjectHideFlags: 0
@@ -17402,9 +17483,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _apiKey: 
-  _skybox: {fileID: 1946445123}
+  _skyboxMesh: {fileID: 0}
   _skyboxMaterial: {fileID: 2100000, guid: 8bbc7111fd83de745beb42d92e974968, type: 2}
   _depthMaterial: {fileID: 2100000, guid: 503161aa846cabf4e90e8b5fdd5df395, type: 2}
+  _HDRPVolume: {fileID: 1297566023}
+  _HDRPVolumeProfile: {fileID: 11400000, guid: 0b478194c970ff9418e805599ea5b1c6, type: 2}
   _selectedStyleFamilyIndex: 3
   _selectedStyleIndex: 1
   _prompt: 
@@ -19417,6 +19500,7 @@ GameObject:
   - component: {fileID: 2142556291}
   - component: {fileID: 2142556294}
   - component: {fileID: 2142556293}
+  - component: {fileID: 2142556295}
   m_Layer: 0
   m_Name: Smooth Sphere
   m_TagString: Untagged
@@ -19447,8 +19531,8 @@ MeshRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2142556290}
   m_Enabled: 1
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
+  m_CastShadows: 0
+  m_ReceiveShadows: 0
   m_DynamicOccludee: 1
   m_StaticShadowCaster: 0
   m_MotionVectors: 1
@@ -19489,6 +19573,21 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2142556290}
   m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &2142556295
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2142556290}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e5bed69c2f411545abae6cce092d5d9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Standard: {fileID: 2100000, guid: 7bd141f82e08a364297a57eff3c8cd59, type: 2}
+  URP: {fileID: 2100000, guid: dc52ce38d8159cf40b10e3fe4ff52850, type: 2}
+  HDRP: {fileID: 2100000, guid: 37854c30487dd13468473b6dc7c69a32, type: 2}
 --- !u!222 &983452280838341728
 CanvasRenderer:
   m_ObjectHideFlags: 0
