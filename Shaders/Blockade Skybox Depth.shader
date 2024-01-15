@@ -124,6 +124,7 @@ Shader "BlockadeLabsSDK/BlockadeSkyboxDepth"
                 v.vertex.xyz = normalize(v.vertex.xyz) * depth;
 
                 o.vertex = UnityObjectToClipPos(v.vertex.xyz);
+
                 // Rotate 90 deg to match depth UV
                 float3 rotated = float3(v.vertex.z, v.vertex.y, -v.vertex.x);
                 o.viewDir = normalize(rotated);

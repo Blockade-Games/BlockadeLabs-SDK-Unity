@@ -486,7 +486,7 @@ namespace BlockadeLabsSDK
             return null;
         }
 
-        private void DestroyTextures(Texture2D[] textures)
+        private void DestroyTextures(Texture[] textures)
         {
             foreach (var texture in textures)
             {
@@ -565,8 +565,8 @@ namespace BlockadeLabsSDK
             depthImporter.wrapModeV = TextureWrapMode.Clamp;
             depthImporter.SaveAndReimport();
 
-            var colorTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(texturePath);
-            var depthTexture = tasks.Count > 1 ? AssetDatabase.LoadAssetAtPath<Texture2D>(depthTexturePath) : null;
+            var colorTexture = AssetDatabase.LoadAssetAtPath<Cubemap>(texturePath);
+            var depthTexture = tasks.Count > 1 ? AssetDatabase.LoadAssetAtPath<Texture>(depthTexturePath) : null;
 
             var depthMaterial = CreateDepthMaterial(colorTexture, depthTexture, result.request.id);
             if (depthMaterial != null)
@@ -605,7 +605,7 @@ namespace BlockadeLabsSDK
 #else
         private async Task DownloadResultAsync(GetImagineResult result)
         {
-            var tasks = new List<Task<Texture2D>>();
+            var tasks = new List<Task<Texture>>();
             tasks.Add(ApiRequests.DownloadTextureAsync(result.request.file_url));
             if (!string.IsNullOrWhiteSpace(result.request.depth_map_url))
             {
@@ -626,7 +626,7 @@ namespace BlockadeLabsSDK
         }
 #endif
 
-        private Material CreateDepthMaterial(Texture2D texture, Texture2D depthTexture, int remixId)
+        private Material CreateDepthMaterial(Texture texture, Texture depthTexture, int remixId)
         {
             if (_depthMaterial == null)
             {
@@ -648,7 +648,7 @@ namespace BlockadeLabsSDK
             return material;
         }
 
-        private Material CreateSkyboxMaterial(Texture2D texture)
+        private Material CreateSkyboxMaterial(Texture texture)
         {
             if (_skyboxMaterial == null)
             {
@@ -656,12 +656,12 @@ namespace BlockadeLabsSDK
             }
 
             var material = new Material(_skyboxMaterial);
-            material.mainTexture = texture;
+            material.SetTexture("_Tex", texture);
             RenderSettings.skybox = material;
             return material;
         }
 
-        private VolumeProfile CreateVolumeProfile(Texture2D skyTexture)
+        private VolumeProfile CreateVolumeProfile(Cubemap skyTexture)
         {
             if (_HDRPVolume == null || _HDRPVolumeProfile == null)
             {
@@ -680,9 +680,9 @@ namespace BlockadeLabsSDK
             var hdrpSkyType = hdrpAssembly.GetType("UnityEngine.Rendering.HighDefinition.HDRISky");
             if (volumeProfile.TryGet<VolumeComponent>(hdrpSkyType, out var sky))
             {
-                var hdriSkyProperty = hdrpSkyType.GetProperty("hdriSky");
-                var overrideMethod = hdriSkyProperty?.PropertyType.GetMethod("Override", new[] { typeof(Texture2D) });
-                var hdriSkyValue = hdriSkyProperty.GetValue(sky);
+                var hdriSkyField = hdrpSkyType.GetField("hdriSky");
+                var overrideMethod = hdriSkyField.FieldType.GetMethod("Override", new[] { typeof(Cubemap) });
+                var hdriSkyValue = hdriSkyField.GetValue(sky);
                 overrideMethod.Invoke(hdriSkyValue, new object[] { skyTexture });
             }
 

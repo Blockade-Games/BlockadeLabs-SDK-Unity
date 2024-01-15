@@ -17483,7 +17483,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _apiKey: 
-  _skyboxMesh: {fileID: 0}
+  _skyboxMesh: {fileID: 1946445123}
   _skyboxMaterial: {fileID: 2100000, guid: 8bbc7111fd83de745beb42d92e974968, type: 2}
   _depthMaterial: {fileID: 2100000, guid: 503161aa846cabf4e90e8b5fdd5df395, type: 2}
   _HDRPVolume: {fileID: 1297566023}
