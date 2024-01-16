@@ -19,18 +19,18 @@ namespace BlockadeLabsSDK.Editor
         private const string _versionKey = "BlockadeLabsSDK_StartMenu_Version";
         private const string _shownKey = "BlockadeLabsSDK_StartMenu_Shown";
 
-        private const string _menuRoot = "Tools/Blockade Labs";
         private const string _styleTag = "BlockadeLabsSDK_StartScreen";
 
-        private const string _packageJsonGuid = "fb5dc3ed6cb9cdf469562dd9cddee9b9";
-        private const string _logoGuid = "608219909903ac246ac3a12aae8675f0";
         private const string _skyboxSceneGuid = "d9b6ab5207db7f8438e56b4c66ea03aa";
-        private const string _fontGuid = "1b5ca89b842763248980ff468bb292ea";
         private const string _changelogGuid = "0519ee665fde4ef0bb74e40b3fffff42";
+
+        private const string _windowTitle = "Blockade Labs Skybox AI";
+        private static readonly string[] _showOnStartOptions = {
+            "Always", "On Update", "Never"
+        };
 
         private GUIStyle _buttonStyle;
         private GUIStyle _bodyStyle;
-        private GUIStyle _warningStyle;
         private GUIStyle _versionStyle;
         private GUIStyle _boldStyle;
         private GUIStyle _bgStyle;
@@ -38,16 +38,8 @@ namespace BlockadeLabsSDK.Editor
         private GUIStyle _footerStyle;
 
         private static ShowOnStart _showOnStart;
-
         private static string _version;
-
-        internal static readonly string WindowTitle = "Blockade Labs Skybox AI";
-        private static readonly string[] _showOnStartOptions = {
-            "Always", "On Update", "Never"
-        };
-
         private Vector2 _scrollPosition;
-
         private List<string> _changelog = new List<string>();
 
         private enum ShowOnStart
@@ -68,12 +60,17 @@ namespace BlockadeLabsSDK.Editor
             Initialize();
         }
 
-        internal static void Initialize()
+        private static void Initialize()
         {
+            if (Application.isBatchMode)
+            {
+                return;
+            }
+
             bool alreadyShown = SessionState.GetBool(_shownKey, false);
             SessionState.SetBool(_shownKey, true);
 
-            var version = GetVersion();
+            var version = WindowUtils.GetVersion();
             var lastVersion = EditorPrefs.GetString(_versionKey, "0.0.0");
             var newVersion = version.CompareTo(lastVersion) > 0;
             if (newVersion)
@@ -91,42 +88,36 @@ namespace BlockadeLabsSDK.Editor
             }
         }
 
-        void OnEnable()
+        private void OnEnable()
         {
             _bodyStyle = null;
         }
 
-        void OnDisable()
+        private void OnDisable()
         {
             BlockadeGUI.CleanupBackgroundTextures(_styleTag);
         }
 
-        [MenuItem(_menuRoot + "/Open Skybox AI Scene", false, 0)]
+        [MenuItem(WindowUtils.MenuRoot + "/Open Skybox AI Scene", false, 0)]
         public static void OpenSkyboxAIScene()
         {
             var scenePath = AssetDatabase.GUIDToAssetPath(_skyboxSceneGuid);
             EditorSceneManager.OpenScene(scenePath);
         }
 
-        [MenuItem(_menuRoot + "/Start Screen", false, 0)]
+        [MenuItem(WindowUtils.MenuRoot + "/Start Screen", false, 0)]
         public static void ShowStartScreen()
         {
-            StartScreen window = GetWindow<StartScreen>(true, WindowTitle, true);
+            StartScreen window = GetWindow<StartScreen>(true, _windowTitle, true);
             window.minSize = new Vector2(800, 600);
             window.maxSize = window.minSize;
             window.Show();
         }
 
-        [MenuItem(_menuRoot + "/Support (Discord)", false, 3)]
+        [MenuItem(WindowUtils.MenuRoot + "/Support (Discord)", false, 3)]
         public static void OpenSupport()
         {
             Application.OpenURL(_discord);
-        }
-
-        private Color HexColor(string hex)
-        {
-            ColorUtility.TryParseHtmlString(hex, out var color);
-            return color;
         }
 
         private void InitStyles()
@@ -135,7 +126,7 @@ namespace BlockadeLabsSDK.Editor
 
             BlockadeGUI.StyleFontSize = 14;
             BlockadeGUI.StyleTag = _styleTag;
-            BlockadeGUI.StyleFont = AssetDatabase.LoadAssetAtPath<Font>(AssetDatabase.GUIDToAssetPath(_fontGuid));
+            BlockadeGUI.StyleFont = WindowUtils.GetFont();
 
             _bodyStyle = BlockadeGUI.CreateStyle(Color.white);
             _bodyStyle.margin.left = 10;
@@ -146,10 +137,7 @@ namespace BlockadeLabsSDK.Editor
             _boldStyle.fontStyle = FontStyle.Bold;
             _boldStyle.fontSize++;
 
-            _warningStyle = new GUIStyle(_bodyStyle);
-            _warningStyle.normal.textColor = Color.yellow;
-
-            _buttonStyle = BlockadeGUI.CreateStyle(Color.black, HexColor("#02ee8b"));
+            _buttonStyle = BlockadeGUI.CreateStyle(Color.black, BlockadeGUI.HexColor("#02ee8b"));
             _buttonStyle.fontSize = 14;
             _buttonStyle.margin.left = 10;
             _buttonStyle.margin.bottom = 5;
@@ -169,7 +157,7 @@ namespace BlockadeLabsSDK.Editor
             _footerStyle.fontSize = 12;
             _footerStyle.padding.top = 3;
 
-            CenterOnEditor(this);
+            WindowUtils.CenterOnEditor(this);
             ReadChangeLog();
         }
 
@@ -267,9 +255,9 @@ namespace BlockadeLabsSDK.Editor
             {
                 BlockadeGUI.Horizontal(_paddedSection, () =>
                 {
-                    BlockadeGUI.Image(_logoGuid, 120, 36);
+                    WindowUtils.DrawLogo();
                     GUILayout.FlexibleSpace();
-                    GUILayout.Label("Version: " + GetVersion(), _versionStyle, GUILayout.ExpandHeight(true));
+                    GUILayout.Label("Version: " + WindowUtils.GetVersion(), _versionStyle, GUILayout.ExpandHeight(true));
                 });
 
                 BlockadeGUI.Horizontal(() =>
@@ -306,7 +294,7 @@ namespace BlockadeLabsSDK.Editor
 
                 BlockadeGUI.Horizontal(_paddedSection, () =>
                 {
-                    GUILayout.Label($"{_menuRoot}/Start Screen", _footerStyle);
+                    GUILayout.Label($"{WindowUtils.MenuRoot}/Start Screen", _footerStyle);
                     GUILayout.FlexibleSpace();
                     GUILayout.Label("Show On Start: ", _footerStyle);
                     var newShowOnStart = (ShowOnStart)EditorGUILayout.Popup((int)_showOnStart, _showOnStartOptions);
@@ -317,32 +305,6 @@ namespace BlockadeLabsSDK.Editor
                     }
                 });
             });
-        }
-
-        public static void CenterOnEditor(EditorWindow window)
-        {
-#if UNITY_2020_1_OR_NEWER
-            var main = EditorGUIUtility.GetMainWindowPosition();
-            var pos = window.position;
-            float w = (main.width - pos.width) * 0.5f;
-            float h = (main.height - pos.height) * 0.5f;
-            pos.x = main.x + w;
-            pos.y = main.y + h;
-            window.position = pos;
-#endif
-        }
-
-        public static string GetVersion()
-        {
-            if (_version == null)
-            {
-                var projectFilePath = AssetDatabase.GUIDToAssetPath(_packageJsonGuid);
-                var lines = File.ReadAllText(projectFilePath);
-                var rx = new Regex("\"version\": \"(.*?)\"");
-                _version = rx.Match(lines).Groups[1].Value;
-            }
-
-            return _version;
         }
     }
 }

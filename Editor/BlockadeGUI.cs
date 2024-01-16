@@ -44,6 +44,24 @@ namespace BlockadeLabsSDK.Editor
             EditorGUILayout.EndHorizontal();
         }
 
+        internal static void HorizontalCentered(Action action)
+        {
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            action();
+            GUILayout.FlexibleSpace();
+            EditorGUILayout.EndHorizontal();
+        }
+
+        internal static void HorizontalCentered(GUIStyle style, Action action)
+        {
+            EditorGUILayout.BeginHorizontal(style);
+            GUILayout.FlexibleSpace();
+            action();
+            GUILayout.FlexibleSpace();
+            EditorGUILayout.EndHorizontal();
+        }
+
         internal static Vector2 Scroll(Vector2 scrollPosition, Action action)
         {
             scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition, GUILayout.ExpandWidth(true));
@@ -134,11 +152,21 @@ namespace BlockadeLabsSDK.Editor
             return style;
         }
 
+        public static GUIStyle CreateStyle(string textColor)
+        {
+            return CreateStyle(HexColor(textColor));
+        }
+
         public static GUIStyle CreateStyle(Color textColor)
         {
             var style = CreateStyle();
             SetTextColor(style, textColor);
             return style;
+        }
+
+        public static GUIStyle CreateStyle(string textColor, string backgroundColor)
+        {
+            return CreateStyle(HexColor(textColor), HexColor(backgroundColor));
         }
 
         public static GUIStyle CreateStyle(Color textColor, Color backgroundColor)
