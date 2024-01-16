@@ -1,3 +1,5 @@
+#if false
+
 using System;
 using UnityEditor;
 using UnityEngine;
@@ -303,3 +305,5 @@ namespace BlockadeLabsSDK.Editor
         }
     }
 }
+
+#endif
