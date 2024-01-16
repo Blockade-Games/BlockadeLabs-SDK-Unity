@@ -122,6 +122,7 @@ namespace BlockadeLabsSDK.Editor
 
         public static int StyleFontSize;
         public static string StyleTag;
+        public static Font StyleFont;
 
         public static GUIStyle CreateStyle()
         {
@@ -129,6 +130,7 @@ namespace BlockadeLabsSDK.Editor
             style.wordWrap = true;
             style.richText = true;
             style.fontSize = StyleFontSize;
+            style.font = StyleFont;
             return style;
         }
 
