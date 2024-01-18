@@ -38,6 +38,7 @@ namespace BlockadeLabsSDK.Editor
         private GUIStyle _bgStyle;
         private GUIStyle _titleSection;
         private GUIStyle _showOnStartStyle;
+        private GUIStyle _showOnStartPopupStyle;
         private GUIStyle _versionStyle;
         private GUIStyle _h1Style;
         private GUIStyle _h2Style;
@@ -163,6 +164,13 @@ namespace BlockadeLabsSDK.Editor
             _showOnStartStyle.fontSize = 12;
             _showOnStartStyle.alignment = TextAnchor.MiddleCenter;
 
+            _showOnStartPopupStyle = new GUIStyle(EditorStyles.popup);
+            _showOnStartPopupStyle.fontSize = 12;
+            _showOnStartPopupStyle.font = BlockadeGUI.StyleFont;
+            BlockadeGUI.SetTextColor(_showOnStartPopupStyle, Color.white);
+            BlockadeGUI.SetBackgroundColor(_showOnStartPopupStyle, BlockadeGUI.HexColor("#313131"));
+            _showOnStartPopupStyle.alignment = TextAnchor.MiddleCenter;
+
             _h1Style = BlockadeGUI.CreateStyle(Color.white);
             _h1Style.fontStyle = FontStyle.Bold;
             _h1Style.fontSize = 32;
@@ -182,7 +190,7 @@ namespace BlockadeLabsSDK.Editor
             ReadChangeLog();
         }
 
-        private void Bullet(string text)
+        private void Bullet(string text, string bullet = "•")
         {
             BlockadeGUI.Horizontal(() =>
             {
@@ -192,9 +200,9 @@ namespace BlockadeLabsSDK.Editor
                     GUILayout.Space(8);
                 }
 
-                GUILayout.Label("•", _bodyStyle);
+                GUILayout.Label(bullet, _bodyStyle);
                 GUILayout.Space(8);
-                GUILayout.Label(text.Substring(ws + 1), _bodyStyle);
+                GUILayout.Label(text.Substring(ws + 1), _bodyStyle, GUILayout.ExpandWidth(true));
             });
         }
 
@@ -205,6 +213,8 @@ namespace BlockadeLabsSDK.Editor
             var changelogAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(changelogPath);
             _changelog = changelogAsset.text.Split('\n')
                 .Select(x => Regex.Replace(x.TrimEnd(), @"\*\*(.*?)\*\*", "<b>$1</b>"))
+                .Select(x => Regex.Replace(x, @"\*(.*?)\*", "<i>$1</i>"))
+                .Select(x => Regex.Replace(x, @"`(.*?)`", "<b>$1</b>"))
                 .Where(x => !string.IsNullOrEmpty(x))
                 .ToList();
             var start = _changelog.FindIndex(l => l.StartsWith("## "));
@@ -315,7 +325,8 @@ namespace BlockadeLabsSDK.Editor
                         GUILayout.FlexibleSpace();
 
                         GUILayout.Label("Show On Start: ", _showOnStartStyle);
-                        var newShowOnStart = (ShowOnStart)EditorGUILayout.Popup((int)_showOnStart, _showOnStartOptions);
+                        GUILayout.Space(4);
+                        var newShowOnStart = (ShowOnStart)EditorGUILayout.Popup((int)_showOnStart, _showOnStartOptions, _showOnStartPopupStyle, GUILayout.Width(205));
                         if (_showOnStart != newShowOnStart)
                         {
                             _showOnStart = newShowOnStart;
@@ -335,24 +346,33 @@ namespace BlockadeLabsSDK.Editor
                         {
                             GUILayout.Label("How to Get Started", _h1Style, GUILayout.ExpandWidth(true));
 
-                            EditorGUILayout.Space(8);
+                            EditorGUILayout.Space(4);
 
-                            GUILayout.Label("To get started, you do this first and follow these basic steps. Fill in actual get started directions here. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris dignissim risus sed hendrerit ullamcorper. Aliquam justo est, semper ac nisi sit amet.", _bodyStyle);
+                            Bullet("- Go to api.blockadelabs.com to get your API key.", "1.");
+
+                            EditorGUILayout.Space(4);
+
+                            Bullet("- Open the Skybox AI Scene.", "2.");
+
+                            EditorGUILayout.Space(4);
+
+                            Bullet("- Select the \"Blockade Labs Skybox Generator\" gameObject and enter your API key.", "3.");
+
+                            EditorGUILayout.Space(4);
+
+                            Bullet("- Enter play mode to start generating in our immersive experience, or use the component in editor mode if you prefer.", "4.");
 
                             EditorGUILayout.Space(24);
 
                             if (BlockadeGUI.Button("OPEN SKYBOX AI SCENE", _buttonStyle, 273, 48))
                             {
                                 OpenSkyboxAIScene();
-                                Close();
                             }
 
+                            // EditorGUILayout.Space(28);
+                            // News();
+
                             EditorGUILayout.Space(28);
-
-                            News();
-
-                            EditorGUILayout.Space(28);
-
                             Changelog();
 
                             EditorGUILayout.Space(28);
