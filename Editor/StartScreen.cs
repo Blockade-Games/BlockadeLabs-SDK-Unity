@@ -26,9 +26,8 @@ namespace BlockadeLabsSDK.Editor
         private const string _changelogGuid = "0519ee665fde4ef0bb74e40b3fffff42";
 
         private const string _windowTitle = "Blockade Labs Skybox AI";
-        private static readonly string[] _showOnStartOptions = {
-            "Always", "On Update", "Never"
-        };
+        private static readonly string[] _showStartScreenOptions =
+            ShowStartScreen.GetNames(typeof(ShowStartScreen)).Select(x => ObjectNames.NicifyVariableName(x)).ToArray();
 
         private GUIStyle _bodyStyle;
         private GUIStyle _boldStyle;
@@ -37,25 +36,17 @@ namespace BlockadeLabsSDK.Editor
         private GUIStyle _buttonStyle;
         private GUIStyle _bgStyle;
         private GUIStyle _titleSection;
-        private GUIStyle _showOnStartStyle;
-        private GUIStyle _showOnStartPopupStyle;
+        private GUIStyle _showStartScreenStyle;
+        private GUIStyle _showStartScreenPopupStyle;
         private GUIStyle _versionStyle;
         private GUIStyle _h1Style;
         private GUIStyle _h2Style;
         private GUIStyle _h3Style;
         private GUIStyle _h4Style;
 
-        private static ShowOnStart _showOnStart;
         private static string _version;
         private Vector2 _scrollPosition;
         private List<string> _changelog = new List<string>();
-
-        private enum ShowOnStart
-        {
-            Always,
-            OnUpdate,
-            Never
-        }
 
         static StartScreen()
         {
@@ -87,12 +78,12 @@ namespace BlockadeLabsSDK.Editor
                 alreadyShown = false;
             }
 
-            _showOnStart = (ShowOnStart)EditorPrefs.GetInt(_showOnStartKey, 0);
-            bool showPref = _showOnStart == ShowOnStart.Always ||
-                (_showOnStart == ShowOnStart.OnUpdate && newVersion);
+            var showStartScreen = PluginSettings.Get().ShowStartScreen;
+            bool showPref = showStartScreen == ShowStartScreen.Always ||
+                (showStartScreen == ShowStartScreen.OnUpdate && newVersion);
             if (!EditorApplication.isPlayingOrWillChangePlaymode && !alreadyShown && showPref)
             {
-                ShowStartScreen();
+                OpenStartScreen();
             }
         }
 
@@ -114,7 +105,7 @@ namespace BlockadeLabsSDK.Editor
         }
 
         [MenuItem(WindowUtils.MenuRoot + "/Start Screen", false, 0)]
-        public static void ShowStartScreen()
+        public static void OpenStartScreen()
         {
             StartScreen window = GetWindow<StartScreen>(true, _windowTitle, true);
             window.minSize = new Vector2(1020, 688);
@@ -160,16 +151,16 @@ namespace BlockadeLabsSDK.Editor
             _titleSection = new GUIStyle();
             _titleSection.padding = new RectOffset(0, 0, 0, 28);
 
-            _showOnStartStyle = BlockadeGUI.CreateStyle(Color.white);
-            _showOnStartStyle.fontSize = 12;
-            _showOnStartStyle.alignment = TextAnchor.MiddleCenter;
+            _showStartScreenStyle = BlockadeGUI.CreateStyle(Color.white);
+            _showStartScreenStyle.fontSize = 12;
+            _showStartScreenStyle.alignment = TextAnchor.MiddleCenter;
 
-            _showOnStartPopupStyle = new GUIStyle(EditorStyles.popup);
-            _showOnStartPopupStyle.fontSize = 12;
-            _showOnStartPopupStyle.font = BlockadeGUI.StyleFont;
-            BlockadeGUI.SetTextColor(_showOnStartPopupStyle, Color.white);
-            BlockadeGUI.SetBackgroundColor(_showOnStartPopupStyle, BlockadeGUI.HexColor("#313131"));
-            _showOnStartPopupStyle.alignment = TextAnchor.MiddleCenter;
+            _showStartScreenPopupStyle = new GUIStyle(EditorStyles.popup);
+            _showStartScreenPopupStyle.fontSize = 12;
+            _showStartScreenPopupStyle.font = BlockadeGUI.StyleFont;
+            BlockadeGUI.SetTextColor(_showStartScreenPopupStyle, Color.white);
+            BlockadeGUI.SetBackgroundColor(_showStartScreenPopupStyle, BlockadeGUI.HexColor("#313131"));
+            _showStartScreenPopupStyle.alignment = TextAnchor.MiddleCenter;
 
             _h1Style = BlockadeGUI.CreateStyle(Color.white);
             _h1Style.fontStyle = FontStyle.Bold;
@@ -324,13 +315,15 @@ namespace BlockadeLabsSDK.Editor
 
                         GUILayout.FlexibleSpace();
 
-                        GUILayout.Label("Show On Start: ", _showOnStartStyle);
+                        GUILayout.Label("Show On Start: ", _showStartScreenStyle);
                         GUILayout.Space(4);
-                        var newShowOnStart = (ShowOnStart)EditorGUILayout.Popup((int)_showOnStart, _showOnStartOptions, _showOnStartPopupStyle, GUILayout.Width(205));
-                        if (_showOnStart != newShowOnStart)
+
+                        var settings = PluginSettings.Get();
+                        var newShowStartScreen = (ShowStartScreen)EditorGUILayout.Popup((int)settings.ShowStartScreen, _showStartScreenOptions, _showStartScreenPopupStyle, GUILayout.Width(205));
+                        if (settings.ShowStartScreen != newShowStartScreen)
                         {
-                            _showOnStart = newShowOnStart;
-                            EditorPrefs.SetInt(_showOnStartKey, (int)_showOnStart);
+                            settings.ShowStartScreen = newShowStartScreen;
+                            settings.Save();
                         }
                     });
 
