@@ -10,14 +10,14 @@ namespace BlockadeLabsSDK.Editor
         public const string MenuRoot = "Tools/Blockade Labs";
 
         private const string _packageJsonGuid = "fb5dc3ed6cb9cdf469562dd9cddee9b9";
-        private const string _logoGuid = "608219909903ac246ac3a12aae8675f0";
+        private const string _logoGuid = "7a7ad95e1e1c4ee488d47d37aa36e95a";
         private const string _fontGuid = "1b5ca89b842763248980ff468bb292ea";
 
         private static string _version;
 
         public static void DrawLogo()
         {
-            BlockadeGUI.Image(_logoGuid, 120, 36);
+            BlockadeGUI.Image(_logoGuid, 165, 42);
         }
 
         public static string GetVersion()

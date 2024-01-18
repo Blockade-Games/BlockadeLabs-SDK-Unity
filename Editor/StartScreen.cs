@@ -12,6 +12,7 @@ namespace BlockadeLabsSDK.Editor
     internal class StartScreen : EditorWindow
     {
         private const string _website = "https://www.blockadelabs.com/";
+        private const string _apikeyUrl = "https://api.blockadelabs.com/";
         private const string _discord = "https://discord.gg/kqKB3X4TJz";
         private const string _github = "https://github.com/Blockade-Games/BlockadeLabs-SDK-Unity";
 
@@ -29,13 +30,19 @@ namespace BlockadeLabsSDK.Editor
             "Always", "On Update", "Never"
         };
 
-        private GUIStyle _buttonStyle;
         private GUIStyle _bodyStyle;
-        private GUIStyle _versionStyle;
         private GUIStyle _boldStyle;
+        private GUIStyle _linkStyle;
+        private GUIStyle _navLinkStyle;
+        private GUIStyle _buttonStyle;
         private GUIStyle _bgStyle;
-        private GUIStyle _paddedSection;
-        private GUIStyle _footerStyle;
+        private GUIStyle _titleSection;
+        private GUIStyle _showOnStartStyle;
+        private GUIStyle _versionStyle;
+        private GUIStyle _h1Style;
+        private GUIStyle _h2Style;
+        private GUIStyle _h3Style;
+        private GUIStyle _h4Style;
 
         private static ShowOnStart _showOnStart;
         private static string _version;
@@ -109,7 +116,7 @@ namespace BlockadeLabsSDK.Editor
         public static void ShowStartScreen()
         {
             StartScreen window = GetWindow<StartScreen>(true, _windowTitle, true);
-            window.minSize = new Vector2(800, 600);
+            window.minSize = new Vector2(1020, 688);
             window.maxSize = window.minSize;
             window.Show();
         }
@@ -124,62 +131,55 @@ namespace BlockadeLabsSDK.Editor
         {
             if (_bodyStyle != null) return;
 
-            BlockadeGUI.StyleFontSize = 14;
+            BlockadeGUI.StyleFontSize = 16;
             BlockadeGUI.StyleTag = _styleTag;
             BlockadeGUI.StyleFont = WindowUtils.GetFont();
 
             _bodyStyle = BlockadeGUI.CreateStyle(Color.white);
-            _bodyStyle.margin.left = 10;
-            _bodyStyle.margin.top = 10;
             _bodyStyle.stretchWidth = false;
 
-            _boldStyle = new GUIStyle(_bodyStyle);
-            _boldStyle.fontStyle = FontStyle.Bold;
-            _boldStyle.fontSize++;
+            _linkStyle = BlockadeGUI.CreateStyle(Color.white);
+            _linkStyle.fontStyle = FontStyle.Bold;
+
+            _navLinkStyle = BlockadeGUI.CreateStyle("#02ee8b");
+            _navLinkStyle.fontStyle = FontStyle.Bold;
 
             _buttonStyle = BlockadeGUI.CreateStyle(Color.black, BlockadeGUI.HexColor("#02ee8b"));
-            _buttonStyle.fontSize = 14;
-            _buttonStyle.margin.left = 10;
-            _buttonStyle.margin.bottom = 5;
-            _buttonStyle.padding = new RectOffset(10, 10, 5, 5);
+            _buttonStyle.fontStyle = FontStyle.Bold;
             _buttonStyle.stretchWidth = false;
-            _buttonStyle.alignment = TextAnchor.MiddleLeft;
+            _buttonStyle.alignment = TextAnchor.MiddleCenter;
 
-            _versionStyle = new GUIStyle(_bodyStyle);
-            _versionStyle.padding.right = 10;
+            _versionStyle = BlockadeGUI.CreateStyle(Color.white);
+            _versionStyle.fontSize = 14;
+            _versionStyle.padding.right = 12;
 
-            _bgStyle = BlockadeGUI.CreateStyle(Color.white, Color.black);
+            _bgStyle = BlockadeGUI.CreateStyle(Color.white, BlockadeGUI.HexColor("#313131"));
+            _bgStyle.padding = new RectOffset(28, 0, 16, 16);
 
-            _paddedSection = new GUIStyle();
-            _paddedSection.padding = new RectOffset(10, 10, 10, 10);
+            _titleSection = new GUIStyle();
+            _titleSection.padding = new RectOffset(0, 0, 0, 28);
 
-            _footerStyle = BlockadeGUI.CreateStyle(new Color(0.8f, 0.8f, 0.8f));
-            _footerStyle.fontSize = 12;
-            _footerStyle.padding.top = 3;
+            _showOnStartStyle = BlockadeGUI.CreateStyle(Color.white);
+            _showOnStartStyle.fontSize = 12;
+            _showOnStartStyle.alignment = TextAnchor.MiddleCenter;
+
+            _h1Style = BlockadeGUI.CreateStyle(Color.white);
+            _h1Style.fontStyle = FontStyle.Bold;
+            _h1Style.fontSize = 32;
+
+            _h2Style = BlockadeGUI.CreateStyle(Color.white);
+            _h2Style.fontStyle = FontStyle.Bold;
+            _h2Style.fontSize = 24;
+
+            _h3Style = BlockadeGUI.CreateStyle(Color.white);
+            _h3Style.fontStyle = FontStyle.Bold;
+            _h3Style.fontSize = 20;
+
+            _h4Style = BlockadeGUI.CreateStyle("#B1B1B1");
+            _h4Style.fontSize = 12;
 
             WindowUtils.CenterOnEditor(this);
             ReadChangeLog();
-        }
-
-        private void LinkButton(string label, string url, GUIStyle style = null, int width = 170)
-        {
-            if (style == null) style = _buttonStyle;
-            var labelContent = new GUIContent(label);
-            var position = GUILayoutUtility.GetRect(width, 35, style);
-            EditorGUIUtility.AddCursorRect(position, MouseCursor.Link);
-            if (GUI.Button(position, labelContent, style))
-            {
-                Application.OpenURL(url);
-            }
-        }
-
-        private bool Button(string label, GUIStyle style = null, int width = 170)
-        {
-            if (style == null) style = _buttonStyle;
-            var labelContent = new GUIContent(label);
-            var position = GUILayoutUtility.GetRect(width, 35, style);
-            EditorGUIUtility.AddCursorRect(position, MouseCursor.Link);
-            return GUI.Button(position, labelContent, style);
         }
 
         private void Bullet(string text)
@@ -189,10 +189,11 @@ namespace BlockadeLabsSDK.Editor
                 var ws = 1 + text.IndexOf('-');
                 for (int i = 0; i < ws; i++)
                 {
-                    GUILayout.Space(10);
+                    GUILayout.Space(8);
                 }
-                GUILayout.Label("•", _bodyStyle);
 
+                GUILayout.Label("•", _bodyStyle);
+                GUILayout.Space(8);
                 GUILayout.Label(text.Substring(ws + 1), _bodyStyle);
             });
         }
@@ -212,15 +213,30 @@ namespace BlockadeLabsSDK.Editor
             _changelog = _changelog.GetRange(start, _changelog.Count - start);
         }
 
-        private void WhatsNew()
+        private void News()
         {
-            EditorGUILayout.Space();
-            if (Button("Open Skybox AI Scene", _buttonStyle, 550))
-            {
-                OpenSkyboxAIScene();
-                Close();
-            }
-            EditorGUILayout.Space();
+            BlockadeGUI.HorizontalLine(BlockadeGUI.HexColor("#797979"));
+            EditorGUILayout.Space(8);
+
+            GUILayout.Label("BLOCKADE NEWS", _h4Style);
+
+            GUILayout.Space(28);
+
+            GUILayout.Label("New Feature Headline", _h2Style);
+
+            GUILayout.Space(8);
+
+            GUILayout.Label("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris dignissim risus sed hendrerit ullamcorper. Aliquam justo est, semper ac nisi sit amet, aliquet aliquam nunc. Sed vitae nisl eget nunc aliquam aliquet. Sed vitae nisl eget nunc aliquam aliquet.", _bodyStyle);
+        }
+
+        private void Changelog()
+        {
+            BlockadeGUI.HorizontalLine(BlockadeGUI.HexColor("#797979"));
+            EditorGUILayout.Space(8);
+
+            GUILayout.Label("RELEASE NOTES", _h4Style);
+
+            GUILayout.Space(28);
 
             for (int i = 0; i < _changelog.Count; i++)
             {
@@ -233,18 +249,20 @@ namespace BlockadeLabsSDK.Editor
                 }
                 else if (line.StartsWith("##"))
                 {
-                    EditorGUILayout.Space();
-                    GUILayout.Label(line.Substring(3), _boldStyle);
+                    if (i > 0)
+                    {
+                        EditorGUILayout.Space(28);
+                    }
+
+                    GUILayout.Label(line.Substring(3), _h3Style);
                     EditorGUILayout.Space();
                 }
                 else
-                {
+                 {
                     Bullet(line);
                     EditorGUILayout.Space();
                 }
             }
-
-            EditorGUILayout.Space();
         }
 
         private void OnGUI()
@@ -253,7 +271,7 @@ namespace BlockadeLabsSDK.Editor
 
             BlockadeGUI.Vertical(_bgStyle, () =>
             {
-                BlockadeGUI.Horizontal(_paddedSection, () =>
+                BlockadeGUI.Horizontal(_titleSection, () =>
                 {
                     WindowUtils.DrawLogo();
                     GUILayout.FlexibleSpace();
@@ -262,47 +280,86 @@ namespace BlockadeLabsSDK.Editor
 
                 BlockadeGUI.Horizontal(() =>
                 {
-                    BlockadeGUI.Vertical(180, () =>
+                    BlockadeGUI.Vertical(196, () =>
                     {
-                        GUILayout.Space(10);
-                        GUILayout.Label("Resources", _boldStyle);
-                        GUILayout.Space(10);
-                        LinkButton("Website", _website);
-                        LinkButton("Discord Invite", _discord);
-                        LinkButton("Docs (Github)", _github);
+                        GUILayout.Label("RESOURCES", _h4Style);
+
+                        GUILayout.Space(28);
+
+                        if (BlockadeGUI.Link("GET API KEY", _navLinkStyle))
+                        {
+                            Application.OpenURL(_apikeyUrl);
+                        }
+
+                        GUILayout.Space(28);
+
+                        if (BlockadeGUI.Link("DOCS (GITHUB)", _navLinkStyle))
+                        {
+                            Application.OpenURL(_github);
+                        }
+
+                        GUILayout.Space(28);
+
+                        if (BlockadeGUI.Link("DISCORD INVITE", _navLinkStyle))
+                        {
+                            Application.OpenURL(_discord);
+                        }
+
+                        GUILayout.Space(28);
+
+                        if (BlockadeGUI.Link("WEBSITE", _navLinkStyle))
+                        {
+                            Application.OpenURL(_website);
+                        }
+
                         GUILayout.FlexibleSpace();
+
+                        GUILayout.Label("Show On Start: ", _showOnStartStyle);
+                        var newShowOnStart = (ShowOnStart)EditorGUILayout.Popup((int)_showOnStart, _showOnStartOptions);
+                        if (_showOnStart != newShowOnStart)
+                        {
+                            _showOnStart = newShowOnStart;
+                            EditorPrefs.SetInt(_showOnStartKey, (int)_showOnStart);
+                        }
                     });
+
+                    GUILayout.Space(24);
+
+                    BlockadeGUI.VerticalLine(BlockadeGUI.HexColor("#797979"));
+
+                    GUILayout.Space(32);
 
                     BlockadeGUI.Vertical(() =>
                     {
                         _scrollPosition = BlockadeGUI.Scroll(_scrollPosition, () =>
                         {
-                            GUILayout.Label("Thank you for using Blockade Labs Skybox AI!", _boldStyle, GUILayout.ExpandWidth(true));
+                            GUILayout.Label("How to Get Started", _h1Style, GUILayout.ExpandWidth(true));
 
-                            EditorGUILayout.Space();
+                            EditorGUILayout.Space(8);
 
-                            GUILayout.Label("You're invited to join the Discord community for support and feedback. Let us know how to make Skybox AI better for you!", _bodyStyle);
+                            GUILayout.Label("To get started, you do this first and follow these basic steps. Fill in actual get started directions here. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris dignissim risus sed hendrerit ullamcorper. Aliquam justo est, semper ac nisi sit amet.", _bodyStyle);
 
-                            EditorGUILayout.Space();
+                            EditorGUILayout.Space(24);
 
-                            WhatsNew();
+                            if (BlockadeGUI.Button("OPEN SKYBOX AI SCENE", _buttonStyle, 273, 48))
+                            {
+                                OpenSkyboxAIScene();
+                                Close();
+                            }
+
+                            EditorGUILayout.Space(28);
+
+                            News();
+
+                            EditorGUILayout.Space(28);
+
+                            Changelog();
+
+                            EditorGUILayout.Space(28);
                         });
                     });
 
                     EditorGUILayout.Space();
-                });
-
-                BlockadeGUI.Horizontal(_paddedSection, () =>
-                {
-                    GUILayout.Label($"{WindowUtils.MenuRoot}/Start Screen", _footerStyle);
-                    GUILayout.FlexibleSpace();
-                    GUILayout.Label("Show On Start: ", _footerStyle);
-                    var newShowOnStart = (ShowOnStart)EditorGUILayout.Popup((int)_showOnStart, _showOnStartOptions);
-                    if (_showOnStart != newShowOnStart)
-                    {
-                        _showOnStart = newShowOnStart;
-                        EditorPrefs.SetInt(_showOnStartKey, (int)_showOnStart);
-                    }
                 });
             });
         }

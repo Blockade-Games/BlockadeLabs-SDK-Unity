@@ -30,6 +30,13 @@ namespace BlockadeLabsSDK.Editor
             EditorGUILayout.EndVertical();
         }
 
+        internal static void Vertical(GUIStyle style, float width, Action action)
+        {
+            EditorGUILayout.BeginVertical(style, GUILayout.Width(width));
+            action();
+            EditorGUILayout.EndVertical();
+        }
+
         internal static void Horizontal(Action action)
         {
             EditorGUILayout.BeginHorizontal();
@@ -128,14 +135,45 @@ namespace BlockadeLabsSDK.Editor
             return Checkbox(value, () => GUILayout.Label(label, labelStyle));
         }
 
-        public static void Link(string label, string url, GUIStyle labelStyle)
+        public static bool Button(string label, GUIStyle style, int width, int height)
         {
-            var rect = GUILayoutUtility.GetRect(new GUIContent(label), labelStyle);
-            EditorGUIUtility.AddCursorRect(rect, MouseCursor.Link);
-            if (GUI.Button(rect, label, labelStyle))
-            {
-                Application.OpenURL(url);
-            }
+            var labelContent = new GUIContent(label);
+            var position = GUILayoutUtility.GetRect(width, height, style);
+            EditorGUIUtility.AddCursorRect(position, MouseCursor.Link);
+            return GUI.Button(position, labelContent, style);
+        }
+
+        public static bool Link(string label, GUIStyle style)
+        {
+            var labelContent = new GUIContent(label);
+            var position = GUILayoutUtility.GetRect(labelContent, style, GUILayout.ExpandWidth(false));
+            Handles.BeginGUI();
+            Handles.color = style.normal.textColor;
+            Handles.DrawLine(new Vector3(position.xMin, position.yMax), new Vector3(position.xMax, position.yMax));
+            Handles.color = Color.white;
+            Handles.EndGUI();
+            EditorGUIUtility.AddCursorRect(position, MouseCursor.Link);
+            return GUI.Button(position, labelContent, style);
+        }
+
+        public static void HorizontalLine(Color color)
+        {
+            var position = GUILayoutUtility.GetRect(GUIContent.none, GUIStyle.none, GUILayout.ExpandWidth(true));
+            Handles.BeginGUI();
+            Handles.color = color;
+            Handles.DrawLine(new Vector3(position.xMin, position.yMax), new Vector3(position.xMax, position.yMax));
+            Handles.color = Color.white;
+            Handles.EndGUI();
+        }
+
+        public static void VerticalLine(Color color)
+        {
+            var position = GUILayoutUtility.GetRect(GUIContent.none, GUIStyle.none, GUILayout.ExpandHeight(true));
+            Handles.BeginGUI();
+            Handles.color = color;
+            Handles.DrawLine(new Vector3(position.xMax, position.yMin), new Vector3(position.xMax, position.yMax));
+            Handles.color = Color.white;
+            Handles.EndGUI();
         }
 
         public static int StyleFontSize;
