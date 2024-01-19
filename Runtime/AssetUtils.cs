@@ -57,6 +57,12 @@ namespace BlockadeLabsSDK
         {
             return AssetDatabase.LoadAssetAtPath<T>(AssetDatabase.GUIDToAssetPath(guid));
         }
+
+        internal static void PingAsset(UnityEngine.Object asset)
+        {
+            EditorApplication.ExecuteMenuItem("Window/General/Project");
+            EditorGUIUtility.PingObject(asset);
+        }
     }
 }
 

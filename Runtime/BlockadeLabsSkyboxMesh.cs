@@ -199,7 +199,7 @@ namespace BlockadeLabsSDK
             var clone = Instantiate(gameObject);
             var prefab = PrefabUtility.SaveAsPrefabAsset(clone, prefabPath);
             DestroyImmediate(clone);
-            EditorGUIUtility.PingObject(prefab);
+            AssetUtils.PingAsset(prefab);
             _somethingChangedSinceSave = false;
             OnPropertyChanged?.Invoke();
 #endif

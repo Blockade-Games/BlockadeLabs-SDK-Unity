@@ -580,7 +580,7 @@ namespace BlockadeLabsSDK
             if (skyboxMaterial != null)
             {
                 AssetDatabase.CreateAsset(skyboxMaterial, folderPath + "/" + prefix + " skybox material.mat");
-                EditorGUIUtility.PingObject(skyboxMaterial);
+                AssetUtils.PingAsset(skyboxMaterial);
             }
 
 #if UNITY_HDRP
