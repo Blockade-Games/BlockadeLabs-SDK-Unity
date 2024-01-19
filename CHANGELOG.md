@@ -1,5 +1,14 @@
 ﻿# Changelog
 
+## 1.7.0 - January 19, 2023.
+- The downloaded skybox is now imported as a `Cubemap`.
+- The `Blockade Skybox Depth` shader now takes a `Cubemap` texture.
+- A `Skybox Cubemap` material is now generated for use in the Scene Lighting settings.
+- A `HDRP Volume Profile` is now generated for use in HDRP projects.
+- A `Show Reflective Spheres` option was added to the runtime UI to demonstrate environment lighting.
+- The `Save Mesh` function has been replaced with `Save Prefab` to make it easier to drop a preconfigured skybox mesh into your scene.
+- A new `Start Screen` will optionally appear when the plugin installed and updated.
+
 ## 1.6.1 - December 21, 2023.
 
 - Added Mesh Creator mode, which uses a new shader to display the depth map.
