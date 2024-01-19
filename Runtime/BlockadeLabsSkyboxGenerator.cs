@@ -525,10 +525,9 @@ namespace BlockadeLabsSDK
 
             var prefix = AssetUtils.CreateValidFilename(prompt);
             var folderPath = AssetUtils.GetOrCreateFolder(prefix);
-            var texturePath = folderPath + "/" + prefix + "_texture.png";
-            UnityEngine.Debug.Log("E: " + texturePath);
-            var depthTexturePath = folderPath + "/" + prefix + "_depth_texture.png";
-            var resultsPath = folderPath + "/" + prefix + "_data.txt";
+            var texturePath = folderPath + "/" + prefix + " texture.png";
+            var depthTexturePath = folderPath + "/" + prefix + " depth texture.png";
+            var resultsPath = folderPath + "/" + prefix + " data.txt";
 
             var tasks = new List<Task>();
             tasks.Add(ApiRequests.DownloadFileAsync(textureUrl, texturePath));
@@ -572,20 +571,20 @@ namespace BlockadeLabsSDK
             var depthMaterial = CreateDepthMaterial(colorTexture, depthTexture, result.request.id);
             if (depthMaterial != null)
             {
-                AssetDatabase.CreateAsset(depthMaterial, folderPath + "/" + prefix + "_depth_material.mat");
+                AssetDatabase.CreateAsset(depthMaterial, folderPath + "/" + prefix + " depth material.mat");
             }
 
             var skyboxMaterial = CreateSkyboxMaterial(colorTexture);
             if (skyboxMaterial != null)
             {
-                AssetDatabase.CreateAsset(skyboxMaterial, folderPath + "/" + prefix + "_material.mat");
+                AssetDatabase.CreateAsset(skyboxMaterial, folderPath + "/" + prefix + " skybox material.mat");
                 EditorGUIUtility.PingObject(skyboxMaterial);
             }
 
             var volumeProfile = CreateVolumeProfile(colorTexture);
             if (volumeProfile != null)
             {
-                AssetDatabase.CreateAsset(volumeProfile, folderPath + "/" + prefix + "_volume_profile.asset");
+                AssetDatabase.CreateAsset(volumeProfile, folderPath + "/" + prefix + " volume profile.asset");
             }
         }
 

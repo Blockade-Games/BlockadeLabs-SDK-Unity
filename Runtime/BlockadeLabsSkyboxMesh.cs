@@ -195,12 +195,6 @@ namespace BlockadeLabsSDK
 
             var materialPath = AssetDatabase.GetAssetPath(_meshRenderer.sharedMaterial);
             var folder = materialPath.Substring(0, materialPath.LastIndexOf('/'));
-            var name = _meshRenderer.sharedMaterial.name;
-            if (name.EndsWith("_material"))
-            {
-                name = name.Substring(0, name.Length - 9);
-            }
-
             var prefabPath = AssetDatabase.GenerateUniqueAssetPath($"{folder}/{name}.prefab");
             var clone = Instantiate(gameObject);
             var prefab = PrefabUtility.SaveAsPrefabAsset(clone, prefabPath);
