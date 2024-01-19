@@ -526,6 +526,7 @@ namespace BlockadeLabsSDK
             var prefix = AssetUtils.CreateValidFilename(prompt);
             var folderPath = AssetUtils.GetOrCreateFolder(prefix);
             var texturePath = folderPath + "/" + prefix + "_texture.png";
+            UnityEngine.Debug.Log("E: " + texturePath);
             var depthTexturePath = folderPath + "/" + prefix + "_depth_texture.png";
             var resultsPath = folderPath + "/" + prefix + "_data.txt";
 
@@ -676,7 +677,10 @@ namespace BlockadeLabsSDK
                 return null;
             }
 
-            var volumeProfile = Instantiate(_HDRPVolumeProfile);
+            // This does a deep copy, while Instantiate does not.
+            _HDRPVolume.sharedProfile = _HDRPVolumeProfile;
+            var volumeProfile = _HDRPVolume.profile;
+
             var hdrpSkyType = hdrpAssembly.GetType("UnityEngine.Rendering.HighDefinition.HDRISky");
             if (volumeProfile.TryGet<VolumeComponent>(hdrpSkyType, out var sky))
             {

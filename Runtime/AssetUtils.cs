@@ -50,7 +50,7 @@ namespace BlockadeLabsSDK
                 name = name.Replace("__", "_");
             }
 
-            return name.TrimStart('_').TrimEnd('_');
+            return name.TrimStart('_').TrimEnd('_').Trim();
         }
     }
 }
