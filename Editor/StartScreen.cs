@@ -25,9 +25,8 @@ namespace BlockadeLabsSDK.Editor
         private const string _skyboxSceneGuid = "d9b6ab5207db7f8438e56b4c66ea03aa";
         private const string _changelogGuid = "0519ee665fde4ef0bb74e40b3fffff42";
 
-        private const string _windowTitle = "Blockade Labs Skybox AI";
-        private static readonly string[] _showStartScreenOptions =
-            ShowStartScreen.GetNames(typeof(ShowStartScreen)).Select(x => ObjectNames.NicifyVariableName(x)).ToArray();
+        private const string _windowTitle = "Skybox AI by Blockade Labs";
+        private static string[] _showStartScreenOptions;
 
         private GUIStyle _bodyStyle;
         private GUIStyle _boldStyle;
@@ -90,6 +89,7 @@ namespace BlockadeLabsSDK.Editor
         private void OnEnable()
         {
             _bodyStyle = null;
+            _showStartScreenOptions = ShowStartScreen.GetNames(typeof(ShowStartScreen)).Select(x => ObjectNames.NicifyVariableName(x)).ToArray();
         }
 
         private void OnDisable()
@@ -341,7 +341,18 @@ namespace BlockadeLabsSDK.Editor
 
                             EditorGUILayout.Space(4);
 
-                            Bullet("- Go to api.blockadelabs.com to get your API key.", "1.");
+                            BlockadeGUI.Horizontal(() =>
+                            {
+                                GUILayout.Space(8);
+                                GUILayout.Label("1.", _bodyStyle);
+                                GUILayout.Space(8);
+                                GUILayout.Label("Go to ", _bodyStyle);
+                                if (BlockadeGUI.Link("api.blockadelabs.com", _linkStyle))
+                                {
+                                    Application.OpenURL(_apikeyUrl);
+                                }
+                                GUILayout.Label(" to get your API key.", _bodyStyle);
+                            });
 
                             EditorGUILayout.Space(4);
 
