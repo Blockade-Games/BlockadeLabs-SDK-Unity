@@ -144,6 +144,7 @@ namespace BlockadeLabsSDK.Editor
             _versionStyle = BlockadeGUI.CreateStyle(Color.white);
             _versionStyle.fontSize = 14;
             _versionStyle.padding.right = 12;
+            _versionStyle.wordWrap = false;
 
             _bgStyle = BlockadeGUI.CreateStyle(Color.white, BlockadeGUI.HexColor("#313131"));
             _bgStyle.padding = new RectOffset(28, 0, 16, 16);
