@@ -12,8 +12,10 @@ namespace BlockadeLabsSDK.Editor
         private SerializedProperty _skyboxMesh;
         private SerializedProperty _skyboxMaterial;
         private SerializedProperty _depthMaterial;
+#if UNITY_HDRP
         private SerializedProperty _HDRPVolume;
         private SerializedProperty _HDRPVolumeProfile;
+#endif
         private SerializedProperty _selectedStyleFamilyIndex;
         private SerializedProperty _selectedStyleIndex;
         private SerializedProperty _prompt;
@@ -28,8 +30,10 @@ namespace BlockadeLabsSDK.Editor
             _skyboxMesh = serializedObject.FindProperty("_skyboxMesh");
             _skyboxMaterial = serializedObject.FindProperty("_skyboxMaterial");
             _depthMaterial = serializedObject.FindProperty("_depthMaterial");
+#if UNITY_HDRP
             _HDRPVolume = serializedObject.FindProperty("_HDRPVolume");
             _HDRPVolumeProfile = serializedObject.FindProperty("_HDRPVolumeProfile");
+#endif
             _selectedStyleFamilyIndex = serializedObject.FindProperty("_selectedStyleFamilyIndex");
             _selectedStyleIndex = serializedObject.FindProperty("_selectedStyleIndex");
             _prompt = serializedObject.FindProperty("_prompt");

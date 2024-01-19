@@ -11154,31 +11154,14 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1297566024}
-  - component: {fileID: 1297566023}
+  - component: {fileID: 1297566025}
   m_Layer: 0
-  m_Name: Global Volume
+  m_Name: HDRP Volume
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1297566023
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1297566022}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 172515602e62fb746b5d573b38a5fe58, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_IsGlobal: 1
-  priority: 0
-  blendDistance: 0
-  weight: 1
-  sharedProfile: {fileID: 11400000, guid: 0b478194c970ff9418e805599ea5b1c6, type: 2}
 --- !u!4 &1297566024
 Transform:
   m_ObjectHideFlags: 0
@@ -11194,6 +11177,19 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 8
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1297566025
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1297566022}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b92b97085f4cc884eaab78a8f1617cd9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _generator: {fileID: 1954151757}
 --- !u!1 &1324224183
 GameObject:
   m_ObjectHideFlags: 0
@@ -17486,8 +17482,6 @@ MonoBehaviour:
   _skyboxMesh: {fileID: 1946445123}
   _skyboxMaterial: {fileID: 2100000, guid: 8bbc7111fd83de745beb42d92e974968, type: 2}
   _depthMaterial: {fileID: 2100000, guid: 503161aa846cabf4e90e8b5fdd5df395, type: 2}
-  _HDRPVolume: {fileID: 1297566023}
-  _HDRPVolumeProfile: {fileID: 11400000, guid: 0b478194c970ff9418e805599ea5b1c6, type: 2}
   _selectedStyleFamilyIndex: 3
   _selectedStyleIndex: 1
   _prompt: 

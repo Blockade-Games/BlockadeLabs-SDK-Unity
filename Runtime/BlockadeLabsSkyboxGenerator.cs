@@ -52,6 +52,7 @@ namespace BlockadeLabsSDK
             set => _depthMaterial = value;
         }
 
+#if UNITY_HDRP
         [SerializeField, Tooltip("Optional volume to apply the generated volume profile to for HDRP.")]
         private Volume _HDRPVolume;
         public Volume HDRPVolume
@@ -67,6 +68,7 @@ namespace BlockadeLabsSDK
             get => _HDRPVolumeProfile;
             set => _HDRPVolumeProfile = value;
         }
+#endif
 
         private List<SkyboxStyleFamily> _styleFamilies;
         public IReadOnlyList<SkyboxStyleFamily> StyleFamilies => _styleFamilies;
@@ -581,11 +583,13 @@ namespace BlockadeLabsSDK
                 EditorGUIUtility.PingObject(skyboxMaterial);
             }
 
+#if UNITY_HDRP
             var volumeProfile = CreateVolumeProfile(colorTexture);
             if (volumeProfile != null)
             {
-                AssetDatabase.CreateAsset(volumeProfile, folderPath + "/" + prefix + " volume profile.asset");
+                AssetDatabase.CreateAsset(volumeProfile, folderPath + "/" + prefix + " HDRP volume profile.asset");
             }
+#endif
         }
 
         private string ValidateFilename(string prompt)
@@ -622,7 +626,9 @@ namespace BlockadeLabsSDK
 
             CreateDepthMaterial(textures[0], textures.Length > 1 ? textures[1] : null, result.request.id);
             CreateSkyboxMaterial();
+#if UNITY_HDRP
             CreateVolumeProfile(textures[0]);
+#endif
         }
 #endif
 
@@ -661,6 +667,7 @@ namespace BlockadeLabsSDK
             return material;
         }
 
+#if UNITY_HDRP
         private VolumeProfile CreateVolumeProfile(Cubemap skyTexture)
         {
             if (_HDRPVolume == null || _HDRPVolumeProfile == null)
@@ -692,6 +699,7 @@ namespace BlockadeLabsSDK
             _HDRPVolume.sharedProfile = volumeProfile;
             return volumeProfile;
         }
+#endif
 
         private void UpdateProgress(float percentageCompleted)
         {

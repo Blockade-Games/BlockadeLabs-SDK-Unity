@@ -77,7 +77,7 @@ namespace BlockadeLabsSDK
 
             if (request.result != UnityWebRequest.Result.Success)
             {
-                Debug.LogError("Download error: " + request.downloadHandler.error);
+                Debug.LogError("Download error: " + textureUrl + " " + request.error);
                 return null;
             }
 

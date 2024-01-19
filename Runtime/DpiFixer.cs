@@ -5,7 +5,7 @@ using UnityEngine.UI;
 namespace BlockadeLabsSDK
 {
     [ExecuteAlways]
-    public class DpiFixer : MonoBehaviour
+    internal class DpiFixer : MonoBehaviour
     {
         private CanvasScaler _canvasScaler;
 

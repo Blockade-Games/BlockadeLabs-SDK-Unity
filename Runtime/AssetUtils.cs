@@ -52,6 +52,11 @@ namespace BlockadeLabsSDK
 
             return name.TrimStart('_').TrimEnd('_').Trim();
         }
+
+        internal static T LoadAsset<T>(string guid) where T : UnityEngine.Object
+        {
+            return AssetDatabase.LoadAssetAtPath<T>(AssetDatabase.GUIDToAssetPath(guid));
+        }
     }
 }
 
