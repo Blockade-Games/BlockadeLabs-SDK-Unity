@@ -664,6 +664,7 @@ namespace BlockadeLabsSDK
             var material = new Material(_skyboxMaterial);
             material.SetTexture("_Tex", texture);
             RenderSettings.skybox = material;
+            DynamicGI.UpdateEnvironment();
             return material;
         }
 
