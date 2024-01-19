@@ -24,6 +24,11 @@ namespace BlockadeLabsSDK
             }
 
             var scale = dpi / 96f;
+
+        #if UNITY_EDITOR_OSX // Retina display fix
+            scale *= 0.75f;
+        #endif
+
             _canvasScaler.scaleFactor = scale;
         }
     }
