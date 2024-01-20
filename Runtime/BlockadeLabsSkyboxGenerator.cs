@@ -280,6 +280,12 @@ namespace BlockadeLabsSDK
 
         public async void GenerateSkyboxAsync()
         {
+            if (!Application.isEditor)
+            {
+                SetError("Skybox generation is only supported in the editor.");
+                return;
+            }
+
             if (string.IsNullOrWhiteSpace(_prompt))
             {
                 SetError("Prompt is empty.");
@@ -609,26 +615,28 @@ namespace BlockadeLabsSDK
 #else
         private async Task DownloadResultAsync(GetImagineResult result)
         {
-            var tasks = new List<Task<Texture>>();
-            tasks.Add(ApiRequests.DownloadTextureAsync(result.request.file_url));
-            if (!string.IsNullOrWhiteSpace(result.request.depth_map_url))
-            {
-                tasks.Add(ApiRequests.DownloadTextureAsync(result.request.depth_map_url));
-            }
+                await Task.Delay(1);
+                // TODO: Need to download or generate a cubemap to support importing outside of editor.
+//             var tasks = new List<Task<Texture2D>>();
+//             tasks.Add(ApiRequests.DownloadTextureAsync(result.request.file_url));
+//             if (!string.IsNullOrWhiteSpace(result.request.depth_map_url))
+//             {
+//                 tasks.Add(ApiRequests.DownloadTextureAsync(result.request.depth_map_url));
+//             }
 
-            var textures = await Task.WhenAll(tasks);
+//             var textures = await Task.WhenAll(tasks);
 
-            if (_isCancelled)
-            {
-                DestroyTextures(textures);
-                return;
-            }
+//             if (_isCancelled)
+//             {
+//                 DestroyTextures(textures);
+//                 return;
+//             }
 
-            CreateDepthMaterial(textures[0], textures.Length > 1 ? textures[1] : null, result.request.id);
-            CreateSkyboxMaterial();
-#if UNITY_HDRP
-            CreateVolumeProfile(textures[0]);
-#endif
+//             CreateDepthMaterial(textures[0], textures.Length > 1 ? textures[1] : null, result.request.id);
+//             CreateSkyboxMaterial();
+// #if UNITY_HDRP
+//             CreateVolumeProfile(textures[0]);
+// #endif
         }
 #endif
 

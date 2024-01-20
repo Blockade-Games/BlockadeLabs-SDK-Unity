@@ -417,7 +417,7 @@ namespace BlockadeLabsSDK
             _depthScaleSlider.value = _skybox.DepthScale;
             _savePrefabButton.interactable = _skybox.CanSave;
 #if !UNITY_EDITOR
-            _savePrefabButton.gameObject.active = false;
+            _savePrefabButton.gameObject.SetActive(false);
 #endif
         }
 
