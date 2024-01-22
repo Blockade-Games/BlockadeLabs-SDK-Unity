@@ -108,10 +108,11 @@ namespace BlockadeLabsSDK
 #if UNITY_EDITOR
             // In editor, read the remix ID from the data file saved next to the texture.
             var texturePath = AssetDatabase.GetAssetPath(renderer.sharedMaterial.mainTexture);
-            var resultPath = texturePath.Substring(0, texturePath.LastIndexOf('_')) + "_data.txt";
-            if (File.Exists(resultPath))
+            var folder = texturePath.Substring(0, texturePath.LastIndexOf('/'));
+            var dataFiles = Directory.GetFiles(folder, "*data.txt", SearchOption.TopDirectoryOnly);
+            if (dataFiles.Length > 0)
             {
-                return JsonConvert.DeserializeObject<GetImagineResult>(File.ReadAllText(resultPath)).request.id;
+                return JsonConvert.DeserializeObject<GetImagineResult>(File.ReadAllText(dataFiles[0])).request.id;
             }
 #endif
             return null;
