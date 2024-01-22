@@ -41,6 +41,11 @@ namespace BlockadeLabsSDK.Editor
             _remix = serializedObject.FindProperty("_remix");
             _seed = serializedObject.FindProperty("_seed");
             _enhancePrompt = serializedObject.FindProperty("_enhancePrompt");
+
+            if (_apiKey.stringValue != null)
+            {
+                InitializeAsync((BlockadeLabsSkyboxGenerator)target, false);
+            }
         }
 
         public override void OnInspectorGUI()
@@ -100,7 +105,7 @@ namespace BlockadeLabsSDK.Editor
                 EditorGUILayout.PropertyField(_apiKey, new GUIContent("API key"));
                 if (GUILayout.Button("Apply", GUILayout.Width(80)))
                 {
-                    InitializeAsync(generator);
+                    InitializeAsync(generator, true);
                 }
             });
         }
@@ -144,24 +149,27 @@ namespace BlockadeLabsSDK.Editor
             });
         }
 
-        private async void InitializeAsync(BlockadeLabsSkyboxGenerator generator)
+        private async void InitializeAsync(BlockadeLabsSkyboxGenerator generator, bool sendAttribution)
         {
             if (!generator.CheckApiKeyValid())
             {
                 return;
             }
 
-            bool wasInitialzied = generator.CurrentState != BlockadeLabsSkyboxGenerator.State.NeedApiKey;
+            if (generator.CurrentState != BlockadeLabsSkyboxGenerator.State.NeedApiKey)
+            {
+                return;
+            }
 
             try
             {
                 await generator.LoadAsync();
-
-                // send attribution event to verified solution
-                if (!wasInitialzied)
+                if (sendAttribution)
                 {
                     VSAttribution.SendAttributionEvent("Initialization", "BlockadeLabs", _apiKey.stringValue);
                 }
+
+                Repaint();
             }
             catch (Exception e)
             {

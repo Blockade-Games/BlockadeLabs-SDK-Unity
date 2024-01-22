@@ -211,6 +211,7 @@ namespace BlockadeLabsSDK
         {
             if (string.IsNullOrWhiteSpace(_apiKey) || _apiKey.Contains("api.blockadelabs.com"))
             {
+                _state = State.NeedApiKey;
                 return false;
             }
 
