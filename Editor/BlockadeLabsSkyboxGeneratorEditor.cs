@@ -130,6 +130,8 @@ namespace BlockadeLabsSDK.Editor
                 }
             });
 
+
+            EditorStyles.textField.wordWrap = true;
             EditorGUILayout.PropertyField(_prompt, GUILayout.Height(EditorGUIUtility.singleLineHeight * 3));
             EditorGUILayout.PropertyField(_negativeText);
             EditorGUILayout.PropertyField(_remix);
