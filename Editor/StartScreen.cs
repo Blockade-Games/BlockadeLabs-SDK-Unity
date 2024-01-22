@@ -16,7 +16,6 @@ namespace BlockadeLabsSDK.Editor
         private const string _discord = "https://discord.gg/kqKB3X4TJz";
         private const string _github = "https://github.com/Blockade-Games/BlockadeLabs-SDK-Unity";
 
-        private const string _showOnStartKey = "BlockadeLabsSDK_StartMenu_ShowOnStart";
         private const string _versionKey = "BlockadeLabsSDK_StartMenu_Version";
         private const string _shownKey = "BlockadeLabsSDK_StartMenu_Shown";
 
@@ -160,7 +159,6 @@ namespace BlockadeLabsSDK.Editor
             _showStartScreenPopupStyle.fontSize = 12;
             _showStartScreenPopupStyle.font = BlockadeGUI.StyleFont;
             BlockadeGUI.SetTextColor(_showStartScreenPopupStyle, Color.white);
-            BlockadeGUI.SetBackgroundColor(_showStartScreenPopupStyle, BlockadeGUI.HexColor("#313131"));
             _showStartScreenPopupStyle.alignment = TextAnchor.MiddleCenter;
 
             _h1Style = BlockadeGUI.CreateStyle(Color.white);
