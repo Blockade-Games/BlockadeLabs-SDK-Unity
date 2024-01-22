@@ -247,6 +247,10 @@ namespace BlockadeLabsSDK
                 return;
             }
 
+            // Remove anything with status: "disabled"
+            _styleFamilies.ForEach(x => x.items?.RemoveAll(y => y.status == "disabled"));
+            _styleFamilies.RemoveAll(x => x.status == "disabled" || x.items?.Count == 0);
+
             // Ensure each style has a family to simplify logic everywhere.
             for (int i = 0; i < _styleFamilies.Count; i++)
             {
