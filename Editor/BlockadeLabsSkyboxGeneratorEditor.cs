@@ -133,6 +133,7 @@ namespace BlockadeLabsSDK.Editor
 
             EditorStyles.textField.wordWrap = true;
             EditorGUILayout.PropertyField(_prompt, GUILayout.Height(EditorGUIUtility.singleLineHeight * 3));
+            EditorStyles.textField.wordWrap = false;
             EditorGUILayout.PropertyField(_negativeText);
             EditorGUILayout.PropertyField(_remix);
             EditorGUILayout.PropertyField(_seed);
