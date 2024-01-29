@@ -8,6 +8,9 @@ namespace BlockadeLabsSDK
 {
     public class RuntimeGuiManager : MonoBehaviour
     {
+        private const string _helpDontShowAgainKey = "BlockadeLabsSDK_Help_Dont_Show_Again";
+        private const string _remixDontShowAgainKey = "BlockadeLabsSDK_Remix_Dont_Show_Again";
+
         [SerializeField, Header("Core Components")]
         private BlockadeLabsSkyboxGenerator _generator;
         public BlockadeLabsSkyboxGenerator Generator
@@ -287,6 +290,14 @@ namespace BlockadeLabsSDK
             get { return _helpPopup; }
             set { _helpPopup = value; }
         }
+        
+        [SerializeField]
+        private Toggle _helpDontShowAgainToggle;
+        public Toggle HelpDontShowAgainToggle
+        {
+            get { return _helpDontShowAgainToggle; }
+            set { _helpDontShowAgainToggle = value; }
+        }
 
         [SerializeField]
         private GameObject _remixPopup;
@@ -342,7 +353,12 @@ namespace BlockadeLabsSDK
         async void Start()
         {
             _helloPopup.SetActive(false);
-            _helpPopup.SetActive(true);
+            
+            if (PlayerPrefs.GetInt(_helpDontShowAgainKey) == 0)
+            {
+                _helpPopup.SetActive(true);
+            }
+            
             _viewButton.SetActive(true);
             _promptPanel.SetActive(true);
 
@@ -367,6 +383,8 @@ namespace BlockadeLabsSDK
             _negativeTextToggle.OnValueChanged.AddListener(OnNegativeTextToggleChanged);
             _negativeTextInput.onValueChanged.AddListener(OnNegativeTextInputChanged);
             _enhancePromptToggle.OnValueChanged.AddListener(OnEnhancePromptToggleChanged);
+            _helpDontShowAgainToggle.onValueChanged.AddListener(OnHelpDontShowAgainToggle);
+            _remixDontShowAgainToggle.onValueChanged.AddListener(OnRemixDontShowAgainToggle);
             _createButton.onClick.AddListener(OnCreateButtonClicked);
             _remixButton.onClick.AddListener(OnRemixButtonClicked);
             _createUnderlineOffset = _createRemixUnderline.localPosition.x;
@@ -538,13 +556,29 @@ namespace BlockadeLabsSDK
             _generator.Remix = false;
             _remixPopup.SetActive(false);
         }
+        
+        private void OnHelpDontShowAgainToggle(bool value)
+        {
+            if (value)
+            {
+                PlayerPrefs.SetInt(_helpDontShowAgainKey, 1);
+            }
+        }
 
         private void OnRemixButtonClicked()
         {
             _generator.Remix = true;
-            if (!_remixDontShowAgainToggle.isOn)
+            if (PlayerPrefs.GetInt(_remixDontShowAgainKey) == 0)
             {
                 _remixPopup.SetActive(true);
+            }
+        }
+
+        private void OnRemixDontShowAgainToggle(bool value)
+        {
+            if (value)
+            {
+                PlayerPrefs.SetInt(_remixDontShowAgainKey, 1);
             }
         }
 

@@ -26,6 +26,7 @@ namespace BlockadeLabsSDK.Editor
             var saveIfDirty = typeof(AssetDatabase).GetMethod("SaveAssetIfDirty", new Type[] { typeof(UnityEngine.Object) });
             if (saveIfDirty != null)
             {
+                EditorUtility.SetDirty(this);
                 saveIfDirty.Invoke(null, new object[] { this });
             }
         }
