@@ -364,6 +364,7 @@ namespace BlockadeLabsSDK
 
             // Initialize values
             _skybox.DepthScale = _depthScaleSlider.minValue;
+            _helpDontShowAgainToggle.isOn = PlayerPrefs.GetInt(_helpDontShowAgainKey) != 0;
 
             // Bind to property changes that will update the UI
             _generator.OnPropertyChanged += OnGeneratorPropertyChanged;
@@ -559,10 +560,7 @@ namespace BlockadeLabsSDK
         
         private void OnHelpDontShowAgainToggle(bool value)
         {
-            if (value)
-            {
-                PlayerPrefs.SetInt(_helpDontShowAgainKey, 1);
-            }
+            PlayerPrefs.SetInt(_helpDontShowAgainKey, value ? 1 : 0);
         }
 
         private void OnRemixButtonClicked()
