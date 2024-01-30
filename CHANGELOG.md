@@ -1,5 +1,10 @@
 ﻿# Changelog
 
+## 1.7.1 - January 30, 2023.
+- Fix the issue where the `Start Screen` was redisplayed even when disabled in options.
+- Fix the issue where the `Remix help popup` was redisplayed every time on runtime, even when the `Don't show this message again` checkbox was ticked.
+- Add an option to permanently disable initial `Help popup` on runtime.
+
 ## 1.7.0 - January 19, 2023.
 - The downloaded skybox is now imported as a `Cubemap`.
 - The `Blockade Skybox Depth` shader now takes a `Cubemap` texture.
