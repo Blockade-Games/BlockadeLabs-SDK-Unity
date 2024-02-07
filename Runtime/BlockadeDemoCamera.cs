@@ -166,7 +166,7 @@ namespace BlockadeLabsSDK
 
             bool mouseOverGameView = Input.mousePosition.x >= 0 && Input.mousePosition.x < Screen.width &&
                 Input.mousePosition.y >= 0 && Input.mousePosition.y < Screen.height;
-            if (!EventSystem.current.IsPointerOverGameObject() && Input.mouseScrollDelta.y != 0 && mouseOverGameView)
+            if (!MouseIsOverUI() && Input.mouseScrollDelta.y != 0 && mouseOverGameView)
             {
                 _zoom += Input.mouseScrollDelta.y * _zoomSpeed * 0.001f;
                 _zoom = Mathf.Clamp(_zoom, _zoomMin, _mode == Mode.CenterOrbit ? _sphereOrbitZoomMax : _zoomMax);
@@ -180,7 +180,7 @@ namespace BlockadeLabsSDK
 
         private void UpdateWaitingToAutoPan()
         {
-            if (!EventSystem.current.IsPointerOverGameObject() && Input.GetMouseButtonDown(0))
+            if (!MouseIsOverUI() && Input.GetMouseButtonDown(0))
             {
                 _state = State.ManuallyMoving;
                 _mousePosition = Input.mousePosition;
@@ -198,7 +198,7 @@ namespace BlockadeLabsSDK
 
         private void UpdateAutoPanning()
         {
-            if (!_autoPan || (!EventSystem.current.IsPointerOverGameObject() && Input.GetMouseButtonDown(0)))
+            if (!_autoPan || (!MouseIsOverUI() && Input.GetMouseButtonDown(0)))
             {
                 _state = State.ManuallyMoving;
                 _mousePosition = Input.mousePosition;
@@ -208,6 +208,11 @@ namespace BlockadeLabsSDK
                 _yaw += _autoPanSpeed * Time.deltaTime;
                 _pitch = 0;
             }
+        }
+
+        private bool MouseIsOverUI()
+        {
+            return EventSystem.current?.IsPointerOverGameObject() ?? false;
         }
 
         private void UpdateManuallyMoving()
