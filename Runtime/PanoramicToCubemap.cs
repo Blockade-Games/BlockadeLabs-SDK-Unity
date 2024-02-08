@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace BlockadeLabsSDK
 {
-    public static class PanoramicToCubemap
+    internal static class PanoramicToCubemap
     {
         public static Cubemap Convert(Texture2D panoramicTexture, ComputeShader computeShader, int size)
         {

@@ -60,7 +60,7 @@ Shader "BlockadeLabsSDK/BlockadeSkyboxDepth"
                 IN.positionOS.xyz = normalize(IN.positionOS.xyz) * depth;
                 OUT.positionCS = TransformObjectToHClip(IN.positionOS.xyz);
 
-                // Rotate 90 deg to match depth UV
+                // Unity generates cubemaps with -90 deg rotation for some reason
                 float3 rotated = float3(IN.positionOS.z, IN.positionOS.y, -IN.positionOS.x);
                 OUT.viewDir = normalize(rotated);
                 return OUT;
@@ -125,7 +125,7 @@ Shader "BlockadeLabsSDK/BlockadeSkyboxDepth"
 
                 o.vertex = UnityObjectToClipPos(v.vertex.xyz);
 
-                // Rotate 90 deg to match depth UV
+                // Unity generates cubemaps with -90 deg rotation for some reason
                 float3 rotated = float3(v.vertex.z, v.vertex.y, -v.vertex.x);
                 o.viewDir = normalize(rotated);
                 return o;

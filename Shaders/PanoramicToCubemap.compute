@@ -18,12 +18,13 @@ float3 CalculateDirection(int x, int y, int size, int face)
 
     switch (face)
     {
-        case 0: direction = float3(1, -v, -u); break;
-        case 1: direction = float3(-1, -v, u); break;
-        case 2: direction = float3(u, 1, v); break;
-        case 3: direction = float3(u, -1, -v); break;
-        case 4: direction = float3(u, -v, 1); break;
-        case 5: direction = float3(-u, -v, -1); break;
+        // Unity generates cubemaps with -90 deg rotation for some reason, so match it here.
+        case 0: direction = float3(-u, -v, -1); break;
+        case 1: direction = float3(u, -v, 1); break;
+        case 2: direction = float3(v, 1, -u); break;
+        case 3: direction = float3(-v, -1, -u); break;
+        case 4: direction = float3(1, -v, -u); break;
+        case 5: direction = float3(-1, -v, u); break;
         default: direction = float3(0, 0, 0); break;
     }
 

@@ -12,6 +12,7 @@ namespace BlockadeLabsSDK.Editor
         private SerializedProperty _skyboxMesh;
         private SerializedProperty _skyboxMaterial;
         private SerializedProperty _depthMaterial;
+        private SerializedProperty _cubemapComputeShader;
 #if UNITY_HDRP
         private SerializedProperty _HDRPVolume;
         private SerializedProperty _HDRPVolumeProfile;
@@ -30,6 +31,7 @@ namespace BlockadeLabsSDK.Editor
             _skyboxMesh = serializedObject.FindProperty("_skyboxMesh");
             _skyboxMaterial = serializedObject.FindProperty("_skyboxMaterial");
             _depthMaterial = serializedObject.FindProperty("_depthMaterial");
+            _cubemapComputeShader = serializedObject.FindProperty("_cubemapComputeShader");
 #if UNITY_HDRP
             _HDRPVolume = serializedObject.FindProperty("_HDRPVolume");
             _HDRPVolumeProfile = serializedObject.FindProperty("_HDRPVolumeProfile");
@@ -62,6 +64,7 @@ namespace BlockadeLabsSDK.Editor
                 EditorGUILayout.PropertyField(_skyboxMesh);
                 EditorGUILayout.PropertyField(_skyboxMaterial);
                 EditorGUILayout.PropertyField(_depthMaterial);
+                EditorGUILayout.PropertyField(_cubemapComputeShader);
 #if UNITY_HDRP
                 EditorGUILayout.PropertyField(_HDRPVolume);
                 EditorGUILayout.PropertyField(_HDRPVolumeProfile);

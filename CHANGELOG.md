@@ -1,5 +1,8 @@
 ﻿# Changelog
 
+## 1.7.2 - February 7, 2023.
+- Added PanoramicToCubemap compute shader, which allows the BlockadeLabsSkyboxGenerator to create cubemaps in a built application.
+
 ## 1.7.1 - January 30, 2023.
 - Fix the issue where the `Start Screen` was redisplayed even when disabled in options.
 - Fix the issue where the `Remix help popup` was redisplayed every time on runtime, even when the `Don't show this message again` checkbox was ticked.

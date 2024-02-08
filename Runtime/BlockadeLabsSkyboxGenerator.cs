@@ -52,6 +52,14 @@ namespace BlockadeLabsSDK
             set => _depthMaterial = value;
         }
 
+        [SerializeField, Tooltip("Compute shader to use for converting panoramic to cubemap at runtime.")]
+        private ComputeShader _cubemapComputeShader;
+        public ComputeShader CubemapComputeShader
+        {
+            get => _cubemapComputeShader;
+            set => _cubemapComputeShader = value;
+        }
+
 #if UNITY_HDRP
         [SerializeField, Tooltip("Optional volume to apply the generated volume profile to for HDRP.")]
         private Volume _HDRPVolume;
@@ -285,9 +293,15 @@ namespace BlockadeLabsSDK
 
         public async void GenerateSkyboxAsync()
         {
-            if (!Application.isEditor)
+            if (!Application.isEditor && _cubemapComputeShader == null)
             {
-                SetError("Skybox generation is only supported in the editor.");
+                SetError("Cubemap Compute Shader is required in a runtime build.");
+                return;
+            }
+
+            if (!SystemInfo.supportsComputeShaders)
+            {
+                SetError("Compute Shaders are not supported on this device.");
                 return;
             }
 
@@ -620,28 +634,29 @@ namespace BlockadeLabsSDK
 #else
         private async Task DownloadResultAsync(GetImagineResult result)
         {
-                await Task.Delay(1);
-                // TODO: Need to download or generate a cubemap to support importing outside of editor.
-//             var tasks = new List<Task<Texture2D>>();
-//             tasks.Add(ApiRequests.DownloadTextureAsync(result.request.file_url));
-//             if (!string.IsNullOrWhiteSpace(result.request.depth_map_url))
-//             {
-//                 tasks.Add(ApiRequests.DownloadTextureAsync(result.request.depth_map_url));
-//             }
+            var tasks = new List<Task<Texture2D>>();
+            tasks.Add(ApiRequests.DownloadTextureAsync(result.request.file_url));
+            if (!string.IsNullOrWhiteSpace(result.request.depth_map_url))
+            {
+                tasks.Add(ApiRequests.DownloadTextureAsync(result.request.depth_map_url));
+            }
 
-//             var textures = await Task.WhenAll(tasks);
+            var textures = await Task.WhenAll(tasks);
 
-//             if (_isCancelled)
-//             {
-//                 DestroyTextures(textures);
-//                 return;
-//             }
+            if (_isCancelled)
+            {
+                DestroyTextures(textures);
+                return;
+            }
 
-//             CreateDepthMaterial(textures[0], textures.Length > 1 ? textures[1] : null, result.request.id);
-//             CreateSkyboxMaterial();
-// #if UNITY_HDRP
-//             CreateVolumeProfile(textures[0]);
-// #endif
+            var cubemap = PanoramicToCubemap.Convert(textures[0], _cubemapComputeShader, 2048);
+            Destroy(textures[0]);
+
+            CreateDepthMaterial(cubemap, textures.Length > 1 ? textures[1] : null, result.request.id);
+            CreateSkyboxMaterial(cubemap);
+#if UNITY_HDRP
+            CreateVolumeProfile(cubemap);
+#endif
         }
 #endif
 
