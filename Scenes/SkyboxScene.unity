@@ -12212,7 +12212,7 @@ MonoBehaviour:
     Create images for use as skyboxes or HDRIs in seconds.\n \r\nSkybox AI for Unity
     requires API access. Go <color=#31F1A0><u><link=\"https://www.api.blockadelabs.com/#Request-API-Access\">here</link></u></color>
     to get API access. Having problems? Check out API documentation <color=#31F1A0><u><link=\"https://api-documentation.blockadelabs.com\">here</link></u></color>.\r\n\n@2023
-    Blockade Labs. <color=#31F1A0><u><link=\"https://www.api.blockadelabs.com\">Blockade
+    Blockade Labs. <color=#31F1A0><u><link=\"https://www.blockadelabs.com\">Blockade
     Labs website</link></u></color>"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: b3bd6c68239f4e743aaae6ab0ff401a5, type: 2}
