@@ -8829,7 +8829,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_UiScaleMode: 0
   m_ReferencePixelsPerUnit: 100
-  m_ScaleFactor: 1.5
+  m_ScaleFactor: 1
   m_ReferenceResolution: {x: 1280, y: 1080}
   m_ScreenMatchMode: 1
   m_MatchWidthOrHeight: 0
@@ -16042,7 +16042,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _skyboxSphere: {fileID: 1946445122}
   _autoPan: 1
-  _autoPanSpeed: 10
+  _autoPanSpeed: 7
   _autoPanDelay: 5
   _manualPanSpeed: 80
   _zoomDefault: 0
