@@ -18,8 +18,8 @@ namespace BlockadeLabsSDK
         Epic
     }
 
-    [ExecuteAlways, RequireComponent(typeof(MeshRenderer))]
-    public class BlockadeLabsSkybox : MonoBehaviour
+    [ExecuteAlways, RequireComponent(typeof(MeshRenderer)), RequireComponent(typeof(MeshFilter))]
+    public class BlockadeLabsSkyboxMesh : MonoBehaviour
     {
         [SerializeField]
         private MeshDensity _meshDensity = MeshDensity.Medium;
@@ -30,6 +30,7 @@ namespace BlockadeLabsSDK
             {
                 if (_meshDensity != value)
                 {
+                    _somethingChangedSinceSave = true;
                     _meshDensity = value;
                     UpdateMesh();
                     OnPropertyChanged?.Invoke();
@@ -46,12 +47,19 @@ namespace BlockadeLabsSDK
             {
                 if (_depthScale != value)
                 {
+                    _somethingChangedSinceSave = true;
                     _depthScale = value;
                     UpdateDepthScale();
                     OnPropertyChanged?.Invoke();
                 }
             }
         }
+
+        private bool _somethingChangedSinceSave = true;
+
+        public bool CanSave => _meshRenderer && _meshFilter && _meshRenderer.sharedMaterial &&
+            _meshRenderer.sharedMaterial.mainTexture && _meshFilter.sharedMesh && _somethingChangedSinceSave &&
+            _meshRenderer.sharedMaterial.mainTexture.name != "default_skybox_texture";
 
         public event Action OnPropertyChanged;
 
@@ -64,10 +72,13 @@ namespace BlockadeLabsSDK
         private MaterialPropertyBlock _materialPropertyBlock;
         private Dictionary<int, Mesh> _meshes = new Dictionary<int, Mesh>();
 
-        public void SetSkyboxMaterial(Material material, int remixId)
+        public void SetSkyboxDepthMaterial(Material material, int remixId)
         {
             _meshRenderer = GetComponent<MeshRenderer>();
             _meshRenderer.sharedMaterial = material;
+            _material = material;
+            _remixId = remixId;
+            _somethingChangedSinceSave = true;
         }
 
         private void OnEnable()
@@ -75,7 +86,6 @@ namespace BlockadeLabsSDK
             _meshDensity = MeshDensity.Medium;
             UpdateMesh();
             UpdateDepthScale();
-            HDRPCameraFix();
         }
 
         public int? GetRemixId()
@@ -98,10 +108,11 @@ namespace BlockadeLabsSDK
 #if UNITY_EDITOR
             // In editor, read the remix ID from the data file saved next to the texture.
             var texturePath = AssetDatabase.GetAssetPath(renderer.sharedMaterial.mainTexture);
-            var resultPath = texturePath.Substring(0, texturePath.LastIndexOf('_')) + "_data.txt";
-            if (File.Exists(resultPath))
+            var folder = texturePath.Substring(0, texturePath.LastIndexOf('/'));
+            var dataFiles = Directory.GetFiles(folder, "*data.txt", SearchOption.TopDirectoryOnly);
+            if (dataFiles.Length > 0)
             {
-                return JsonConvert.DeserializeObject<GetImagineResult>(File.ReadAllText(resultPath)).request.id;
+                return JsonConvert.DeserializeObject<GetImagineResult>(File.ReadAllText(dataFiles[0])).request.id;
             }
 #endif
             return null;
@@ -134,8 +145,23 @@ namespace BlockadeLabsSDK
                 return mesh;
             }
 
+#if UNITY_EDITOR
+            // Look for a mesh in the project
+            var folder = AssetUtils.GetOrCreateFolder("Meshes");
+            var meshPath = $"{folder}/Tetrahedron_{subdivisions}.asset";
+            mesh = AssetDatabase.LoadAssetAtPath<Mesh>(meshPath);
+            if (mesh != null)
+            {
+                _meshes.Add(subdivisions, mesh);
+                return mesh;
+            }
+#endif
+
             mesh = TetrahedronMesh.GenerateMesh(subdivisions);
-            mesh.hideFlags = HideFlags.DontSave;
+#if UNITY_EDITOR
+            AssetDatabase.CreateAsset(mesh, meshPath);
+            AssetDatabase.SaveAssets();
+#endif
             _meshes.Add(subdivisions, mesh);
             return mesh;
         }
@@ -156,29 +182,27 @@ namespace BlockadeLabsSDK
         {
             UpdateMesh();
             UpdateDepthScale();
+            _somethingChangedSinceSave = true;
             OnPropertyChanged?.Invoke();
         }
 
-        private void HDRPCameraFix()
+        public void SavePrefab()
         {
-            // If using HDRP, and this is the default scene, set the camera environment volume mask to nothing
-            // So the camera isn't affected by the default volume and we can see the skybox properly.
-#if UNITY_HDRP && UNITY_EDITOR
-            bool isHDRP = UnityEngine.Rendering.GraphicsSettings.renderPipelineAsset.GetType().Name == "HDRenderPipelineAsset";
-            bool isDefaultScene = AssetDatabase.GUIDFromAssetPath(gameObject.scene.path).ToString() == "d9b6ab5207db7f8438e56b4c66ea03aa";
-            if (isHDRP && isDefaultScene)
+#if UNITY_EDITOR
+            if (!CanSave)
             {
-                var components = Camera.main.GetComponents<MonoBehaviour>();
-                foreach (var component in components)
-                {
-                    if (component.GetType().Name == "HDAdditionalCameraData")
-                    {
-                        var field = component.GetType().GetField("volumeLayerMask");
-                        LayerMask mask = 0;
-                        field.SetValue(component, mask);
-                    }
-                }
+                return;
             }
+
+            var materialPath = AssetDatabase.GetAssetPath(_meshRenderer.sharedMaterial);
+            var folder = materialPath.Substring(0, materialPath.LastIndexOf('/'));
+            var prefabPath = AssetDatabase.GenerateUniqueAssetPath($"{folder}/{name}.prefab");
+            var clone = Instantiate(gameObject);
+            var prefab = PrefabUtility.SaveAsPrefabAsset(clone, prefabPath);
+            DestroyImmediate(clone);
+            AssetUtils.PingAsset(prefab);
+            _somethingChangedSinceSave = false;
+            OnPropertyChanged?.Invoke();
 #endif
         }
     }

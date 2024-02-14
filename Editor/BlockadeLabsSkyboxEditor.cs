@@ -1,10 +1,10 @@
-using UnityEditor;
+﻿using UnityEditor;
 using UnityEngine;
 
 namespace BlockadeLabsSDK.Editor
 {
-    [CustomEditor(typeof(BlockadeLabsSkybox))]
-    public class BlockadeLabsSkyboxEditor : UnityEditor.Editor
+    [CustomEditor(typeof(BlockadeLabsSkyboxMesh))]
+    public class BlockadeLabsSkyboxMeshEditor : UnityEditor.Editor
     {
         private SerializedProperty _meshDensity;
         private SerializedProperty _depthScale;
@@ -21,35 +21,20 @@ namespace BlockadeLabsSDK.Editor
             EditorGUILayout.PropertyField(_meshDensity);
             EditorGUILayout.PropertyField(_depthScale);
 
-            var skybox = (BlockadeLabsSkybox)target;
+            var skybox = (BlockadeLabsSkyboxMesh)target;
 
             if (GUILayout.Button("Move Scene Camera to Skybox"))
             {
                 SceneView.lastActiveSceneView.AlignViewToObject(skybox.transform);
             }
 
-            var meshFilter = skybox.GetComponent<MeshFilter>();
-            if (meshFilter != null)
+            BlockadeGUI.DisableGroup(!skybox.CanSave, () =>
             {
-                bool hasUnsavedMesh = meshFilter.sharedMesh != null &&
-                    string.IsNullOrWhiteSpace(AssetDatabase.GetAssetPath(meshFilter.sharedMesh));
-
-                if (hasUnsavedMesh)
+                if (GUILayout.Button("Save Prefab"))
                 {
-                    if (GUILayout.Button("Save Mesh"))
-                    {
-                        var path = EditorUtility.SaveFilePanelInProject("Save mesh", meshFilter.sharedMesh.name, "asset", "Save mesh");
-                        if (string.IsNullOrEmpty(path))
-                        {
-                            return;
-                        }
-
-                        meshFilter.sharedMesh.hideFlags = HideFlags.None;
-                        AssetDatabase.CreateAsset(meshFilter.sharedMesh, path);
-                        AssetDatabase.SaveAssets();
-                    }
+                    skybox.SavePrefab();
                 }
-            }
+            });
 
             if (serializedObject.ApplyModifiedProperties())
             {

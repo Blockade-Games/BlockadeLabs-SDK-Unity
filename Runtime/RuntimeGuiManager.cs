@@ -1,13 +1,17 @@
 ﻿using System.Collections;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.UI;
 
 namespace BlockadeLabsSDK
 {
     public class RuntimeGuiManager : MonoBehaviour
     {
-        [SerializeField]
+        private const string _helpDontShowAgainKey = "BlockadeLabsSDK_Help_Dont_Show_Again";
+        private const string _remixDontShowAgainKey = "BlockadeLabsSDK_Remix_Dont_Show_Again";
+
+        [SerializeField, Header("Core Components")]
         private BlockadeLabsSkyboxGenerator _generator;
         public BlockadeLabsSkyboxGenerator Generator
         {
@@ -16,8 +20,8 @@ namespace BlockadeLabsSDK
         }
 
         [SerializeField]
-        private BlockadeLabsSkybox _skybox;
-        public BlockadeLabsSkybox Skybox
+        private BlockadeLabsSkyboxMesh _skybox;
+        public BlockadeLabsSkyboxMesh Skybox
         {
             get { return _skybox; }
             set { _skybox = value; }
@@ -31,7 +35,7 @@ namespace BlockadeLabsSDK
             set { _demoCamera = value; }
         }
 
-        [SerializeField]
+        [SerializeField, Header("Skybox Generator")]
         private TMP_InputField _promptInput;
         public TMP_InputField PromptInput
         {
@@ -176,30 +180,6 @@ namespace BlockadeLabsSDK
         }
 
         [SerializeField]
-        private GameObject _helpPopup;
-        public GameObject HelpPopup
-        {
-            get { return _helpPopup; }
-            set { _helpPopup = value; }
-        }
-
-        [SerializeField]
-        private GameObject _remixPopup;
-        public GameObject RemixPopup
-        {
-            get { return _remixPopup; }
-            set { _remixPopup = value; }
-        }
-
-        [SerializeField]
-        private Toggle _remixDontShowAgainToggle;
-        public Toggle RemixDontShowAgainToggle
-        {
-            get { return _remixDontShowAgainToggle; }
-            set { _remixDontShowAgainToggle = value; }
-        }
-
-        [SerializeField]
         private RectTransform _progressBar;
         public RectTransform ProgressBar
         {
@@ -208,30 +188,22 @@ namespace BlockadeLabsSDK
         }
 
         [SerializeField]
-        private GameObject _promptPanel;
-        public GameObject PromptPanel
+        private MultiToggle _showSpheresToggle;
+        public MultiToggle ShowSpheresToggle
         {
-            get { return _promptPanel; }
-            set { _promptPanel = value; }
+            get { return _showSpheresToggle; }
+            set { _showSpheresToggle = value; }
         }
 
         [SerializeField]
-        private GameObject _errorPopup;
-        public GameObject ErrorPopup
+        private GameObject _spheres;
+        public GameObject Spheres
         {
-            get { return _errorPopup; }
-            set { _errorPopup = value; }
+            get { return _spheres; }
+            set { _spheres = value; }
         }
 
-        [SerializeField]
-        private TMP_Text _errorText;
-        public TMP_Text ErrorText
-        {
-            get { return _errorText; }
-            set { _errorText = value; }
-        }
-
-        [SerializeField]
+        [SerializeField, Header("Mesh Creator")]
         private GameObject _meshCreator;
         public GameObject MeshCreator
         {
@@ -295,13 +267,104 @@ namespace BlockadeLabsSDK
             set { _depthScaleSlider = value; }
         }
 
+        [SerializeField]
+        private Button _savePrefabButton;
+        public Button SavePrefabButton
+        {
+            get { return _savePrefabButton; }
+            set { _savePrefabButton = value; }
+        }
+
+        [SerializeField, Header("Popups")]
+        private GameObject _helloPopup;
+        public GameObject HelloPopup
+        {
+            get { return _helloPopup; }
+            set { _helloPopup = value; }
+        }
+
+        [SerializeField]
+        private GameObject _helpPopup;
+        public GameObject HelpPopup
+        {
+            get { return _helpPopup; }
+            set { _helpPopup = value; }
+        }
+        
+        [SerializeField]
+        private Toggle _helpDontShowAgainToggle;
+        public Toggle HelpDontShowAgainToggle
+        {
+            get { return _helpDontShowAgainToggle; }
+            set { _helpDontShowAgainToggle = value; }
+        }
+
+        [SerializeField]
+        private GameObject _remixPopup;
+        public GameObject RemixPopup
+        {
+            get { return _remixPopup; }
+            set { _remixPopup = value; }
+        }
+
+        [SerializeField]
+        private Toggle _remixDontShowAgainToggle;
+        public Toggle RemixDontShowAgainToggle
+        {
+            get { return _remixDontShowAgainToggle; }
+            set { _remixDontShowAgainToggle = value; }
+        }
+
+        [SerializeField]
+        private GameObject _promptPanel;
+        public GameObject PromptPanel
+        {
+            get { return _promptPanel; }
+            set { _promptPanel = value; }
+        }
+
+        [SerializeField]
+        private GameObject _errorPopup;
+        public GameObject ErrorPopup
+        {
+            get { return _errorPopup; }
+            set { _errorPopup = value; }
+        }
+
+        [SerializeField]
+        private TMP_Text _errorText;
+        public TMP_Text ErrorText
+        {
+            get { return _errorText; }
+            set { _errorText = value; }
+        }
+
+        [SerializeField, Header("Titlebar")]
+        private GameObject _viewButton;
+        public GameObject ViewButton
+        {
+            get { return _viewButton; }
+            set { _viewButton = value; }
+        }
+
         private float _createUnderlineOffset;
         private bool _anyStylePicked;
 
         async void Start()
         {
+            _helloPopup.SetActive(false);
+            
+            if (PlayerPrefs.GetInt(_helpDontShowAgainKey) == 0)
+            {
+                _helpPopup.SetActive(true);
+            }
+            
+            _viewButton.SetActive(true);
+            _promptPanel.SetActive(true);
+
             // Initialize values
             _skybox.DepthScale = _depthScaleSlider.minValue;
+            _helpDontShowAgainToggle.isOn = PlayerPrefs.GetInt(_helpDontShowAgainKey) != 0;
 
             // Bind to property changes that will update the UI
             _generator.OnPropertyChanged += OnGeneratorPropertyChanged;
@@ -321,6 +384,8 @@ namespace BlockadeLabsSDK
             _negativeTextToggle.OnValueChanged.AddListener(OnNegativeTextToggleChanged);
             _negativeTextInput.onValueChanged.AddListener(OnNegativeTextInputChanged);
             _enhancePromptToggle.OnValueChanged.AddListener(OnEnhancePromptToggleChanged);
+            _helpDontShowAgainToggle.onValueChanged.AddListener(OnHelpDontShowAgainToggle);
+            _remixDontShowAgainToggle.onValueChanged.AddListener(OnRemixDontShowAgainToggle);
             _createButton.onClick.AddListener(OnCreateButtonClicked);
             _remixButton.onClick.AddListener(OnRemixButtonClicked);
             _createUnderlineOffset = _createRemixUnderline.localPosition.x;
@@ -329,6 +394,7 @@ namespace BlockadeLabsSDK
             _stylePickerPanel.OnStylePicked += OnStylePicked;
             _generateButton.onClick.AddListener(OnGenerateButtonClicked);
             _meshCreatorButton.onClick.AddListener(OnMeshCreatorButtonClicked);
+            _showSpheresToggle.OnValueChanged.AddListener(OnShowSpheresToggleChanged);
 
             // Mesh Creator Controls
             _meshCreatorBackButton.onClick.AddListener(OnMeshCreatorBackButtonClicked);
@@ -337,6 +403,7 @@ namespace BlockadeLabsSDK
             _highDensityToggle.OnTurnedOn.AddListener(() => _skybox.MeshDensity = MeshDensity.High);
             _epicDensityToggle.OnTurnedOn.AddListener(() => _skybox.MeshDensity = MeshDensity.Epic);
             _depthScaleSlider.onValueChanged.AddListener((_) => _skybox.DepthScale = _depthScaleSlider.value);
+            _savePrefabButton.onClick.AddListener(() => _skybox.SavePrefab());
 
             await _generator.LoadAsync();
         }
@@ -367,6 +434,10 @@ namespace BlockadeLabsSDK
             _highDensityToggle.IsOn = _skybox.MeshDensity == MeshDensity.High;
             _epicDensityToggle.IsOn = _skybox.MeshDensity == MeshDensity.Epic;
             _depthScaleSlider.value = _skybox.DepthScale;
+            _savePrefabButton.interactable = _skybox.CanSave;
+#if !UNITY_EDITOR
+            _savePrefabButton.gameObject.SetActive(false);
+#endif
         }
 
         private void OnStateChanged()
@@ -391,6 +462,11 @@ namespace BlockadeLabsSDK
             UpdateGenerateButton();
             UpdateCanRemix();
             UpdateMeshCreatorButton();
+
+            if (_generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Ready)
+            {
+                UpdateSpheres();
+            }
         }
 
         private void UpdateCanRemix()
@@ -481,13 +557,26 @@ namespace BlockadeLabsSDK
             _generator.Remix = false;
             _remixPopup.SetActive(false);
         }
+        
+        private void OnHelpDontShowAgainToggle(bool value)
+        {
+            PlayerPrefs.SetInt(_helpDontShowAgainKey, value ? 1 : 0);
+        }
 
         private void OnRemixButtonClicked()
         {
             _generator.Remix = true;
-            if (!_remixDontShowAgainToggle.isOn)
+            if (PlayerPrefs.GetInt(_remixDontShowAgainKey) == 0)
             {
                 _remixPopup.SetActive(true);
+            }
+        }
+
+        private void OnRemixDontShowAgainToggle(bool value)
+        {
+            if (value)
+            {
+                PlayerPrefs.SetInt(_remixDontShowAgainKey, 1);
             }
         }
 
@@ -548,17 +637,58 @@ namespace BlockadeLabsSDK
         private void OnMeshCreatorButtonClicked()
         {
             StartCoroutine(CoAnimateDepthScale(_depthScaleSlider.minValue + (_depthScaleSlider.maxValue - _depthScaleSlider.minValue) / 3f));
-            _demoCamera.SetZoom(-0.5f);
             _promptPanel.SetActive(false);
             _meshCreator.SetActive(true);
+            UpdateSpheres();
+            UpdateCamera();
+        }
+
+        private void OnShowSpheresToggleChanged(bool toggleOn)
+        {
+            UpdateSpheres();
+            UpdateCamera();
         }
 
         private void OnMeshCreatorBackButtonClicked()
         {
             StartCoroutine(CoAnimateDepthScale(_depthScaleSlider.minValue));
-            _demoCamera.SetZoom(0.0f);
             _promptPanel.SetActive(true);
             _meshCreator.SetActive(false);
+            UpdateSpheres();
+            UpdateCamera();
+        }
+
+        private void UpdateCamera()
+        {
+            if (_meshCreator.activeSelf)
+            {
+                _demoCamera.SetMode(BlockadeDemoCamera.Mode.MeshCreator);
+            }
+            else if (_showSpheresToggle.IsOn)
+            {
+                _demoCamera.SetMode(BlockadeDemoCamera.Mode.CenterOrbit);
+            }
+            else
+            {
+                _demoCamera.SetMode(BlockadeDemoCamera.Mode.SkyboxDefault);
+            }
+        }
+
+        private void UpdateSpheres()
+        {
+            if (_meshCreator.activeSelf || !_showSpheresToggle.IsOn)
+            {
+                _spheres.SetActive(false);
+                return;
+            }
+
+            _spheres.SetActive(true);
+
+            foreach (var reflectionProbe in FindObjectsOfType<ReflectionProbe>())
+            {
+                reflectionProbe.mode = ReflectionProbeMode.Realtime;
+                reflectionProbe.RenderProbe();
+            }
         }
 
         private void OnStylePicked(SkyboxStyle style)

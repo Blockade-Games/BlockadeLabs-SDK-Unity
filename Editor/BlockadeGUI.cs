@@ -30,6 +30,13 @@ namespace BlockadeLabsSDK.Editor
             EditorGUILayout.EndVertical();
         }
 
+        internal static void Vertical(GUIStyle style, float width, Action action)
+        {
+            EditorGUILayout.BeginVertical(style, GUILayout.Width(width));
+            action();
+            EditorGUILayout.EndVertical();
+        }
+
         internal static void Horizontal(Action action)
         {
             EditorGUILayout.BeginHorizontal();
@@ -41,6 +48,24 @@ namespace BlockadeLabsSDK.Editor
         {
             EditorGUILayout.BeginHorizontal(style);
             action();
+            EditorGUILayout.EndHorizontal();
+        }
+
+        internal static void HorizontalCentered(Action action)
+        {
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            action();
+            GUILayout.FlexibleSpace();
+            EditorGUILayout.EndHorizontal();
+        }
+
+        internal static void HorizontalCentered(GUIStyle style, Action action)
+        {
+            EditorGUILayout.BeginHorizontal(style);
+            GUILayout.FlexibleSpace();
+            action();
+            GUILayout.FlexibleSpace();
             EditorGUILayout.EndHorizontal();
         }
 
@@ -110,18 +135,50 @@ namespace BlockadeLabsSDK.Editor
             return Checkbox(value, () => GUILayout.Label(label, labelStyle));
         }
 
-        public static void Link(string label, string url, GUIStyle labelStyle)
+        public static bool Button(string label, GUIStyle style, int width, int height)
         {
-            var rect = GUILayoutUtility.GetRect(new GUIContent(label), labelStyle);
-            EditorGUIUtility.AddCursorRect(rect, MouseCursor.Link);
-            if (GUI.Button(rect, label, labelStyle))
-            {
-                Application.OpenURL(url);
-            }
+            var labelContent = new GUIContent(label);
+            var position = GUILayoutUtility.GetRect(width, height, style);
+            EditorGUIUtility.AddCursorRect(position, MouseCursor.Link);
+            return GUI.Button(position, labelContent, style);
+        }
+
+        public static bool Link(string label, GUIStyle style)
+        {
+            var labelContent = new GUIContent(label);
+            var position = GUILayoutUtility.GetRect(labelContent, style, GUILayout.ExpandWidth(false));
+            Handles.BeginGUI();
+            Handles.color = style.normal.textColor;
+            Handles.DrawLine(new Vector3(position.xMin, position.yMax), new Vector3(position.xMax, position.yMax));
+            Handles.color = Color.white;
+            Handles.EndGUI();
+            EditorGUIUtility.AddCursorRect(position, MouseCursor.Link);
+            return GUI.Button(position, labelContent, style);
+        }
+
+        public static void HorizontalLine(Color color)
+        {
+            var position = GUILayoutUtility.GetRect(GUIContent.none, GUIStyle.none, GUILayout.ExpandWidth(true));
+            Handles.BeginGUI();
+            Handles.color = color;
+            Handles.DrawLine(new Vector3(position.xMin, position.yMax), new Vector3(position.xMax, position.yMax));
+            Handles.color = Color.white;
+            Handles.EndGUI();
+        }
+
+        public static void VerticalLine(Color color)
+        {
+            var position = GUILayoutUtility.GetRect(GUIContent.none, GUIStyle.none, GUILayout.ExpandHeight(true));
+            Handles.BeginGUI();
+            Handles.color = color;
+            Handles.DrawLine(new Vector3(position.xMax, position.yMin), new Vector3(position.xMax, position.yMax));
+            Handles.color = Color.white;
+            Handles.EndGUI();
         }
 
         public static int StyleFontSize;
         public static string StyleTag;
+        public static Font StyleFont;
 
         public static GUIStyle CreateStyle()
         {
@@ -129,7 +186,13 @@ namespace BlockadeLabsSDK.Editor
             style.wordWrap = true;
             style.richText = true;
             style.fontSize = StyleFontSize;
+            style.font = StyleFont;
             return style;
+        }
+
+        public static GUIStyle CreateStyle(string textColor)
+        {
+            return CreateStyle(HexColor(textColor));
         }
 
         public static GUIStyle CreateStyle(Color textColor)
@@ -137,6 +200,11 @@ namespace BlockadeLabsSDK.Editor
             var style = CreateStyle();
             SetTextColor(style, textColor);
             return style;
+        }
+
+        public static GUIStyle CreateStyle(string textColor, string backgroundColor)
+        {
+            return CreateStyle(HexColor(textColor), HexColor(backgroundColor));
         }
 
         public static GUIStyle CreateStyle(Color textColor, Color backgroundColor)
