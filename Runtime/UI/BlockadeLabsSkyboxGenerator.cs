@@ -43,7 +43,7 @@ namespace BlockadeLabsSDK
 #pragma warning disable CS0414 // Field is assigned but its value is never used
         // we will keep this serialized field so that we can convert to new Configuration
         private string _apiKey = "API key needed. Get one at api.blockadelabs.com";
-#pragma warning restore CS0414 
+#pragma warning restore CS0414
 
         [SerializeField]
         private BlockadeLabsConfiguration _configuration;
@@ -297,6 +297,8 @@ namespace BlockadeLabsSDK
 
 #if UNITY_EDITOR
         private int _progressId;
+
+        internal static event Action OnSurveyTrigger;
 #endif
 
 #if !UNITY_2022_1_OR_NEWER
@@ -564,6 +566,7 @@ namespace BlockadeLabsSDK
             {
                 UpdateProgress(-1);
                 SetState(State.Ready);
+                OnSurveyTrigger?.Invoke();
             }
         }
 
@@ -1125,7 +1128,7 @@ namespace BlockadeLabsSDK
             SetState(State.Ready);
         }
 
-        public void EditorPropertyChanged()
+        internal void EditorPropertyChanged()
         {
             OnPropertyChanged?.Invoke();
         }

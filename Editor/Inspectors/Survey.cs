@@ -1,6 +1,5 @@
-#if false
-
 using System;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -9,45 +8,12 @@ namespace BlockadeLabsSDK.Editor
 {
     internal class Survey : EditorWindow
     {
-        private struct SurveyData
-        {
-            public string sdkVersion;
-            public string unityVersion;
-            public int satisfaction;
-            public int nps;
-            public string benefits;
-            public string improvements;
-        }
-
-        private enum SurveyState
-        {
-            Ask,
-            DontAsk,
-            Completed
-        }
-
-        private enum SurveyPage
-        {
-            Satisfaction,
-            Benefits,
-            Improvements,
-            Promoter,
-            ThankYou
-        }
-
-        private static readonly string[] _satisfactionOptions = new string[] { "Extremely disappointed", "Somewhat disappointed", "Not disappointed" };
         private static readonly string[] _npsOptions = new string[] { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10" };
         private static readonly string[] _npsBgColors = new string[] { "#ff0000", "#ff1100", "#ff2200", "#ff3300", "#ff4400", "#ff5500", "#ff6600", "#ff9900", "#ffCC00", "#88ff00", "#00ff00" };
         private static readonly string[] _npsTextColors = new string[] { "#ffffff", "#ffffff", "#ffffff", "#ffffff", "#ffffff", "#ffffff", "#ffffff", "#000000", "#000000", "#ffffff", "#ffffff" };
 
         private static readonly Vector2 _initialSize = new Vector2(580, 400);
         private static readonly Vector2 _expandedSize = new Vector2(580, 520);
-
-        private const string _stateKey = "BlockadeLabsSDK_Survey_State";
-        private const string _lastAskedKey = "BlockadeLabsSDK_Survey_LastAsked";
-        private const string _generatedCountKey = "BlockadeLabsSDK_Survey_GeneratedCount";
-
-        private const int _askFrequency = 5;
 
         private const string _windowTitle = "Skybox AI Feedback";
         private const string _styleTag = "BlockadeLabsSDK_Survey";
@@ -60,28 +26,48 @@ namespace BlockadeLabsSDK.Editor
         private GUIStyle _textAreaStyle;
         private GUIStyle[] _npsButtonStyles;
 
-        private SurveyData _surveyData;
-        private SurveyPage _page;
+        private static string _apiKey;
+        private static GetFeedbacksResponse _feedbacks;
+        private static PostFeedbacksRequest _response;
+        private static int _currentQuestion;
 
-        public static bool Completed => EditorPrefs.GetInt(_stateKey, 0) == (int)SurveyState.Completed;
+        private int _intAnswer = -1;
+        private string _stringAnswer = "";
 
-        public static bool ShouldAsk()
+        public static async void Trigger(string apiKey)
         {
-            if (Application.isBatchMode)
+            if (_feedbacks != null)
             {
-                return false;
+                // Already showing
+                return;
             }
 
-            if (EditorPrefs.GetInt(_stateKey, 0) != (int)SurveyState.Ask)
+            try
             {
-                return false;
+                _feedbacks = await ApiRequests.GetFeedbacksAsync(apiKey);
+            }
+            catch (Exception)
+            {
+                return;
             }
 
-            var generatedCount = EditorPrefs.GetInt(_generatedCountKey, 0);
-            return generatedCount % _askFrequency == 0;
+            if (_feedbacks.data.Count > 0)
+            {
+                _response = new PostFeedbacksRequest() {
+                    id = _feedbacks.id,
+                    version = _feedbacks.version,
+                    channel = "integration - unity",
+                    data = _feedbacks.data.Select(d => new FeedbackAnswer() { id = d.id }).ToList()
+                };
+
+                _currentQuestion = 0;
+
+                _apiKey = apiKey;
+
+                ShowSurvey();
+            }
         }
 
-        [MenuItem(WindowUtils.MenuRoot + "/Feedback")] // TODO: Remove
         public static void ShowSurvey()
         {
             var window = GetWindow<Survey>(true, _windowTitle, true);
@@ -91,16 +77,12 @@ namespace BlockadeLabsSDK.Editor
         private void OnEnable()
         {
             _bodyStyle = null;
-            _surveyData = new SurveyData {
-                sdkVersion = WindowUtils.GetVersion(),
-                unityVersion = Application.unityVersion,
-                satisfaction = -1,
-                nps = -1,
-            };
         }
 
         private void OnDisable()
         {
+            _feedbacks = null;
+            _response = null;
             BlockadeGUI.CleanupBackgroundTextures(_styleTag);
         }
 
@@ -174,67 +156,57 @@ namespace BlockadeLabsSDK.Editor
 
             BlockadeGUI.Vertical(() =>
             {
-
-                switch (_page)
+                if (_currentQuestion < _feedbacks.data.Count)
                 {
-                    case SurveyPage.Satisfaction:
-                        SatisfactionPage();
-                        break;
-                    case SurveyPage.Benefits:
-                        BenefitsPage();
-                        break;
-                    case SurveyPage.Improvements:
-                        ImprovementsPage();
-                        break;
-                    case SurveyPage.Promoter:
-                        PromoterPage();
-                        break;
-                    case SurveyPage.ThankYou:
-                        ThankYouPage();
-                        break;
+                    DrawFeedbackQuestion(_feedbacks.data[_currentQuestion], _response.data[_currentQuestion]);
+                }
+                else
+                {
+                    DrawThankYou();
                 }
             });
         }
 
-        private void SatisfactionPage()
+        private void DrawFeedbackQuestion(FeedbackData data, FeedbackAnswer answer)
         {
-            BlockadeGUI.HorizontalCentered(() =>
+            switch (data.type)
             {
-                GUILayout.Label("How would you feel if you could no longer use Skybox AI?", _bodyStyle);
-            });
-
-            _surveyData.satisfaction = ToggleGroup(_surveyData.satisfaction, _satisfactionOptions, new GUIStyle[] { _toggleStyle, _toggleStyle, _toggleStyle });
-
-            BlockadeGUI.Horizontal(() =>
-            {
-                GUILayout.FlexibleSpace();
-
-                if (GUILayout.Button("Ask me later", _dontAskButtonStyle))
-                {
-                    Close();
-                }
-
-                if (GUILayout.Button("Don't ask again", _dontAskButtonStyle))
-                {
-                    EditorPrefs.SetInt(_stateKey, (int)SurveyState.DontAsk);
-                    Close();
-                }
-            });
-
-            if (_surveyData.satisfaction != -1)
-            {
-                _page = SurveyPage.Benefits;
+                case "quantitative":
+                    DrawQuantitativeQuestion(data, answer);
+                    break;
+                case "qualitative":
+                    DrawQualitativeQuestion(data, answer);
+                    break;
+                case "choice":
+                    DrawChoiceQuestion(data, answer);
+                    break;
             }
         }
 
-        private void BenefitsPage()
+        private void DrawQuantitativeQuestion(FeedbackData data, FeedbackAnswer answerData)
         {
             BlockadeGUI.HorizontalCentered(() =>
             {
-                GUILayout.Label("What is the main benefit you get from Skybox AI?", _bodyStyle);
+                GUILayout.Label(data.question, _bodyStyle);
             });
 
-            _surveyData.benefits = GUILayout.TextArea(_surveyData.benefits, _textAreaStyle, GUILayout.Height(100));
+            _intAnswer = ToggleGroup(_intAnswer, _npsOptions, _npsButtonStyles);
+            if (_intAnswer != -1)
+            {
+                answerData.answer = _intAnswer;
+                _intAnswer = -1;
+                NextQuestionOrSubmit();
+            }
+        }
+
+        private void DrawQualitativeQuestion(FeedbackData data, FeedbackAnswer answerData)
+        {
+            BlockadeGUI.HorizontalCentered(() =>
+            {
+                GUILayout.Label(data.question, _bodyStyle);
+            });
+
+            _stringAnswer = GUILayout.TextArea(_stringAnswer, _textAreaStyle, GUILayout.Height(100));
 
             BlockadeGUI.Horizontal(() =>
             {
@@ -242,48 +214,53 @@ namespace BlockadeLabsSDK.Editor
 
                 if (GUILayout.Button("Submit", _buttonStyle))
                 {
-                    _page = SurveyPage.Improvements;
+                    answerData.answer = _stringAnswer;
+                    _stringAnswer = "";
+                    NextQuestionOrSubmit();
                 }
             });
         }
 
-        private void ImprovementsPage()
+        private void DrawChoiceQuestion(FeedbackData data, FeedbackAnswer answerData)
         {
             BlockadeGUI.HorizontalCentered(() =>
             {
-                GUILayout.Label("How can Skybox AI be improved for you?", _bodyStyle);
+                GUILayout.Label(data.question, _bodyStyle);
             });
 
-            _surveyData.improvements = GUILayout.TextArea(_surveyData.improvements, _textAreaStyle, GUILayout.Height(100));
-
-            BlockadeGUI.Horizontal(() =>
+            _intAnswer = ToggleGroup(_intAnswer, data.options.ToArray(), data.options.Select(o => _toggleStyle).ToArray());
+            if (_intAnswer != -1)
             {
-                GUILayout.FlexibleSpace();
-
-                if (GUILayout.Button("Submit", _buttonStyle))
-                {
-                    _page = SurveyPage.Promoter;
-                }
-            });
-        }
-
-        private void PromoterPage()
-        {
-            BlockadeGUI.HorizontalCentered(() =>
-            {
-                GUILayout.Label("How likely are you to recommend Skybox AI to a colleague or friend?", _bodyStyle);
-            });
-
-            _surveyData.nps = ToggleGroup(_surveyData.nps, _npsOptions, _npsButtonStyles);
-
-            if (_surveyData.nps != -1)
-            {
-                SendSurvey();
-                _page = SurveyPage.ThankYou;
+                answerData.answer = _intAnswer;
+                _intAnswer = -1;
+                NextQuestionOrSubmit();
             }
         }
 
-        private void ThankYouPage()
+        private void NextQuestionOrSubmit()
+        {
+            _currentQuestion++;
+
+            if (_currentQuestion >= _feedbacks.data.Count)
+            {
+                Submit();
+            }
+        }
+
+        private async void Submit()
+        {
+            try
+            {
+                ApiRequests.PostFeedbackAsync(_response, _apiKey);
+            }
+            catch (Exception)
+            {
+            }
+
+            Close();
+        }
+
+        private void DrawThankYou()
         {
             BlockadeGUI.HorizontalCentered(() =>
             {
@@ -298,12 +275,5 @@ namespace BlockadeLabsSDK.Editor
                 }
             });
         }
-
-        private void SendSurvey()
-        {
-            Debug.Log("Sending feedback...");
-        }
     }
 }
-
-#endif

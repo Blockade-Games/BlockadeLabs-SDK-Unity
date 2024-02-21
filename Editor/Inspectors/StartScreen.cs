@@ -82,6 +82,8 @@ namespace BlockadeLabsSDK.Editor
             {
                 OpenStartScreen();
             }
+
+            BlockadeLabsSkyboxGenerator.OnSurveyTrigger += Survey.Trigger;
         }
 
         private void OnEnable()
