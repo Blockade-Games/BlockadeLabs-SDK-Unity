@@ -214,6 +214,8 @@ namespace BlockadeLabsSDK
 
 #if UNITY_EDITOR
         private int _progressId = 0;
+
+        internal static event Action<string> OnSurveyTrigger;
 #endif
 
         public bool CheckApiKeyValid()
@@ -373,6 +375,7 @@ namespace BlockadeLabsSDK
 
                 UpdateProgress(-1);
                 SetState(State.Ready);
+                OnSurveyTrigger?.Invoke(_apiKey);
             }
             catch (Exception e)
             {
@@ -780,7 +783,7 @@ namespace BlockadeLabsSDK
             SetState(State.Ready);
         }
 
-        public void EditorPropertyChanged()
+        internal void EditorPropertyChanged()
         {
             OnPropertyChanged?.Invoke();
         }

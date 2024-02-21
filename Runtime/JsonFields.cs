@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using UnityEngine.Scripting;
 
 namespace BlockadeLabsSDK
@@ -73,5 +74,53 @@ namespace BlockadeLabsSDK
     public class SkyboxStyleFamily : SkyboxStyle
     {
         public List<SkyboxStyle> items;
+    }
+
+    [Preserve, Serializable]
+    public class GetFeedbacksResponse
+    {
+        public int id;
+        public string title;
+        public int version;
+        public List<FeedbackData> data;
+    }
+
+    [Preserve, Serializable]
+    public class FeedbackData
+    {
+        public int id;
+        public string type;
+        public string question;
+        public List<string> options;
+    }
+
+    [Preserve, Serializable]
+    public class PostFeedbacksRequest
+    {
+        public int id;
+        public int version;
+        public string channel;
+        public List<FeedbackAnswer> data;
+    }
+
+    [Preserve, Serializable]
+    public class FeedbackAnswer
+    {
+        public int id;
+        public JToken answer; // int or string
+    }
+
+    [Preserve, Serializable]
+    public class PostFeedbacksSkipRequest
+    {
+        public int id;
+        public bool ask_me_later;
+    }
+
+    [Preserve, Serializable]
+    public class PostFeedbacksResponse
+    {
+        public bool success;
+        public string message;
     }
 }

@@ -37,11 +37,11 @@ namespace BlockadeLabsSDK
             return await GetAsync<List<SkyboxStyle>>("skybox/styles", apiKey);
         }
 
-        public static async Task<CreateSkyboxResult> GenerateSkyboxAsync(CreateSkyboxRequest requestData, string apiKey)
+        private static async Task<TResponse> PostAsync<TResponse>(object requestData, string path, string apiKey) where TResponse : class
         {
             string requestJson = JsonConvert.SerializeObject(requestData);
             using var request = new UnityWebRequest();
-            request.url = ApiEndpoint + "skybox?api_key=" + apiKey;
+            request.url = ApiEndpoint + path + "?api_key=" + apiKey;
             request.method = "POST";
             request.downloadHandler = new DownloadHandlerBuffer();
             request.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(requestJson));
@@ -49,18 +49,23 @@ namespace BlockadeLabsSDK
             request.SetRequestHeader("Accept", "application/json");
             request.SetRequestHeader("Content-Type", "application/json; charset=UTF-8");
 
-            LogVerbose("Generate Skybox Request: " + request.url + "\n" + requestJson);
+            LogVerbose("Post Request: " + request.url + "\n" + requestJson);
 
             await request.SendWebRequest();
 
             if (request.result != UnityWebRequest.Result.Success)
             {
-                Debug.LogError("Create Skybox Error: " + request.error);
+                Debug.LogError("Post Error: " + request.error);
                 return null;
             }
 
-            LogVerbose("Generate Skybox Response: " + request.downloadHandler.text);
-            return JsonConvert.DeserializeObject<CreateSkyboxResult>(request.downloadHandler.text);
+            LogVerbose("Post Response: " + request.downloadHandler.text);
+            return JsonConvert.DeserializeObject<TResponse>(request.downloadHandler.text);
+        }
+
+        public static async Task<CreateSkyboxResult> GenerateSkyboxAsync(CreateSkyboxRequest requestData, string apiKey)
+        {
+            return await PostAsync<CreateSkyboxResult>(requestData, "skybox", apiKey);
         }
 
         public static async Task<GetImagineResult> GetRequestStatusAsync(string imagineObfuscatedId, string apiKey)
@@ -99,6 +104,21 @@ namespace BlockadeLabsSDK
             }
 
             LogVerbose("Complete download: " + url);
+        }
+
+        public static Task<GetFeedbacksResponse> GetFeedbacksAsync(string apiKey)
+        {
+            return GetAsync<GetFeedbacksResponse>("feedbacks", apiKey);
+        }
+
+        public static Task PostFeedbackAsync(PostFeedbacksRequest requestData, string apiKey)
+        {
+            return PostAsync<PostFeedbacksResponse>(requestData, "feedbacks", apiKey);
+        }
+
+        public static Task PostFeedbackSkipAsync(PostFeedbacksSkipRequest requestData, string apiKey)
+        {
+            return PostAsync<PostFeedbacksResponse>(requestData, "feedbacks", apiKey);
         }
 
         [System.Diagnostics.Conditional("BLOCKADE_SDK_LOG")]
