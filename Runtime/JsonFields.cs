@@ -114,6 +114,7 @@ namespace BlockadeLabsSDK
     public class PostFeedbacksSkipRequest
     {
         public int id;
+        public string channel;
         public bool ask_me_later;
     }
 

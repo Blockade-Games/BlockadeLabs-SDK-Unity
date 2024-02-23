@@ -12,17 +12,20 @@ namespace BlockadeLabsSDK.Editor
         private static readonly string[] _npsBgColors = new string[] { "#ff0000", "#ff1100", "#ff2200", "#ff3300", "#ff4400", "#ff5500", "#ff6600", "#ff9900", "#ffCC00", "#88ff00", "#00ff00" };
         private static readonly string[] _npsTextColors = new string[] { "#ffffff", "#ffffff", "#ffffff", "#ffffff", "#ffffff", "#ffffff", "#ffffff", "#000000", "#000000", "#ffffff", "#ffffff" };
 
-        private static readonly Vector2 _initialSize = new Vector2(580, 400);
-        private static readonly Vector2 _expandedSize = new Vector2(580, 520);
-
         private const string _windowTitle = "Skybox AI Feedback";
         private const string _styleTag = "BlockadeLabsSDK_Survey";
 
+        private static readonly  Vector2 _windowSize = new Vector2(866, 360);
+
+        private GUIStyle _bgStyle;
+        private GUIStyle _titleStyle;
         private GUIStyle _bodyStyle;
         private GUIStyle _boldStyle;
         private GUIStyle _toggleStyle;
-        private GUIStyle _buttonStyle;
-        private GUIStyle _dontAskButtonStyle;
+        private GUIStyle _previousButtonStyle;
+        private GUIStyle _nextButtonStyle;
+        private GUIStyle _nextButtonDisabledStyle;
+        private GUIStyle _askLaterButtonStyle;
         private GUIStyle _textAreaStyle;
         private GUIStyle[] _npsButtonStyles;
 
@@ -33,6 +36,21 @@ namespace BlockadeLabsSDK.Editor
 
         private int _intAnswer = -1;
         private string _stringAnswer = "";
+
+        [MenuItem("TEST/Feedback Survey")]
+        public static void Test()
+        {
+            var json = Resources.Load<TextAsset>("feedback-test");
+            _feedbacks = Newtonsoft.Json.JsonConvert.DeserializeObject<GetFeedbacksResponse>(json.text);
+            _response = new PostFeedbacksRequest() {
+                    id = _feedbacks.id,
+                    version = _feedbacks.version,
+                    channel = "website - desktop",
+                    data = _feedbacks.data.Select(d => new FeedbackAnswer() { id = d.id }).ToList()
+                };
+            _currentQuestion = 0;
+            ShowSurvey();
+        }
 
         public static async void Trigger(string apiKey)
         {
@@ -51,12 +69,13 @@ namespace BlockadeLabsSDK.Editor
                 return;
             }
 
-            if (_feedbacks.data.Count > 0)
+            if (_feedbacks.data?.Count > 0)
             {
+                Debug.Log("Feedbacks: " + _feedbacks.data.Count);
                 _response = new PostFeedbacksRequest() {
                     id = _feedbacks.id,
                     version = _feedbacks.version,
-                    channel = "integration - unity",
+                    channel = "website - desktop",
                     data = _feedbacks.data.Select(d => new FeedbackAnswer() { id = d.id }).ToList()
                 };
 
@@ -65,6 +84,10 @@ namespace BlockadeLabsSDK.Editor
                 _apiKey = apiKey;
 
                 ShowSurvey();
+            }
+            else
+            {
+                Debug.Log("No feedbacks");
             }
         }
 
@@ -81,6 +104,18 @@ namespace BlockadeLabsSDK.Editor
 
         private void OnDisable()
         {
+            if (_feedbacks != null && !string.IsNullOrWhiteSpace(_apiKey) && _currentQuestion < _feedbacks.data.Count)
+            {
+                var requestData = new PostFeedbacksSkipRequest()
+                {
+                    id = _feedbacks.id,
+                    channel = "website - desktop",
+                    ask_me_later = true
+                };
+
+                ApiRequests.PostFeedbackSkipAsync(requestData, _apiKey);
+            }
+
             _feedbacks = null;
             _response = null;
             BlockadeGUI.CleanupBackgroundTextures(_styleTag);
@@ -94,6 +129,11 @@ namespace BlockadeLabsSDK.Editor
             BlockadeGUI.StyleTag = _styleTag;
             BlockadeGUI.StyleFont = WindowUtils.GetFont();
 
+            _bgStyle = BlockadeGUI.CreateStyle(Color.white, BlockadeGUI.HexColor("#313131"));
+
+            _titleStyle = BlockadeGUI.CreateStyle(Color.white);
+            _titleStyle.fontSize = 18;
+
             _bodyStyle = BlockadeGUI.CreateStyle(Color.white);
             _bodyStyle.margin.left = 10;
             _bodyStyle.margin.top = 10;
@@ -103,17 +143,31 @@ namespace BlockadeLabsSDK.Editor
             _boldStyle.fontStyle = FontStyle.Bold;
             _boldStyle.fontSize++;
 
-            _buttonStyle = BlockadeGUI.CreateStyle(Color.black, BlockadeGUI.HexColor("#02ee8b"));
-            _buttonStyle.fontSize = 14;
-            _buttonStyle.margin.left = 10;
-            _buttonStyle.margin.bottom = 5;
-            _buttonStyle.padding = new RectOffset(10, 10, 5, 5);
-            _buttonStyle.stretchWidth = false;
-            _buttonStyle.alignment = TextAnchor.MiddleLeft;
+            _previousButtonStyle = BlockadeGUI.CreateStyle(Color.white);
+            _previousButtonStyle.fontSize = 16;
+            _previousButtonStyle.stretchWidth = false;
+            _previousButtonStyle.alignment = TextAnchor.MiddleCenter;
+            _previousButtonStyle.fontStyle = FontStyle.Bold;
+
+            _nextButtonStyle = BlockadeGUI.CreateStyle(Color.black, BlockadeGUI.HexColor("#02ee8b"));
+            _nextButtonStyle.fontSize = 16;
+            _nextButtonStyle.stretchWidth = false;
+            _nextButtonStyle.alignment = TextAnchor.MiddleCenter;
+            _nextButtonStyle.fontStyle = FontStyle.Bold;
+
+            _nextButtonDisabledStyle = BlockadeGUI.CreateStyle(BlockadeGUI.HexColor("#313131"), BlockadeGUI.HexColor("#4E4E4E"));
+            _nextButtonDisabledStyle.fontSize = 16;
+            _nextButtonDisabledStyle.stretchWidth = false;
+            _nextButtonDisabledStyle.alignment = TextAnchor.MiddleCenter;
+            _nextButtonDisabledStyle.fontStyle = FontStyle.Bold;
 
             _toggleStyle = new GUIStyle(EditorStyles.toggle);
-            _textAreaStyle = BlockadeGUI.CreateStyle(Color.black, Color.white);
-            _dontAskButtonStyle = new GUIStyle(EditorStyles.miniButton);
+
+            _textAreaStyle = new GUIStyle(EditorStyles.textArea);
+            _textAreaStyle.padding = new RectOffset(10, 10, 10, 10);
+            _textAreaStyle.fontSize = 14;
+
+            _askLaterButtonStyle = BlockadeGUI.CreateStyle(Color.white);
 
             _npsButtonStyles = new GUIStyle[_npsOptions.Length];
             for (int i = 0; i < _npsOptions.Length; i++)
@@ -124,6 +178,7 @@ namespace BlockadeLabsSDK.Editor
                 _npsButtonStyles[i].alignment = TextAnchor.MiddleCenter;
             }
 
+            minSize = maxSize = _windowSize;
             WindowUtils.CenterOnEditor(this);
         }
 
@@ -154,7 +209,7 @@ namespace BlockadeLabsSDK.Editor
         {
             InitStyles();
 
-            BlockadeGUI.Vertical(() =>
+            BlockadeGUI.VerticalExpanded(_bgStyle, () =>
             {
                 if (_currentQuestion < _feedbacks.data.Count)
                 {
@@ -169,71 +224,71 @@ namespace BlockadeLabsSDK.Editor
 
         private void DrawFeedbackQuestion(FeedbackData data, FeedbackAnswer answer)
         {
+            GUILayout.Space(99);
+
+            BlockadeGUI.HorizontalCentered(() =>
+            {
+                GUILayout.Label(data.question, _titleStyle);
+            });
+
+            GUILayout.Space(28);
+
             switch (data.type)
             {
                 case "quantitative":
-                    DrawQuantitativeQuestion(data, answer);
+                    _intAnswer = ToggleGroup(_intAnswer, _npsOptions, _npsButtonStyles);
                     break;
                 case "qualitative":
-                    DrawQualitativeQuestion(data, answer);
+                    BlockadeGUI.HorizontalCentered(() =>
+                    {
+                        _stringAnswer = GUILayout.TextArea(_stringAnswer, _textAreaStyle, GUILayout.Height(105), GUILayout.Width(810));
+                    });
                     break;
                 case "choice":
-                    DrawChoiceQuestion(data, answer);
+                    _intAnswer = ToggleGroup(_intAnswer, data.options.ToArray(), data.options.Select(o => _toggleStyle).ToArray());
                     break;
             }
-        }
 
-        private void DrawQuantitativeQuestion(FeedbackData data, FeedbackAnswer answerData)
-        {
-            BlockadeGUI.HorizontalCentered(() =>
-            {
-                GUILayout.Label(data.question, _bodyStyle);
-            });
-
-            _intAnswer = ToggleGroup(_intAnswer, _npsOptions, _npsButtonStyles);
-            if (_intAnswer != -1)
-            {
-                answerData.answer = _intAnswer;
-                _intAnswer = -1;
-                NextQuestionOrSubmit();
-            }
-        }
-
-        private void DrawQualitativeQuestion(FeedbackData data, FeedbackAnswer answerData)
-        {
-            BlockadeGUI.HorizontalCentered(() =>
-            {
-                GUILayout.Label(data.question, _bodyStyle);
-            });
-
-            _stringAnswer = GUILayout.TextArea(_stringAnswer, _textAreaStyle, GUILayout.Height(100));
+            GUILayout.Space(28);
 
             BlockadeGUI.Horizontal(() =>
             {
+                GUILayout.Space(28);
+
+                if (_currentQuestion > 0)
+                {
+                    if (BlockadeGUI.BoxButton("PREVIOUS", 130, 48, _previousButtonStyle, BlockadeGUI.HexColor("#313131"), BlockadeGUI.HexColor("#8F8F8F"), 2))
+                    {
+                        _currentQuestion--;
+                    }
+                }
+
                 GUILayout.FlexibleSpace();
 
-                if (GUILayout.Button("Submit", _buttonStyle))
+                bool canProceed = _intAnswer != -1 || !string.IsNullOrWhiteSpace(_stringAnswer);
+
+                if (BlockadeGUI.Button("NEXT", canProceed ? _nextButtonStyle : _nextButtonDisabledStyle, 92, 48) && canProceed)
                 {
-                    answerData.answer = _stringAnswer;
+                    if (data.type == "quantitative" || data.type == "choice")
+                    {
+                        answer.answer = _intAnswer;
+                    }
+                    else
+                    {
+                        answer.answer = _stringAnswer;
+                    }
+
+                    _intAnswer = -1;
                     _stringAnswer = "";
                     NextQuestionOrSubmit();
                 }
-            });
-        }
 
-        private void DrawChoiceQuestion(FeedbackData data, FeedbackAnswer answerData)
-        {
-            BlockadeGUI.HorizontalCentered(() =>
-            {
-                GUILayout.Label(data.question, _bodyStyle);
+                GUILayout.Space(28);
             });
 
-            _intAnswer = ToggleGroup(_intAnswer, data.options.ToArray(), data.options.Select(o => _toggleStyle).ToArray());
-            if (_intAnswer != -1)
+            if (BlockadeGUI.Link("Ask me later", _askLaterButtonStyle, GUILayoutUtility.GetLastRect().center))
             {
-                answerData.answer = _intAnswer;
-                _intAnswer = -1;
-                NextQuestionOrSubmit();
+                Close();
             }
         }
 
@@ -251,13 +306,11 @@ namespace BlockadeLabsSDK.Editor
         {
             try
             {
-                ApiRequests.PostFeedbackAsync(_response, _apiKey);
+                await ApiRequests.PostFeedbackAsync(_response, _apiKey);
             }
             catch (Exception)
             {
             }
-
-            Close();
         }
 
         private void DrawThankYou()
@@ -269,7 +322,7 @@ namespace BlockadeLabsSDK.Editor
 
             BlockadeGUI.HorizontalCentered(() =>
             {
-                if (GUILayout.Button("Close", _buttonStyle))
+                if (GUILayout.Button("Close", _nextButtonStyle))
                 {
                     Close();
                 }

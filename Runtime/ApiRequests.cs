@@ -9,7 +9,7 @@ namespace BlockadeLabsSDK
 {
     internal class ApiRequests
     {
-        private static readonly string ApiEndpoint = "https://backend.blockadelabs.com/api/v1/";
+        private static readonly string ApiEndpoint = "https://backend-staging.blockadelabs.com/api/v1/";
 
         public static async Task<T> GetAsync<T>(string path, string apiKey)
         {
@@ -19,12 +19,23 @@ namespace BlockadeLabsSDK
 
             if (request.result != UnityWebRequest.Result.Success)
             {
-                Debug.Log("Get error: " + request.error);
+                Debug.LogError("Get error: " + request.error);
                 return default(T);
             }
 
             LogVerbose("Get response: " + request.downloadHandler.text);
-            return JsonConvert.DeserializeObject<T>(request.downloadHandler.text);
+            var resp = request.downloadHandler.text;
+            if (resp.StartsWith('['))
+            {
+                resp = resp.Substring(1, resp.Length - 2);
+            }
+            if (string.IsNullOrWhiteSpace(resp))
+            {
+                LogVerbose("Empty response");
+                throw new System.Exception("Empty response");
+            }
+
+            return JsonConvert.DeserializeObject<T>(resp);
         }
 
         public static async Task<List<SkyboxStyleFamily>> GetSkyboxStylesMenuAsync(string apiKey)
@@ -55,7 +66,7 @@ namespace BlockadeLabsSDK
 
             if (request.result != UnityWebRequest.Result.Success)
             {
-                Debug.LogError("Post Error: " + request.error);
+                Debug.LogError("Post Error: " + request.error + " " + request.downloadHandler.text);
                 return null;
             }
 
