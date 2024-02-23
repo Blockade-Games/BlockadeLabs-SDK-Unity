@@ -37,6 +37,14 @@ namespace BlockadeLabsSDK.Editor
             EditorGUILayout.EndVertical();
         }
 
+        internal static void VerticalExpanded(GUIStyle style, Action action)
+        {
+            EditorGUILayout.BeginVertical(style, GUILayout.ExpandHeight(true));
+            action();
+            GUILayout.FlexibleSpace();
+            EditorGUILayout.EndVertical();
+        }
+
         internal static void Horizontal(Action action)
         {
             EditorGUILayout.BeginHorizontal();
@@ -146,14 +154,27 @@ namespace BlockadeLabsSDK.Editor
         public static bool Link(string label, GUIStyle style)
         {
             var labelContent = new GUIContent(label);
-            var position = GUILayoutUtility.GetRect(labelContent, style, GUILayout.ExpandWidth(false));
+            var rect = GUILayoutUtility.GetRect(labelContent, style, GUILayout.ExpandWidth(false));
+            return Link(labelContent, style, rect);
+        }
+
+        public static bool Link(string label, GUIStyle style, Vector2 position)
+        {
+            var labelContent = new GUIContent(label);
+            var size = style.CalcSize(labelContent);
+            var rect = new Rect(position.x - size.x * 0.5f, position.y - size.y * 0.5f, size.x, size.y);
+            return Link(labelContent, style, rect);
+        }
+
+        public static bool Link(GUIContent labelContent, GUIStyle style, Rect rect)
+        {
             Handles.BeginGUI();
             Handles.color = style.normal.textColor;
-            Handles.DrawLine(new Vector3(position.xMin, position.yMax), new Vector3(position.xMax, position.yMax));
+            Handles.DrawLine(new Vector3(rect.xMin, rect.yMax), new Vector3(rect.xMax, rect.yMax));
             Handles.color = Color.white;
             Handles.EndGUI();
-            EditorGUIUtility.AddCursorRect(position, MouseCursor.Link);
-            return GUI.Button(position, labelContent, style);
+            EditorGUIUtility.AddCursorRect(rect, MouseCursor.Link);
+            return GUI.Button(rect, labelContent, style);
         }
 
         public static void HorizontalLine(Color color)
@@ -236,6 +257,14 @@ namespace BlockadeLabsSDK.Editor
             textures.Add(bgTex);
         }
 
+        public static void SetBackgroundImage(GUIStyle style, Texture2D image)
+        {
+            style.normal.background =
+                style.active.background =
+                style.focused.background =
+                style.hover.background = image;
+        }
+
         public static void CleanupBackgroundTextures(string styleTag)
         {
             if (_bgTextures.TryGetValue(styleTag, out var textures))
@@ -294,6 +323,35 @@ namespace BlockadeLabsSDK.Editor
             var position = GUILayoutUtility.GetLastRect();
             EditorGUIUtility.AddCursorRect(position, MouseCursor.Link);
             return GUI.Button(position, GUIContent.none, EditorStyles.linkLabel);
+        }
+
+        public static void Box(int width, int height, Color backgroundColor, Color borderColor, int borderThickness)
+        {
+            var rect = GUILayoutUtility.GetRect(width, height);
+            Rect outer = new Rect(rect);
+            Rect inner = new Rect(rect.x + borderThickness,
+                rect.y + borderThickness,
+                rect.width - borderThickness * 2,
+                rect.height - borderThickness * 2);
+
+            EditorGUI.DrawRect(outer, borderColor);
+            EditorGUI.DrawRect(inner, backgroundColor);
+        }
+
+        public static bool BoxButton(string label, int width, int height, GUIStyle style, Color backgroundColor, Color borderColor, int borderThickness)
+        {
+            var rect = GUILayoutUtility.GetRect(width, height);
+            Rect outer = new Rect(rect);
+            Rect inner = new Rect(rect.x + borderThickness,
+                rect.y + borderThickness,
+                rect.width - borderThickness * 2,
+                rect.height - borderThickness * 2);
+
+            EditorGUI.DrawRect(outer, borderColor);
+            EditorGUI.DrawRect(inner, backgroundColor);
+
+            EditorGUIUtility.AddCursorRect(rect, MouseCursor.Link);
+            return GUI.Button(rect, label, style);
         }
     }
 }
