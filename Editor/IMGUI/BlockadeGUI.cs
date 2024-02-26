@@ -11,7 +11,7 @@ namespace BlockadeLabsSDK.Editor
 
         internal static void Vertical(Action action)
         {
-            EditorGUILayout.BeginVertical(GUILayout.ExpandHeight(true));
+            EditorGUILayout.BeginVertical();
             action();
             EditorGUILayout.EndVertical();
         }
@@ -25,7 +25,7 @@ namespace BlockadeLabsSDK.Editor
 
         internal static void Vertical(GUIStyle style, Action action)
         {
-            EditorGUILayout.BeginVertical(style, GUILayout.ExpandWidth(true));
+            EditorGUILayout.BeginVertical(style, GUILayout.ExpandWidth(false));
             action();
             EditorGUILayout.EndVertical();
         }
@@ -41,7 +41,6 @@ namespace BlockadeLabsSDK.Editor
         {
             EditorGUILayout.BeginVertical(style, GUILayout.ExpandHeight(true));
             action();
-            GUILayout.FlexibleSpace();
             EditorGUILayout.EndVertical();
         }
 
@@ -55,6 +54,13 @@ namespace BlockadeLabsSDK.Editor
         internal static void Horizontal(GUIStyle style, Action action)
         {
             EditorGUILayout.BeginHorizontal(style);
+            action();
+            EditorGUILayout.EndHorizontal();
+        }
+
+        internal static void HorizontalExpanded(Action action)
+        {
+            EditorGUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
             action();
             EditorGUILayout.EndHorizontal();
         }
@@ -80,6 +86,14 @@ namespace BlockadeLabsSDK.Editor
         internal static Vector2 Scroll(Vector2 scrollPosition, Action action)
         {
             scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition, GUILayout.ExpandWidth(true));
+            action();
+            EditorGUILayout.EndScrollView();
+            return scrollPosition;
+        }
+
+        internal static Vector2 Scroll(Vector2 scrollPosition, float height, Action action)
+        {
+            scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition, GUILayout.Height(height), GUILayout.ExpandWidth(true));
             action();
             EditorGUILayout.EndScrollView();
             return scrollPosition;
@@ -340,7 +354,7 @@ namespace BlockadeLabsSDK.Editor
 
         public static bool BoxButton(string label, int width, int height, GUIStyle style, Color backgroundColor, Color borderColor, int borderThickness)
         {
-            var rect = GUILayoutUtility.GetRect(width, height);
+            var rect = GUILayoutUtility.GetRect(width, height, GUILayout.ExpandWidth(false), GUILayout.ExpandHeight(false));
             Rect outer = new Rect(rect);
             Rect inner = new Rect(rect.x + borderThickness,
                 rect.y + borderThickness,
