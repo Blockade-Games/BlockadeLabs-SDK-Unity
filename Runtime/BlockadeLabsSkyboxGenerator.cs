@@ -375,7 +375,9 @@ namespace BlockadeLabsSDK
 
                 UpdateProgress(-1);
                 SetState(State.Ready);
+#if UNITY_EDITOR
                 OnSurveyTrigger?.Invoke(_apiKey);
+#endif
             }
             catch (Exception e)
             {
