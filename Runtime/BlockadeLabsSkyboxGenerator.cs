@@ -301,7 +301,7 @@ namespace BlockadeLabsSDK
 
             if (!SystemInfo.supportsComputeShaders)
             {
-                SetError("Compute Shaders are not supported on this device.");
+                SetError("Compute Shaders are not supported on this platform.");
                 return;
             }
 
