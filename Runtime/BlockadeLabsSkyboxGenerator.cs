@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Rendering;
+using System.Collections;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -293,18 +294,6 @@ namespace BlockadeLabsSDK
 
         public async void GenerateSkyboxAsync()
         {
-            if (!Application.isEditor && _cubemapComputeShader == null)
-            {
-                SetError("Cubemap Compute Shader is required in a runtime build.");
-                return;
-            }
-
-            if (!SystemInfo.supportsComputeShaders)
-            {
-                SetError("Compute Shaders are not supported on this platform.");
-                return;
-            }
-
             if (string.IsNullOrWhiteSpace(_prompt))
             {
                 SetError("Prompt is empty.");
@@ -451,7 +440,7 @@ namespace BlockadeLabsSDK
             LogVerbose("Waiting for Pusher event: " + pusherChannel + " " + pusherEvent);
             while (!tcs.Task.IsCompleted && !_isCancelled)
             {
-                await Task.Delay(1000);
+                await WaitForSeconds(1);
                 if (_percentageCompleted < 80)
                 {
                     UpdateProgress(_percentageCompleted + 2);
@@ -486,7 +475,7 @@ namespace BlockadeLabsSDK
                     UpdateProgress(_percentageCompleted + 2);
                 }
 
-                await Task.Delay(1000);
+                await WaitForSeconds(1);
                 if (_isCancelled)
                 {
                     break;
@@ -511,6 +500,19 @@ namespace BlockadeLabsSDK
             }
 
             return null;
+        }
+
+        private Task WaitForSeconds(float seconds)
+        {
+            var tcs = new TaskCompletionSource<object>();
+            StartCoroutine(WaitForSecondsEnumerator(tcs, seconds));
+            return tcs.Task;
+        }
+
+        private IEnumerator WaitForSecondsEnumerator(TaskCompletionSource<object> tcs, float seconds)
+        {
+            yield return new WaitForSeconds(seconds);
+            tcs.SetResult(null);
         }
 
         private void DestroyTextures(Texture[] textures)
@@ -634,8 +636,10 @@ namespace BlockadeLabsSDK
 #else
         private async Task DownloadResultAsync(GetImagineResult result)
         {
+            bool useComputeShader = SystemInfo.supportsComputeShaders && _cubemapComputeShader != null;
+
             var tasks = new List<Task<Texture2D>>();
-            tasks.Add(ApiRequests.DownloadTextureAsync(result.request.file_url));
+            tasks.Add(ApiRequests.DownloadTextureAsync(result.request.file_url, !useComputeShader));
             if (!string.IsNullOrWhiteSpace(result.request.depth_map_url))
             {
                 tasks.Add(ApiRequests.DownloadTextureAsync(result.request.depth_map_url));
@@ -649,7 +653,17 @@ namespace BlockadeLabsSDK
                 return;
             }
 
-            var cubemap = PanoramicToCubemap.Convert(textures[0], _cubemapComputeShader, 2048);
+            Cubemap cubemap;
+
+            if (useComputeShader)
+            {
+                cubemap = PanoramicToCubemap.Convert(textures[0], _cubemapComputeShader, 2048);
+            }
+            else
+            {
+                cubemap = PanoramicToCubemap.Convert(textures[0], 2048);
+            }
+
             Destroy(textures[0]);
 
             CreateDepthMaterial(cubemap, textures.Length > 1 ? textures[1] : null, result.request.id);
