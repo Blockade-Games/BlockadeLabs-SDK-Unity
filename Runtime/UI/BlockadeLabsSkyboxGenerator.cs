@@ -566,7 +566,9 @@ namespace BlockadeLabsSDK
             {
                 UpdateProgress(-1);
                 SetState(State.Ready);
+#if UNITY_EDITOR
                 OnSurveyTrigger?.Invoke();
+#endif
             }
         }
 

@@ -194,19 +194,20 @@ namespace BlockadeLabsSDK.Editor
         public static void HorizontalLine(Color color)
         {
             var position = GUILayoutUtility.GetRect(GUIContent.none, GUIStyle.none, GUILayout.ExpandWidth(true));
-            Handles.BeginGUI();
-            Handles.color = color;
-            Handles.DrawLine(new Vector3(position.xMin, position.yMax), new Vector3(position.xMax, position.yMax));
-            Handles.color = Color.white;
-            Handles.EndGUI();
+            Line(color, position.xMin, position.yMax, position.xMax, position.yMax);
         }
 
         public static void VerticalLine(Color color)
         {
             var position = GUILayoutUtility.GetRect(GUIContent.none, GUIStyle.none, GUILayout.ExpandHeight(true));
+            Line(color, position.xMax, position.yMin, position.xMax, position.yMax);
+        }
+
+        public static void Line(Color color, float fromX, float fromY, float toX, float toY)
+        {
             Handles.BeginGUI();
             Handles.color = color;
-            Handles.DrawLine(new Vector3(position.xMax, position.yMin), new Vector3(position.xMax, position.yMax));
+            Handles.DrawLine(new Vector3(fromX, fromY), new Vector3(toX, toY));
             Handles.color = Color.white;
             Handles.EndGUI();
         }
@@ -352,16 +353,26 @@ namespace BlockadeLabsSDK.Editor
             EditorGUI.DrawRect(inner, backgroundColor);
         }
 
+        public static Rect GetRect(int width, int height)
+        {
+            return GUILayoutUtility.GetRect(width, height, GUILayout.ExpandWidth(false), GUILayout.ExpandHeight(false));
+        }
+
         public static bool BoxButton(string label, int width, int height, GUIStyle style, Color backgroundColor, Color borderColor, int borderThickness)
         {
-            var rect = GUILayoutUtility.GetRect(width, height, GUILayout.ExpandWidth(false), GUILayout.ExpandHeight(false));
-            Rect outer = new Rect(rect);
-            Rect inner = new Rect(rect.x + borderThickness,
+            var rect = GetRect(width, height);
+            return BoxButton(label, rect, style, backgroundColor, borderColor, borderThickness);
+        }
+
+        public static bool BoxButton(string label, Rect rect, GUIStyle style, Color backgroundColor, Color borderColor, int borderThickness)
+        {
+            Rect inner = new Rect(
+                rect.x + borderThickness,
                 rect.y + borderThickness,
                 rect.width - borderThickness * 2,
                 rect.height - borderThickness * 2);
 
-            EditorGUI.DrawRect(outer, borderColor);
+            EditorGUI.DrawRect(rect, borderColor);
             EditorGUI.DrawRect(inner, backgroundColor);
 
             EditorGUIUtility.AddCursorRect(rect, MouseCursor.Link);

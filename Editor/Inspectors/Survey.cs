@@ -185,6 +185,7 @@ namespace BlockadeLabsSDK.Editor
 
         private void OnGUI()
         {
+            wantsMouseMove = true;
             InitStyles();
 
             BlockadeGUI.VerticalExpanded(_bgStyle, () =>
@@ -286,10 +287,19 @@ namespace BlockadeLabsSDK.Editor
                     {
                         for (int i = 0; i < _quantitativeColors.Length; i++)
                         {
-                            var borderWidth = selected == i ? 4 : 2;
-                            if (BlockadeGUI.BoxButton((i + 1).ToString(), optionWidth, 50, _optionStyle, BlockadeGUI.HexColor("#313131"), BlockadeGUI.HexColor(_quantitativeColors[i]), borderWidth))
+                            var rect = BlockadeGUI.GetRect(optionWidth, 50);
+                            bool hovered = rect.Contains(Event.current.mousePosition);
+                            var borderWidth = (hovered || selected == i) ? 4 : 2;
+                            if (BlockadeGUI.BoxButton((i + 1).ToString(), rect, _optionStyle, BlockadeGUI.HexColor("#313131"), BlockadeGUI.HexColor(_quantitativeColors[i]), borderWidth))
                             {
                                 selected = i;
+                            }
+
+                            if (hovered && selected != i)
+                            {
+                                float lineLength = 10;
+                                float lineY = rect.center.y + 10;
+                                BlockadeGUI.Line(Color.white, rect.center.x - lineLength / 2, lineY, rect.center.x + lineLength / 2, lineY);
                             }
 
                             if (i < _quantitativeColors.Length - 1)
@@ -324,9 +334,11 @@ namespace BlockadeLabsSDK.Editor
 
                 for (int i = 0; i < options.Count; i++)
                 {
+                    var rect = BlockadeGUI.GetRect(optionWidth, 50);
                     var borderColor = selected == i ? BlockadeGUI.HexColor("#02ee8b") : BlockadeGUI.HexColor("#8F8F8F");
                     var borderWidth = selected == i ? 4 : 2;
-                    if (BlockadeGUI.BoxButton(options[i], optionWidth, 50, _optionStyle, BlockadeGUI.HexColor("#313131"), borderColor, borderWidth))
+
+                    if (BlockadeGUI.BoxButton(options[i], rect, _optionStyle, BlockadeGUI.HexColor("#313131"), borderColor, borderWidth))
                     {
                         selected = i;
                     }
