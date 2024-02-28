@@ -264,11 +264,34 @@ namespace BlockadeLabsSDK.Editor
             DrawAskMeLater(GUILayoutUtility.GetLastRect().center);
         }
 
+        private Rect _lastHoveredRect = new Rect();
+
+        private bool IsHovered(Rect rect)
+        {
+            bool isHovered = rect.Contains(Event.current.mousePosition);
+            bool isSameRect = rect == _lastHoveredRect;
+
+            // We need to repaint if the hovered state changes, otherwise
+            // it might take time to see the updated hover state.
+            if (isHovered && !isSameRect)
+            {
+                _lastHoveredRect = rect;
+                Repaint();
+            }
+            else if (!isHovered && isSameRect)
+            {
+                _lastHoveredRect = new Rect();
+                Repaint();
+            }
+
+            return isHovered;
+        }
+
         private void DrawAskMeLater(Vector2 position)
         {
             var linkContent = new GUIContent("Ask me later");
             var linkRect = BlockadeGUI.GetLinkRect(linkContent, _askLaterButtonStyle, position);
-            var hovered = linkRect.Contains(Event.current.mousePosition);
+            var hovered = IsHovered(linkRect);
             var lineThickness = hovered ? 1 : 0.5f;
 
             if (BlockadeGUI.Link(linkContent, _askLaterButtonStyle, linkRect, lineThickness))
@@ -312,7 +335,7 @@ namespace BlockadeLabsSDK.Editor
             var borderThickness = 4;
             var rect = BlockadeGUI.GetRect(width + borderThickness, 48 + borderThickness);
             var bgColor = canProceed ? BlockadeGUI.HexColor("#02ee8b") : BlockadeGUI.HexColor("#4E4E4E");
-            var hovered = rect.Contains(Event.current.mousePosition);
+            var hovered = IsHovered(rect);
             var borderColor = (canProceed && hovered) ? BlockadeGUI.HexColor("#066446") : Color.clear;
 
             if (BlockadeGUI.BoxButton(content, rect, style, bgColor, borderColor, borderThickness) && canProceed)
@@ -339,7 +362,7 @@ namespace BlockadeLabsSDK.Editor
             var rect = BlockadeGUI.GetRect(211 + borderThickness, 48 + borderThickness);
             var style = _nextButtonStyle;
             var bgColor = BlockadeGUI.HexColor("#02ee8b");
-            var hovered = rect.Contains(Event.current.mousePosition);
+            var hovered = IsHovered(rect);
             var borderColor = hovered ? BlockadeGUI.HexColor("#066446") : Color.clear;
 
             if (BlockadeGUI.BoxButton(content, rect, style, bgColor, borderColor, borderThickness))
@@ -369,7 +392,7 @@ namespace BlockadeLabsSDK.Editor
                         for (int i = 0; i < _quantitativeColors.Length; i++)
                         {
                             var rect = BlockadeGUI.GetRect(optionWidth, 50);
-                            bool hovered = rect.Contains(Event.current.mousePosition);
+                            var hovered = IsHovered(rect);
                             var borderWidth = (hovered || selected == i) ? 4 : 2;
                             var content = new GUIContent((i + 1).ToString());
                             if (BlockadeGUI.BoxButton(content, rect, _optionStyle, BlockadeGUI.HexColor("#313131"), BlockadeGUI.HexColor(_quantitativeColors[i]), borderWidth))
@@ -416,7 +439,7 @@ namespace BlockadeLabsSDK.Editor
                 {
                     var rect = BlockadeGUI.GetRect(optionWidth, 50);
                     var borderColor = selected == i ? BlockadeGUI.HexColor("#02ee8b") : BlockadeGUI.HexColor("#8F8F8F");
-                    bool hovered = rect.Contains(Event.current.mousePosition);
+                    bool hovered = IsHovered(rect);
                     var borderWidth = (hovered || selected == i) ? 4 : 2;
                     var content = new GUIContent(options[i]);
 
