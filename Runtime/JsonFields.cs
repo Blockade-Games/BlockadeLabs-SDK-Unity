@@ -94,6 +94,7 @@ namespace BlockadeLabsSDK
         public List<string> options;
         public string low_hint;
         public string high_hint;
+        public string note;
     }
 
     [Preserve, Serializable]

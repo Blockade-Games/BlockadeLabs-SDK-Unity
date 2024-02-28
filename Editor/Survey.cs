@@ -36,16 +36,18 @@ namespace BlockadeLabsSDK.Editor
         private static PostFeedbacksRequest _response;
         private static int _currentQuestion;
 
+#if BLOCKADE_DEBUG
         [MenuItem("TEST/Feedback Survey")]
         public static void Test()
         {
             ShowSurvey();
         }
+#endif
 
-        private void ShowTestFeedback()
+        private void CreateTestFeedbacks()
         {
             var json = Resources.Load<TextAsset>("feedback-test");
-            _feedbacks = Newtonsoft.Json.JsonConvert.DeserializeObject<GetFeedbacksResponse>(json.text);
+            _feedbacks = Newtonsoft.Json.JsonConvert.DeserializeObject<List<GetFeedbacksResponse>>(json.text)[0];
             InitializeResponse();
             _currentQuestion = 0;
         }
@@ -74,14 +76,18 @@ namespace BlockadeLabsSDK.Editor
 
             try
             {
-                _feedbacks = await ApiRequests.GetFeedbacksAsync(apiKey);
+                var feedbacksList = await ApiRequests.GetFeedbacksAsync(apiKey);
+                if (feedbacksList.Count > 0)
+                {
+                    _feedbacks = feedbacksList[0];
+                }
             }
             catch (Exception)
             {
                 return;
             }
 
-            if (_feedbacks.data?.Count > 0)
+            if (_feedbacks?.data?.Count > 0)
             {
                 InitializeResponse();
                 _currentQuestion = 0;
@@ -128,7 +134,12 @@ namespace BlockadeLabsSDK.Editor
         {
             if (_bgStyle != null) return;
 
-            ShowTestFeedback(); // TODO: Remove
+#if BLOCKADE_DEBUG
+            if (_feedbacks == null)
+            {
+                CreateTestFeedbacks();
+            }
+#endif
 
             BlockadeGUI.StyleFontSize = 14;
             BlockadeGUI.StyleTag = _styleTag;
@@ -157,13 +168,13 @@ namespace BlockadeLabsSDK.Editor
             _previousButtonStyle.alignment = TextAnchor.MiddleCenter;
             _previousButtonStyle.fontStyle = FontStyle.Bold;
 
-            _nextButtonStyle = BlockadeGUI.CreateStyle(Color.black, BlockadeGUI.HexColor("#02ee8b"));
+            _nextButtonStyle = BlockadeGUI.CreateStyle(Color.black);
             _nextButtonStyle.fontSize = 16;
             _nextButtonStyle.stretchWidth = false;
             _nextButtonStyle.alignment = TextAnchor.MiddleCenter;
             _nextButtonStyle.fontStyle = FontStyle.Bold;
 
-            _nextButtonDisabledStyle = BlockadeGUI.CreateStyle(BlockadeGUI.HexColor("#313131"), BlockadeGUI.HexColor("#4E4E4E"));
+            _nextButtonDisabledStyle = BlockadeGUI.CreateStyle(BlockadeGUI.HexColor("#313131"));
             _nextButtonDisabledStyle.fontSize = 16;
             _nextButtonDisabledStyle.stretchWidth = false;
             _nextButtonDisabledStyle.alignment = TextAnchor.MiddleCenter;
@@ -231,7 +242,7 @@ namespace BlockadeLabsSDK.Editor
                     canProceed = !string.IsNullOrWhiteSpace((string)answer.answer);
                     break;
                 case "choice":
-                    answer.answer = DrawChoice((int)answer.answer, data.options, _nextButtonStyle, _nextButtonDisabledStyle);
+                    answer.answer = DrawChoice((int)answer.answer, data.options);
                     canProceed = (int)answer.answer >= 0;
                     break;
             }
@@ -242,33 +253,103 @@ namespace BlockadeLabsSDK.Editor
             {
                 if (_currentQuestion > 0)
                 {
-                    if (BlockadeGUI.BoxButton("PREVIOUS", 130, 48, _previousButtonStyle, BlockadeGUI.HexColor("#313131"), BlockadeGUI.HexColor("#8F8F8F"), 2))
-                    {
-                        _textScroll = Vector2.zero;
-                        _currentQuestion--;
-                    }
+                    DrawPreviousButton();
                 }
 
                 GUILayout.FlexibleSpace();
 
-                var lastQuestion = _currentQuestion == _feedbacks.data.Count - 1;
-                var nextButtonText = lastQuestion ? "FINISH & SUBMIT" : "NEXT";
-                var nextButtonStyle = canProceed ? _nextButtonStyle : _nextButtonDisabledStyle;
-                var nextButtonWidth = lastQuestion ? 182 : 92;
-                if (BlockadeGUI.Button(nextButtonText, nextButtonStyle, nextButtonWidth, 48) && canProceed)
-                {
-                    _textScroll = Vector2.zero;
-                    _currentQuestion++;
-                    if (lastQuestion)
-                    {
-                        Submit();
-                    }
-                }
+                DrawNextButton(canProceed);
             });
 
-            if (BlockadeGUI.Link("Ask me later", _askLaterButtonStyle, GUILayoutUtility.GetLastRect().center))
+            DrawAskMeLater(GUILayoutUtility.GetLastRect().center);
+        }
+
+        private void DrawAskMeLater(Vector2 position)
+        {
+            var linkContent = new GUIContent("Ask me later");
+            var linkRect = BlockadeGUI.GetLinkRect(linkContent, _askLaterButtonStyle, position);
+            var hovered = linkRect.Contains(Event.current.mousePosition);
+            var lineThickness = hovered ? 1 : 0.5f;
+
+            if (BlockadeGUI.Link(linkContent, _askLaterButtonStyle, linkRect, lineThickness))
             {
                 Close();
+            }
+        }
+
+        private void DrawPreviousButton()
+        {
+            var content = new GUIContent("PREVIOUS");
+            var rect = BlockadeGUI.GetRect(130, 48);
+            bool hovered = rect.Contains(Event.current.mousePosition);
+            var borderWidth = hovered ? 4 : 2;
+            if (BlockadeGUI.BoxButton(content, rect, _previousButtonStyle, BlockadeGUI.HexColor("#313131"), BlockadeGUI.HexColor("#8F8F8F"), borderWidth))
+            {
+                _textScroll = Vector2.zero;
+                _currentQuestion--;
+            }
+
+            if (hovered)
+            {
+                DrawUnderline(content, _previousButtonStyle, rect);
+            }
+        }
+
+        private void DrawUnderline(GUIContent content, GUIStyle style, Rect rect)
+        {
+            var size = style.CalcSize(content);
+            var thickness = style.fontStyle == FontStyle.Bold ? 2 : 0.5f;
+            BlockadeGUI.HorizontalLine(rect.center.x - size.x / 2 - 2, rect.center.x + size.x / 2 + 2, rect.center.y + size.y / 2 + 2, style.normal.textColor, thickness);
+        }
+
+        private void DrawNextButton(bool canProceed)
+        {
+            var lastQuestion = _currentQuestion == _feedbacks.data.Count - 1;
+            var text = lastQuestion ? "FINISH & SUBMIT" : "NEXT";
+            var content = new GUIContent(text);
+            var style = canProceed ? _nextButtonStyle : _nextButtonDisabledStyle;
+            var width = lastQuestion ? 182 : 92;
+            var borderThickness = 4;
+            var rect = BlockadeGUI.GetRect(width + borderThickness, 48 + borderThickness);
+            var bgColor = canProceed ? BlockadeGUI.HexColor("#02ee8b") : BlockadeGUI.HexColor("#4E4E4E");
+            var hovered = rect.Contains(Event.current.mousePosition);
+            var borderColor = (canProceed && hovered) ? BlockadeGUI.HexColor("#066446") : Color.clear;
+
+            if (BlockadeGUI.BoxButton(content, rect, style, bgColor, borderColor, borderThickness) && canProceed)
+            {
+                _textScroll = Vector2.zero;
+                _currentQuestion++;
+                if (lastQuestion)
+                {
+                    Submit();
+                }
+            }
+
+            if (hovered && canProceed)
+            {
+                DrawUnderline(content, style, rect);
+            }
+        }
+
+        private void DrawFinishButton()
+        {
+            var text = "BACK TO SKYBOX AI";
+            var content = new GUIContent(text);
+            var borderThickness = 4;
+            var rect = BlockadeGUI.GetRect(211 + borderThickness, 48 + borderThickness);
+            var style = _nextButtonStyle;
+            var bgColor = BlockadeGUI.HexColor("#02ee8b");
+            var hovered = rect.Contains(Event.current.mousePosition);
+            var borderColor = hovered ? BlockadeGUI.HexColor("#066446") : Color.clear;
+
+            if (BlockadeGUI.BoxButton(content, rect, style, bgColor, borderColor, borderThickness))
+            {
+                Close();
+            }
+
+            if (hovered)
+            {
+                DrawUnderline(content, style, rect);
             }
         }
 
@@ -290,16 +371,15 @@ namespace BlockadeLabsSDK.Editor
                             var rect = BlockadeGUI.GetRect(optionWidth, 50);
                             bool hovered = rect.Contains(Event.current.mousePosition);
                             var borderWidth = (hovered || selected == i) ? 4 : 2;
-                            if (BlockadeGUI.BoxButton((i + 1).ToString(), rect, _optionStyle, BlockadeGUI.HexColor("#313131"), BlockadeGUI.HexColor(_quantitativeColors[i]), borderWidth))
+                            var content = new GUIContent((i + 1).ToString());
+                            if (BlockadeGUI.BoxButton(content, rect, _optionStyle, BlockadeGUI.HexColor("#313131"), BlockadeGUI.HexColor(_quantitativeColors[i]), borderWidth))
                             {
                                 selected = i;
                             }
 
                             if (hovered && selected != i)
                             {
-                                float lineLength = 10;
-                                float lineY = rect.center.y + 10;
-                                BlockadeGUI.Line(Color.white, rect.center.x - lineLength / 2, lineY, rect.center.x + lineLength / 2, lineY);
+                                DrawUnderline(content, _optionStyle, rect);
                             }
 
                             if (i < _quantitativeColors.Length - 1)
@@ -323,7 +403,7 @@ namespace BlockadeLabsSDK.Editor
             return selected;
         }
 
-        private int DrawChoice(int selected, List<string> options, GUIStyle style, GUIStyle selectedStyle)
+        private int DrawChoice(int selected, List<string> options)
         {
             BlockadeGUI.HorizontalCentered(() =>
             {
@@ -336,11 +416,18 @@ namespace BlockadeLabsSDK.Editor
                 {
                     var rect = BlockadeGUI.GetRect(optionWidth, 50);
                     var borderColor = selected == i ? BlockadeGUI.HexColor("#02ee8b") : BlockadeGUI.HexColor("#8F8F8F");
-                    var borderWidth = selected == i ? 4 : 2;
+                    bool hovered = rect.Contains(Event.current.mousePosition);
+                    var borderWidth = (hovered || selected == i) ? 4 : 2;
+                    var content = new GUIContent(options[i]);
 
-                    if (BlockadeGUI.BoxButton(options[i], rect, _optionStyle, BlockadeGUI.HexColor("#313131"), borderColor, borderWidth))
+                    if (BlockadeGUI.BoxButton(content, rect, _optionStyle, BlockadeGUI.HexColor("#313131"), borderColor, borderWidth))
                     {
                         selected = i;
+                    }
+
+                    if (hovered && selected != i)
+                    {
+                        DrawUnderline(content, _optionStyle, rect);
                     }
 
                     if (i < options.Count - 1)
@@ -357,7 +444,10 @@ namespace BlockadeLabsSDK.Editor
         {
             try
             {
-                await ApiRequests.PostFeedbackAsync(_response, _apiKey);
+                if (!string.IsNullOrWhiteSpace(_apiKey))
+                {
+                    await ApiRequests.PostFeedbackAsync(_response, _apiKey);
+                }
             }
             catch (Exception)
             {
@@ -389,10 +479,7 @@ namespace BlockadeLabsSDK.Editor
 
             BlockadeGUI.HorizontalCentered(() =>
             {
-                if (BlockadeGUI.Button("BACK TO SKYBOX AI", _nextButtonStyle, 211, 48))
-                {
-                    Close();
-                }
+                DrawFinishButton();
             });
         }
     }

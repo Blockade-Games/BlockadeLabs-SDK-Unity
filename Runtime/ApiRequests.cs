@@ -23,16 +23,15 @@ namespace BlockadeLabsSDK
                 return default(T);
             }
 
-            LogVerbose("Get response: " + request.downloadHandler.text);
             var resp = request.downloadHandler.text;
-            if (resp.StartsWith('['))
-            {
-                resp = resp.Substring(1, resp.Length - 2);
-            }
             if (string.IsNullOrWhiteSpace(resp))
             {
                 LogVerbose("Empty response");
                 throw new System.Exception("Empty response");
+            }
+            else
+            {
+                LogVerbose("Get response: " + resp);
             }
 
             return JsonConvert.DeserializeObject<T>(resp);
@@ -117,9 +116,9 @@ namespace BlockadeLabsSDK
             LogVerbose("Complete download: " + url);
         }
 
-        public static Task<GetFeedbacksResponse> GetFeedbacksAsync(string apiKey)
+        public static Task<List<GetFeedbacksResponse>> GetFeedbacksAsync(string apiKey)
         {
-            return GetAsync<GetFeedbacksResponse>("feedbacks", apiKey);
+            return GetAsync<List<GetFeedbacksResponse>>("feedbacks", apiKey);
         }
 
         public static Task PostFeedbackAsync(PostFeedbacksRequest requestData, string apiKey)
@@ -132,7 +131,7 @@ namespace BlockadeLabsSDK
             return PostAsync<PostFeedbacksResponse>(requestData, "feedbacks", apiKey);
         }
 
-        [System.Diagnostics.Conditional("BLOCKADE_SDK_LOG")]
+        [System.Diagnostics.Conditional("BLOCKADE_DEBUG")]
         private static void LogVerbose(string log)
         {
             Debug.Log(log);
