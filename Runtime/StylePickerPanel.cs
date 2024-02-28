@@ -150,6 +150,12 @@ namespace BlockadeLabsSDK
             _previewText.text = style.description;
             _previewStyle = style;
 
+            if (string.IsNullOrWhiteSpace(style.image_jpg))
+            {
+                _previewImage.sprite = null;
+                return;
+            }
+
             if (_previewCache.TryGetValue(style.image_jpg, out var sprite))
             {
                 _previewImage.sprite = sprite;

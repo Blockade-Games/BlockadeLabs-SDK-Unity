@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEngine;
@@ -116,9 +117,29 @@ namespace BlockadeLabsSDK
             LogVerbose("Complete download: " + url);
         }
 
-        public static Task<List<GetFeedbacksResponse>> GetFeedbacksAsync(string apiKey)
+        public static async Task<List<GetFeedbacksResponse>> GetFeedbacksAsync(string apiKey)
         {
-            return GetAsync<List<GetFeedbacksResponse>>("feedbacks", apiKey);
+            var result = await GetAsync<List<GetFeedbacksResponse>>("feedbacks", apiKey);
+
+            // Parse "note", for example: "1 - Low, 5 - High"
+            var regex = new Regex(@"\d+ - ([\w ]+),\s+\d+ - ([\w ]+)");
+            foreach (var feedback in result)
+            {
+                foreach (var question in feedback.data)
+                {
+                    if (question.note != null)
+                    {
+                        var match = regex.Match(question.note);
+                        if (match.Success)
+                        {
+                            question.low_hint = match.Groups[1].Value;
+                            question.high_hint = match.Groups[2].Value;
+                        }
+                    }
+                }
+            }
+
+            return result;
         }
 
         public static Task PostFeedbackAsync(PostFeedbacksRequest requestData, string apiKey)
