@@ -504,9 +504,13 @@ namespace BlockadeLabsSDK
 
         private Task WaitForSeconds(float seconds)
         {
-            var tcs = new TaskCompletionSource<object>();
-            StartCoroutine(WaitForSecondsEnumerator(tcs, seconds));
-            return tcs.Task;
+            #if UNITY_EDITOR
+                return Task.Delay((int)(seconds * 1000));
+            #else
+                var tcs = new TaskCompletionSource<object>();
+                StartCoroutine(WaitForSecondsEnumerator(tcs, seconds));
+                return tcs.Task;
+            #endif
         }
 
         private IEnumerator WaitForSecondsEnumerator(TaskCompletionSource<object> tcs, float seconds)
