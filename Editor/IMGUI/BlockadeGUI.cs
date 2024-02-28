@@ -165,51 +165,68 @@ namespace BlockadeLabsSDK.Editor
             return GUI.Button(position, labelContent, style);
         }
 
-        public static bool Link(string label, GUIStyle style)
+        public static Rect GetLinkRect(GUIContent labelContent, GUIStyle style, Vector2 position)
+        {
+            var size = style.CalcSize(labelContent);
+            return new Rect(position.x - size.x * 0.5f, position.y - size.y * 0.5f, size.x, size.y);
+        }
+
+        public static bool Link(string label, GUIStyle style, float lineThickness = 0.5f)
         {
             var labelContent = new GUIContent(label);
             var rect = GUILayoutUtility.GetRect(labelContent, style, GUILayout.ExpandWidth(false));
-            return Link(labelContent, style, rect);
+            return Link(labelContent, style, rect, lineThickness);
         }
 
-        public static bool Link(string label, GUIStyle style, Vector2 position)
+        public static bool Link(GUIContent labelContent, GUIStyle style, Rect rect, float lineThickness = 0.5f)
         {
-            var labelContent = new GUIContent(label);
-            var size = style.CalcSize(labelContent);
-            var rect = new Rect(position.x - size.x * 0.5f, position.y - size.y * 0.5f, size.x, size.y);
-            return Link(labelContent, style, rect);
-        }
-
-        public static bool Link(GUIContent labelContent, GUIStyle style, Rect rect)
-        {
-            Handles.BeginGUI();
-            Handles.color = style.normal.textColor;
-            Handles.DrawLine(new Vector3(rect.xMin, rect.yMax), new Vector3(rect.xMax, rect.yMax));
-            Handles.color = Color.white;
-            Handles.EndGUI();
+            // Draw a box for the underline
+            var lineRect = new Rect(rect.xMin, rect.yMax - lineThickness / 2, rect.width, lineThickness);
+            EditorGUI.DrawRect(lineRect, style.normal.textColor);
             EditorGUIUtility.AddCursorRect(rect, MouseCursor.Link);
             return GUI.Button(rect, labelContent, style);
         }
 
-        public static void HorizontalLine(Color color)
+        public static void HorizontalLine()
+        {
+            HorizontalLine(Color.white);
+        }
+
+        public static void HorizontalLine(Color color, float thickness = 0.5f)
         {
             var position = GUILayoutUtility.GetRect(GUIContent.none, GUIStyle.none, GUILayout.ExpandWidth(true));
-            Line(color, position.xMin, position.yMax, position.xMax, position.yMax);
+            HorizontalLine(position.xMin, position.xMax, position.y, color, thickness);
         }
 
-        public static void VerticalLine(Color color)
+        public static void HorizontalLine(float startX, float endX, float y)
+        {
+            HorizontalLine(startX, endX, y, Color.white);
+        }
+
+        public static void HorizontalLine(float startX, float endX, float y, Color color, float thickness = 0.5f)
+        {
+            EditorGUI.DrawRect(new Rect(startX, y - thickness / 2, endX - startX, thickness), color);
+        }
+
+        public static void VerticalLine()
+        {
+            VerticalLine(Color.white);
+        }
+
+        public static void VerticalLine(Color color, float thickness = 0.5f)
         {
             var position = GUILayoutUtility.GetRect(GUIContent.none, GUIStyle.none, GUILayout.ExpandHeight(true));
-            Line(color, position.xMax, position.yMin, position.xMax, position.yMax);
+            VerticalLine(position.x, position.yMin, position.yMax, color, thickness);
         }
 
-        public static void Line(Color color, float fromX, float fromY, float toX, float toY)
+        public static void VerticalLine(float x, float startY, float endY)
         {
-            Handles.BeginGUI();
-            Handles.color = color;
-            Handles.DrawLine(new Vector3(fromX, fromY), new Vector3(toX, toY));
-            Handles.color = Color.white;
-            Handles.EndGUI();
+            VerticalLine(x, startY, endY, Color.white);
+        }
+
+        public static void VerticalLine(float x, float startY, float endY, Color color, float thickness = 0.5f)
+        {
+            EditorGUI.DrawRect(new Rect(x - thickness / 2, startY, thickness, endY - startY), color);
         }
 
         public static int StyleFontSize;
@@ -358,13 +375,7 @@ namespace BlockadeLabsSDK.Editor
             return GUILayoutUtility.GetRect(width, height, GUILayout.ExpandWidth(false), GUILayout.ExpandHeight(false));
         }
 
-        public static bool BoxButton(string label, int width, int height, GUIStyle style, Color backgroundColor, Color borderColor, int borderThickness)
-        {
-            var rect = GetRect(width, height);
-            return BoxButton(label, rect, style, backgroundColor, borderColor, borderThickness);
-        }
-
-        public static bool BoxButton(string label, Rect rect, GUIStyle style, Color backgroundColor, Color borderColor, int borderThickness)
+        public static bool BoxButton(GUIContent content, Rect rect, GUIStyle style, Color backgroundColor, Color borderColor, int borderThickness)
         {
             Rect inner = new Rect(
                 rect.x + borderThickness,
@@ -376,7 +387,7 @@ namespace BlockadeLabsSDK.Editor
             EditorGUI.DrawRect(inner, backgroundColor);
 
             EditorGUIUtility.AddCursorRect(rect, MouseCursor.Link);
-            return GUI.Button(rect, label, style);
+            return GUI.Button(rect, content, style);
         }
     }
 }
