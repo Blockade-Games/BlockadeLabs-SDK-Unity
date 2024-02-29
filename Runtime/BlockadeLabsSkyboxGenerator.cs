@@ -502,14 +502,14 @@ namespace BlockadeLabsSDK
             return null;
         }
 
-        private Task WaitForSeconds(float seconds)
+        private async Task WaitForSeconds(float seconds)
         {
             #if UNITY_EDITOR
-                return Task.Delay((int)(seconds * 1000));
+                await Task.Delay((int)(seconds * 1000)).ConfigureAwait(true);
             #else
                 var tcs = new TaskCompletionSource<object>();
                 StartCoroutine(WaitForSecondsEnumerator(tcs, seconds));
-                return tcs.Task;
+                await tcs.Task;
             #endif
         }
 
