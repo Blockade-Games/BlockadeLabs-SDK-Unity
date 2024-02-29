@@ -68,11 +68,11 @@ namespace BlockadeLabsSDK
             return await GetAsync<GetImagineResult>("imagine/requests/obfuscated-id/" + imagineObfuscatedId, apiKey);
         }
 
-        public static async Task<Texture2D> DownloadTextureAsync(string textureUrl)
+        public static async Task<Texture2D> DownloadTextureAsync(string textureUrl, bool readable = false)
         {
             LogVerbose("Start texture download: " + textureUrl);
             using var request = UnityWebRequest.Get(textureUrl);
-            request.downloadHandler = new DownloadHandlerTexture(false);
+            request.downloadHandler = new DownloadHandlerTexture(readable);
             await request.SendWebRequest();
 
             if (request.result != UnityWebRequest.Result.Success)

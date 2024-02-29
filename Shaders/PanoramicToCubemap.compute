@@ -1,0 +1,51 @@
+#pragma kernel CSMain
+
+Texture2D<float4> _PanoramicTexture;
+int _Size;
+RWTexture2DArray<float4> _CubemapTexture;
+bool _IsLinear;
+
+SamplerState samplerLinearClamp : register(s0);
+
+float3 CalculateDirection(int x, int y, int size, int face)
+{
+    float s = (float)x / (size - 1);
+    float t = (float)y / (size - 1);
+    float u = s * 2 - 1;
+    float v = t * 2 - 1;
+
+    float3 direction;
+
+    switch (face)
+    {
+        // Unity generates cubemaps with -90 deg rotation for some reason, so match it here.
+        case 0: direction = float3(-u, -v, -1); break;
+        case 1: direction = float3(u, -v, 1); break;
+        case 2: direction = float3(v, 1, -u); break;
+        case 3: direction = float3(-v, -1, -u); break;
+        case 4: direction = float3(1, -v, -u); break;
+        case 5: direction = float3(-1, -v, u); break;
+        default: direction = float3(0, 0, 0); break;
+    }
+
+    return normalize(direction);
+}
+
+float2 ConvertDirectionToUV(float3 direction)
+{
+    static const float PI = 3.14159265f;
+    float phi = atan2(direction.z, direction.x);
+    float theta = asin(direction.y);
+    float u = phi / (2.0 * PI) + 0.5f;
+    float v = 0.5f + theta / PI;
+    return float2(1 - u, v);
+}
+
+[numthreads(8, 8, 1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    float3 direction = CalculateDirection(id.x, id.y, _Size, id.z);
+    float2 uv = ConvertDirectionToUV(direction);
+    float4 color = _PanoramicTexture.SampleLevel(samplerLinearClamp, uv, 0);
+    _CubemapTexture[id.xyz] = color;
+}

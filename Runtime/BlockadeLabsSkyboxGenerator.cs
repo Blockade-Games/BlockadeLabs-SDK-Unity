@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Rendering;
+using System.Collections;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -50,6 +51,14 @@ namespace BlockadeLabsSDK
         {
             get => _depthMaterial;
             set => _depthMaterial = value;
+        }
+
+        [SerializeField, Tooltip("Compute shader to use for converting panoramic to cubemap at runtime.")]
+        private ComputeShader _cubemapComputeShader;
+        public ComputeShader CubemapComputeShader
+        {
+            get => _cubemapComputeShader;
+            set => _cubemapComputeShader = value;
         }
 
 #if UNITY_HDRP
@@ -285,12 +294,6 @@ namespace BlockadeLabsSDK
 
         public async void GenerateSkyboxAsync()
         {
-            if (!Application.isEditor)
-            {
-                SetError("Skybox generation is only supported in the editor.");
-                return;
-            }
-
             if (string.IsNullOrWhiteSpace(_prompt))
             {
                 SetError("Prompt is empty.");
@@ -437,7 +440,7 @@ namespace BlockadeLabsSDK
             LogVerbose("Waiting for Pusher event: " + pusherChannel + " " + pusherEvent);
             while (!tcs.Task.IsCompleted && !_isCancelled)
             {
-                await Task.Delay(1000);
+                await WaitForSeconds(1);
                 if (_percentageCompleted < 80)
                 {
                     UpdateProgress(_percentageCompleted + 2);
@@ -472,7 +475,7 @@ namespace BlockadeLabsSDK
                     UpdateProgress(_percentageCompleted + 2);
                 }
 
-                await Task.Delay(1000);
+                await WaitForSeconds(1);
                 if (_isCancelled)
                 {
                     break;
@@ -497,6 +500,23 @@ namespace BlockadeLabsSDK
             }
 
             return null;
+        }
+
+        private async Task WaitForSeconds(float seconds)
+        {
+            #if UNITY_EDITOR
+                await Task.Delay((int)(seconds * 1000)).ConfigureAwait(true);
+            #else
+                var tcs = new TaskCompletionSource<object>();
+                StartCoroutine(WaitForSecondsEnumerator(tcs, seconds));
+                await tcs.Task;
+            #endif
+        }
+
+        private IEnumerator WaitForSecondsEnumerator(TaskCompletionSource<object> tcs, float seconds)
+        {
+            yield return new WaitForSeconds(seconds);
+            tcs.SetResult(null);
         }
 
         private void DestroyTextures(Texture[] textures)
@@ -620,28 +640,41 @@ namespace BlockadeLabsSDK
 #else
         private async Task DownloadResultAsync(GetImagineResult result)
         {
-                await Task.Delay(1);
-                // TODO: Need to download or generate a cubemap to support importing outside of editor.
-//             var tasks = new List<Task<Texture2D>>();
-//             tasks.Add(ApiRequests.DownloadTextureAsync(result.request.file_url));
-//             if (!string.IsNullOrWhiteSpace(result.request.depth_map_url))
-//             {
-//                 tasks.Add(ApiRequests.DownloadTextureAsync(result.request.depth_map_url));
-//             }
+            bool useComputeShader = SystemInfo.supportsComputeShaders && _cubemapComputeShader != null;
 
-//             var textures = await Task.WhenAll(tasks);
+            var tasks = new List<Task<Texture2D>>();
+            tasks.Add(ApiRequests.DownloadTextureAsync(result.request.file_url, !useComputeShader));
+            if (!string.IsNullOrWhiteSpace(result.request.depth_map_url))
+            {
+                tasks.Add(ApiRequests.DownloadTextureAsync(result.request.depth_map_url));
+            }
 
-//             if (_isCancelled)
-//             {
-//                 DestroyTextures(textures);
-//                 return;
-//             }
+            var textures = await Task.WhenAll(tasks);
 
-//             CreateDepthMaterial(textures[0], textures.Length > 1 ? textures[1] : null, result.request.id);
-//             CreateSkyboxMaterial();
-// #if UNITY_HDRP
-//             CreateVolumeProfile(textures[0]);
-// #endif
+            if (_isCancelled)
+            {
+                DestroyTextures(textures);
+                return;
+            }
+
+            Cubemap cubemap;
+
+            if (useComputeShader)
+            {
+                cubemap = PanoramicToCubemap.Convert(textures[0], _cubemapComputeShader, 2048);
+            }
+            else
+            {
+                cubemap = PanoramicToCubemap.Convert(textures[0], 2048);
+            }
+
+            Destroy(textures[0]);
+
+            CreateDepthMaterial(cubemap, textures.Length > 1 ? textures[1] : null, result.request.id);
+            CreateSkyboxMaterial(cubemap);
+#if UNITY_HDRP
+            CreateVolumeProfile(cubemap);
+#endif
         }
 #endif
 

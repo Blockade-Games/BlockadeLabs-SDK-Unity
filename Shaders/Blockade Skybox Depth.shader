@@ -36,12 +36,14 @@ Shader "BlockadeLabsSDK/BlockadeSkyboxDepth"
             {
                 float4 positionOS : POSITION;
                 float2 uv : TEXCOORD0;
+                UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
             struct Varyings
             {
                 float4 positionCS : SV_POSITION;
                 float3 viewDir : TEXCOORD0;
+                UNITY_VERTEX_OUTPUT_STEREO
             };
 
             TEXTURECUBE(_MainTex);
@@ -53,6 +55,8 @@ Shader "BlockadeLabsSDK/BlockadeSkyboxDepth"
             Varyings vert(Attributes IN)
             {
                 Varyings OUT;
+                UNITY_SETUP_INSTANCE_ID(IN);
+                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(OUT);
 
                 float depth = SAMPLE_TEXTURE2D_LOD(_DepthMap, sampler_DepthMap, IN.uv, 0).g;
                 depth = clamp(1.0 / depth + 10 / _DepthScale, 0, _DepthScale);
@@ -60,7 +64,7 @@ Shader "BlockadeLabsSDK/BlockadeSkyboxDepth"
                 IN.positionOS.xyz = normalize(IN.positionOS.xyz) * depth;
                 OUT.positionCS = TransformObjectToHClip(IN.positionOS.xyz);
 
-                // Rotate 90 deg to match depth UV
+                // Unity generates cubemaps with -90 deg rotation for some reason
                 float3 rotated = float3(IN.positionOS.z, IN.positionOS.y, -IN.positionOS.x);
                 OUT.viewDir = normalize(rotated);
                 return OUT;
@@ -97,12 +101,14 @@ Shader "BlockadeLabsSDK/BlockadeSkyboxDepth"
             {
                 float4 vertex : POSITION;
                 float2 uv : TEXCOORD0;
+                UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
             struct v2f
             {
                 float3 viewDir : TEXCOORD0;
                 float4 vertex : SV_POSITION;
+                UNITY_VERTEX_OUTPUT_STEREO
             };
 
             samplerCUBE _MainTex;
@@ -125,7 +131,7 @@ Shader "BlockadeLabsSDK/BlockadeSkyboxDepth"
 
                 o.vertex = UnityObjectToClipPos(v.vertex.xyz);
 
-                // Rotate 90 deg to match depth UV
+                // Unity generates cubemaps with -90 deg rotation for some reason
                 float3 rotated = float3(v.vertex.z, v.vertex.y, -v.vertex.x);
                 o.viewDir = normalize(rotated);
                 return o;
