@@ -57,7 +57,7 @@ namespace BlockadeLabsSDK.Editor
             _response = new PostFeedbacksRequest() {
                 id = _feedbacks.id,
                 version = _feedbacks.version,
-                channel = "website - desktop",
+                channel = "integration - unity",
                 data = _feedbacks.data.Select(d => new FeedbackAnswer()
                 {
                     id = d.id,
@@ -118,7 +118,7 @@ namespace BlockadeLabsSDK.Editor
                 var requestData = new PostFeedbacksSkipRequest()
                 {
                     id = _feedbacks.id,
-                    channel = "website - desktop",
+                    channel = "integration - unity",
                     ask_me_later = true
                 };
 
