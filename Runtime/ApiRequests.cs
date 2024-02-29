@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -139,7 +140,7 @@ namespace BlockadeLabsSDK
                 }
             }
 
-            return result;
+            return result.Where(x => x.data.Count > 0).ToList();
         }
 
         public static Task PostFeedbackAsync(PostFeedbacksRequest requestData, string apiKey)
