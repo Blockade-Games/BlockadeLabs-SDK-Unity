@@ -566,6 +566,7 @@ namespace BlockadeLabsSDK
         {
             var textureUrl = result.request.file_url;
             var depthMapUrl = result.request.depth_map_url;
+            bool haveDepthMap = !string.IsNullOrWhiteSpace(depthMapUrl);
             var prompt = result.request.prompt;
 
             if (string.IsNullOrWhiteSpace(textureUrl))
@@ -588,7 +589,7 @@ namespace BlockadeLabsSDK
 
             var tasks = new List<Task>();
             tasks.Add(ApiRequests.DownloadFileAsync(textureUrl, texturePath));
-            if (!string.IsNullOrWhiteSpace(depthMapUrl))
+            if (haveDepthMap)
             {
                 tasks.Add(ApiRequests.DownloadFileAsync(depthMapUrl, depthTexturePath));
             }
@@ -614,17 +615,20 @@ namespace BlockadeLabsSDK
             colorImporter.textureShape = TextureImporterShape.TextureCube;
             colorImporter.SaveAndReimport();
 
-            var depthImporter = TextureImporter.GetAtPath(depthTexturePath) as TextureImporter;
-            depthImporter.maxTextureSize = 2048;
-            depthImporter.textureCompression = TextureImporterCompression.Uncompressed;
-            depthImporter.mipmapEnabled = false;
-            depthImporter.wrapModeU = TextureWrapMode.Repeat;
-            depthImporter.wrapModeV = TextureWrapMode.Clamp;
-            depthImporter.SaveAndReimport();
+            if (haveDepthMap)
+            {
+                var depthImporter = TextureImporter.GetAtPath(depthTexturePath) as TextureImporter;
+                depthImporter.maxTextureSize = 2048;
+                depthImporter.textureCompression = TextureImporterCompression.Uncompressed;
+                depthImporter.mipmapEnabled = false;
+                depthImporter.wrapModeU = TextureWrapMode.Repeat;
+                depthImporter.wrapModeV = TextureWrapMode.Clamp;
+                depthImporter.SaveAndReimport();
+            }
 
             var colorTexture = AssetDatabase.LoadAssetAtPath<Cubemap>(texturePath);
-            var depthTexture = tasks.Count > 1 ? AssetDatabase.LoadAssetAtPath<Texture>(depthTexturePath) : null;
 
+            var depthTexture = AssetDatabase.LoadAssetAtPath<Texture>(depthTexturePath);
             var depthMaterial = CreateDepthMaterial(colorTexture, depthTexture, result.request.id);
             if (depthMaterial != null)
             {

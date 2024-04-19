@@ -21,7 +21,7 @@ namespace BlockadeLabsSDK
             }
 
             using var request = UnityWebRequest.Get(ApiEndpoint + path + queryString);
-            Debug.Log("Get Request: " + request.url);
+            LogVerbose("Get Request: " + request.url);
             await request.SendWebRequest();
 
             if (request.result != UnityWebRequest.Result.Success)
@@ -108,7 +108,7 @@ namespace BlockadeLabsSDK
             LogVerbose("Complete download: " + url);
         }
 
-        [System.Diagnostics.Conditional("BLOCKADE_SDK_LOG")]
+        [System.Diagnostics.Conditional("BLOCKADE_DEBUG")]
         private static void LogVerbose(string log)
         {
             Debug.Log(log);
