@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
@@ -11,10 +12,16 @@ namespace BlockadeLabsSDK
     {
         private static readonly string ApiEndpoint = "https://backend.blockadelabs.com/api/v1/";
 
-        public static async Task<T> GetAsync<T>(string path, string apiKey)
+        public static async Task<T> GetAsync<T>(string path, string apiKey, params (string, string)[] queryParams)
         {
-            using var request = UnityWebRequest.Get(ApiEndpoint + path + "?api_key=" + apiKey);
-            LogVerbose("Get Request: " + request.url);
+            var queryString = "?api_key=" + apiKey;
+            if (queryParams.Length > 0)
+            {
+                queryString += "&" + string.Join("&", queryParams.Select(kv => kv.Item1 + "=" + kv.Item2));
+            }
+
+            using var request = UnityWebRequest.Get(ApiEndpoint + path + queryString);
+            Debug.Log("Get Request: " + request.url);
             await request.SendWebRequest();
 
             if (request.result != UnityWebRequest.Result.Success)
@@ -27,9 +34,9 @@ namespace BlockadeLabsSDK
             return JsonConvert.DeserializeObject<T>(request.downloadHandler.text);
         }
 
-        public static async Task<List<SkyboxStyleFamily>> GetSkyboxStylesMenuAsync(string apiKey)
+        public static async Task<List<SkyboxStyleFamily>> GetSkyboxStylesMenuAsync(string apiKey, SkyboxAiModelVersion modelVersion)
         {
-            return await GetAsync<List<SkyboxStyleFamily>>("skybox/menu", apiKey);
+            return await GetAsync<List<SkyboxStyleFamily>>("skybox/menu", apiKey, ("model_version", ((int)modelVersion).ToString()));
         }
 
         public static async Task<List<SkyboxStyle>> GetSkyboxStylesAsync(string apiKey)

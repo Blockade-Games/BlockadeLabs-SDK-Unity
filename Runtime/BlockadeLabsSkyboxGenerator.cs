@@ -29,6 +29,22 @@ namespace BlockadeLabsSDK
             set => _apiKey = value;
         }
 
+        [Tooltip("The version of the generation engine to use.")]
+        [SerializeField]
+        private SkyboxAiModelVersion _modelVersion = SkyboxAiModelVersion.Model3;
+        public SkyboxAiModelVersion ModelVersion
+        {
+            get => _modelVersion;
+            set
+            {
+                if (_modelVersion != value)
+                {
+                    _modelVersion = value;
+                    Reload();
+                }
+            }
+        }
+
         [SerializeField, Tooltip("Optional skybox mesh to apply the generated depth material.")]
         private BlockadeLabsSkyboxMesh _skyboxMesh;
         public BlockadeLabsSkyboxMesh SkyboxMesh
@@ -246,11 +262,19 @@ namespace BlockadeLabsSDK
             OnErrorChanged?.Invoke();
         }
 
+        public async void Reload()
+        {
+            if (CheckApiKeyValid())
+            {
+                await LoadAsync();
+            }
+        }
+
         public async Task LoadAsync()
         {
             ClearError();
 
-            _styleFamilies = await ApiRequests.GetSkyboxStylesMenuAsync(_apiKey);
+            _styleFamilies = await ApiRequests.GetSkyboxStylesMenuAsync(_apiKey, _modelVersion);
             if (_styleFamilies == null || _styleFamilies.Count == 0)
             {
                 SetError("Something went wrong. Please recheck you API key.");
@@ -284,10 +308,10 @@ namespace BlockadeLabsSDK
                         items = new List<SkyboxStyle> { style }
                     };
                 }
-
-                _selectedStyleFamilyIndex = Math.Min(_selectedStyleFamilyIndex, _styleFamilies.Count - 1);
-                _selectedStyleIndex = Math.Min(_selectedStyleIndex, _styleFamilies[_selectedStyleFamilyIndex].items.Count - 1);
             }
+
+            _selectedStyleFamilyIndex = Math.Min(_selectedStyleFamilyIndex, _styleFamilies.Count - 1);
+            _selectedStyleIndex = Math.Min(_selectedStyleIndex, _styleFamilies[_selectedStyleFamilyIndex].items.Count - 1);
 
             SetState(State.Ready);
         }

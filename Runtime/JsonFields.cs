@@ -74,4 +74,10 @@ namespace BlockadeLabsSDK
     {
         public List<SkyboxStyle> items;
     }
+
+    public enum SkyboxAiModelVersion
+    {
+        Model2 = 2,
+        Model3 = 3
+    }
 }

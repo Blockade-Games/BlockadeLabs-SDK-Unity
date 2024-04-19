@@ -9,6 +9,7 @@ namespace BlockadeLabsSDK.Editor
     public class BlockadeLabsSkyboxGeneratorEditor : UnityEditor.Editor
     {
         private SerializedProperty _apiKey;
+        private SerializedProperty _modelVersion;
         private SerializedProperty _skyboxMesh;
         private SerializedProperty _skyboxMaterial;
         private SerializedProperty _depthMaterial;
@@ -28,6 +29,7 @@ namespace BlockadeLabsSDK.Editor
         private void OnEnable()
         {
             _apiKey = serializedObject.FindProperty("_apiKey");
+            _modelVersion = serializedObject.FindProperty("_modelVersion");
             _skyboxMesh = serializedObject.FindProperty("_skyboxMesh");
             _skyboxMaterial = serializedObject.FindProperty("_skyboxMaterial");
             _depthMaterial = serializedObject.FindProperty("_depthMaterial");
@@ -60,6 +62,13 @@ namespace BlockadeLabsSDK.Editor
             BlockadeGUI.DisableGroup(generating, () =>
             {
                 DrawApiKey(generator);
+
+                EditorGUI.BeginChangeCheck();
+                EditorGUILayout.PropertyField(_modelVersion);
+                if (EditorGUI.EndChangeCheck() && generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Ready)
+                {
+                    generator.ModelVersion = (SkyboxAiModelVersion)_modelVersion.intValue;
+                }
 
                 EditorGUILayout.PropertyField(_skyboxMesh);
                 EditorGUILayout.PropertyField(_skyboxMaterial);
