@@ -57,27 +57,27 @@ namespace BlockadeLabsSDK
 
         private bool _somethingChangedSinceSave = true;
 
-        public bool CanSave => _meshRenderer && _meshFilter && _meshRenderer.sharedMaterial &&
-            _meshRenderer.sharedMaterial.mainTexture && _meshFilter.sharedMesh && _somethingChangedSinceSave &&
-            _meshRenderer.sharedMaterial.mainTexture.name != "default_skybox_texture";
+        public bool CanSave => MeshRenderer && MeshFilter && MeshRenderer.sharedMaterial &&
+            MeshRenderer.sharedMaterial.mainTexture && MeshFilter.sharedMesh && _somethingChangedSinceSave &&
+            MeshRenderer.sharedMaterial.mainTexture.name != "default_skybox_texture";
 
         public event Action OnPropertyChanged;
 
         public bool HasDepthTexture => _meshRenderer?.sharedMaterial?.GetTexture("_DepthMap") != null;
 
-        private int _remixId;
         private MeshRenderer _meshRenderer;
+        private MeshRenderer MeshRenderer => _meshRenderer ? _meshRenderer : _meshRenderer = GetComponent<MeshRenderer>();
+
         private MeshFilter _meshFilter;
-        private Material _material;
+        private MeshFilter MeshFilter => _meshFilter ? _meshFilter : _meshFilter = GetComponent<MeshFilter>();
+
+        private GetImagineResult _metadata;
         private MaterialPropertyBlock _materialPropertyBlock;
         private Dictionary<int, Mesh> _meshes = new Dictionary<int, Mesh>();
 
-        public void SetSkyboxDepthMaterial(Material material, int remixId)
+        internal void SetMetadata(GetImagineResult metadata)
         {
-            _meshRenderer = GetComponent<MeshRenderer>();
-            _meshRenderer.sharedMaterial = material;
-            _material = material;
-            _remixId = remixId;
+            _metadata = metadata;
             _somethingChangedSinceSave = true;
         }
 
@@ -90,6 +90,11 @@ namespace BlockadeLabsSDK
 
         public int? GetRemixId()
         {
+            return GetMetadata()?.request.id;
+        }
+
+        internal GetImagineResult GetMetadata()
+        {
             if (!TryGetComponent<Renderer>(out var renderer) || renderer.sharedMaterial == null || renderer.sharedMaterial.mainTexture == null)
             {
                 return null;
@@ -97,12 +102,7 @@ namespace BlockadeLabsSDK
 
             if (renderer.sharedMaterial.mainTexture.name == "default_skybox_texture")
             {
-                return 0;
-            }
-
-            if (renderer.sharedMaterial == _material)
-            {
-                return _remixId;
+                new GetImagineResult() { request = new GetImagineRequest() { id = 0 } };
             }
 
 #if UNITY_EDITOR
@@ -112,28 +112,27 @@ namespace BlockadeLabsSDK
             var dataFiles = Directory.GetFiles(folder, "*data.txt", SearchOption.TopDirectoryOnly);
             if (dataFiles.Length > 0)
             {
-                return JsonConvert.DeserializeObject<GetImagineResult>(File.ReadAllText(dataFiles[0])).request.id;
+                return JsonConvert.DeserializeObject<GetImagineResult>(File.ReadAllText(dataFiles[0]));
             }
 #endif
-            return null;
+            return _metadata;
         }
 
         public void UpdateMesh()
         {
-            _meshFilter = GetComponent<MeshFilter>();
             switch (_meshDensity)
             {
                 case MeshDensity.Low:
-                    _meshFilter.sharedMesh = GetOrCreateMesh(64);
+                    MeshFilter.sharedMesh = GetOrCreateMesh(64);
                     break;
                 case MeshDensity.Medium:
-                    _meshFilter.sharedMesh = GetOrCreateMesh(128);
+                    MeshFilter.sharedMesh = GetOrCreateMesh(128);
                     break;
                 case MeshDensity.High:
-                    _meshFilter.sharedMesh = GetOrCreateMesh(256);
+                    MeshFilter.sharedMesh = GetOrCreateMesh(256);
                     break;
                 case MeshDensity.Epic:
-                    _meshFilter.sharedMesh = GetOrCreateMesh(768);
+                    MeshFilter.sharedMesh = GetOrCreateMesh(768);
                     break;
             }
         }
@@ -173,9 +172,8 @@ namespace BlockadeLabsSDK
                 _materialPropertyBlock = new MaterialPropertyBlock();
             }
 
-            _meshRenderer = GetComponent<MeshRenderer>();
             _materialPropertyBlock.SetFloat("_DepthScale", _depthScale);
-            _meshRenderer.SetPropertyBlock(_materialPropertyBlock);
+            MeshRenderer.SetPropertyBlock(_materialPropertyBlock);
         }
 
         public void EditorPropertyChanged()
@@ -194,14 +192,7 @@ namespace BlockadeLabsSDK
                 return;
             }
 
-            var materialPath = AssetDatabase.GetAssetPath(_meshRenderer.sharedMaterial);
-            var folder = materialPath.Substring(0, materialPath.LastIndexOf('/'));
-            var prefabPath = AssetDatabase.GenerateUniqueAssetPath($"{folder}/{name}.prefab");
-            var clone = Instantiate(gameObject);
-            var prefab = PrefabUtility.SaveAsPrefabAsset(clone, prefabPath);
-            DestroyImmediate(clone);
-            AssetUtils.PingAsset(prefab);
-            _somethingChangedSinceSave = false;
+            AssetUtils.SavePrefabNextTo(gameObject, _meshRenderer.sharedMaterial);
             OnPropertyChanged?.Invoke();
 #endif
         }

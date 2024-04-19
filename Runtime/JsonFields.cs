@@ -43,8 +43,11 @@ namespace BlockadeLabsSDK
         public string file_url;
         public string depth_map_url;
         public string status;
-        public string prompt;
         public string error_message;
+        public string prompt;
+        public string negative_text;
+        public int seed;
+        public int skybox_style_id;
     }
 
     [Preserve, Serializable]

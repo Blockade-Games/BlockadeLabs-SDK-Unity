@@ -545,24 +545,6 @@ namespace BlockadeLabsSDK
             tcs.SetResult(null);
         }
 
-        private void DestroyTextures(Texture[] textures)
-        {
-            foreach (var texture in textures)
-            {
-                if (texture)
-                {
-                    if (Application.isPlaying)
-                    {
-                        Destroy(texture);
-                    }
-                    else
-                    {
-                        DestroyImmediate(texture);
-                    }
-                }
-            }
-        }
-
 #if UNITY_EDITOR
         private async Task DownloadResultAsync(GetImagineResult result)
         {
@@ -606,6 +588,11 @@ namespace BlockadeLabsSDK
                 return;
             }
 
+            if (_skyboxMesh)
+            {
+                _skyboxMesh.SetMetadata(result);
+            }
+
             UpdateProgress(99);
 
             AssetDatabase.Refresh();
@@ -631,7 +618,7 @@ namespace BlockadeLabsSDK
             var colorTexture = AssetDatabase.LoadAssetAtPath<Cubemap>(texturePath);
 
             var depthTexture = AssetDatabase.LoadAssetAtPath<Texture>(depthTexturePath);
-            var depthMaterial = CreateDepthMaterial(colorTexture, depthTexture, result.request.id);
+            var depthMaterial = CreateDepthMaterial(colorTexture, depthTexture);
             if (depthMaterial != null)
             {
                 AssetDatabase.CreateAsset(depthMaterial, folderPath + "/" + prefix + " depth material.mat");
@@ -683,7 +670,7 @@ namespace BlockadeLabsSDK
 
             if (_isCancelled)
             {
-                DestroyTextures(textures);
+                ObjectUtils.Destroy(textures);
                 return;
             }
 
@@ -698,9 +685,15 @@ namespace BlockadeLabsSDK
                 cubemap = PanoramicToCubemap.Convert(textures[0], 2048);
             }
 
-            Destroy(textures[0]);
+            ObjectUtils.Destroy(textures[0]);
 
-            CreateDepthMaterial(cubemap, textures.Length > 1 ? textures[1] : null, result.request.id);
+            if (_skyboxMesh)
+            {
+                _skyboxMesh.SetMetadata(result);
+            }
+
+            CreateDepthMaterial(cubemap, textures.Length > 1 ? textures[1] : null);
+
             CreateSkyboxMaterial(cubemap);
 #if UNITY_HDRP
             CreateVolumeProfile(cubemap);
@@ -708,7 +701,7 @@ namespace BlockadeLabsSDK
         }
 #endif
 
-        private Material CreateDepthMaterial(Texture texture, Texture depthTexture, int remixId)
+        private Material CreateDepthMaterial(Texture texture, Texture depthTexture)
         {
             if (_depthMaterial == null)
             {
@@ -722,9 +715,9 @@ namespace BlockadeLabsSDK
                 material.SetTexture("_DepthMap", depthTexture);
             }
 
-            if (_skyboxMesh)
+            if (_skyboxMesh.TryGetComponent<Renderer>(out var renderer))
             {
-                _skyboxMesh.SetSkyboxDepthMaterial(material, remixId);
+                renderer.sharedMaterial = material;
             }
 
             return material;
