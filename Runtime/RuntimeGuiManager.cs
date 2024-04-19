@@ -92,6 +92,14 @@ namespace BlockadeLabsSDK
         }
 
         [SerializeField]
+        private GameObject _modeTooltip;
+        public GameObject ModeTooltip
+        {
+            get { return _modeTooltip; }
+            set { _modeTooltip = value; }
+        }
+
+        [SerializeField]
         private string _createHint;
         public string CreateHint
         {
@@ -795,6 +803,9 @@ namespace BlockadeLabsSDK
 
         private void UpdateHintText()
         {
+            var tooltipText = _modeTooltip.GetComponentInChildren<TextMeshProUGUI>();
+            tooltipText.text = "";
+
             if (_createButton.GetComponent<Hoverable>().IsHovered)
             {
                 _hintText.text = _createHint;
@@ -802,19 +813,46 @@ namespace BlockadeLabsSDK
             else if (_remixButton.GetComponent<Hoverable>().IsHovered)
             {
                 _hintText.text = _remixHint;
+
+                if (_generator.ModelVersion == SkyboxAiModelVersion.Model3)
+                {
+                    tooltipText.text = "Coming soon to SkyboxAI Model 3";
+                    _modeTooltip.transform.SetParent(_remixButton.transform, false);
+                }
             }
             else if (_editButton.GetComponent<Hoverable>().IsHovered)
             {
                 _hintText.text = _editHint;
+
+                if (_generator.ModelVersion == SkyboxAiModelVersion.Model3)
+                {
+                    tooltipText.text = "Coming soon to SkyboxAI Model 3";
+                    _modeTooltip.transform.SetParent(_editButton.transform, false);
+                }
+                else
+                {
+                    tooltipText.text = "Coming soon";
+                    _modeTooltip.transform.SetParent(_editButton.transform, false);
+                }
             }
             else if (_meshCreatorButton.GetComponent<Hoverable>().IsHovered)
             {
                 _hintText.text = _meshCreatorHint;
+
+                if (_generator.ModelVersion == SkyboxAiModelVersion.Model3)
+                {
+                    tooltipText.text = "Coming soon to SkyboxAI Model 3";
+                    _modeTooltip.transform.SetParent(_meshCreatorButton.transform, false);
+                }
             }
             else
             {
                 _hintText.text = (_generator.CanRemix && _generator.Remix) ? _remixHint : _createHint;
             }
+
+            _modeTooltip.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(
+                RectTransform.Axis.Horizontal, tooltipText.GetPreferredValues().x + 20);
+            _modeTooltip.SetActive(tooltipText.text != "");
         }
 
         private void UpdateVersionSelector()
