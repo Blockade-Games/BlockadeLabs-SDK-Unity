@@ -290,7 +290,7 @@ namespace BlockadeLabsSDK
             get { return _helpPopup; }
             set { _helpPopup = value; }
         }
-        
+
         [SerializeField]
         private Toggle _helpDontShowAgainToggle;
         public Toggle HelpDontShowAgainToggle
@@ -347,19 +347,60 @@ namespace BlockadeLabsSDK
             set { _viewButton = value; }
         }
 
+        [SerializeField]
+        private GameObject _versionSelector;
+        public GameObject VersionSelector
+        {
+            get { return _versionSelector; }
+            set { _versionSelector = value; }
+        }
+
+        [SerializeField]
+        private Button _model2Button;
+        public Button Model2Button
+        {
+            get { return _model2Button; }
+            set { _model2Button = value; }
+        }
+
+        [SerializeField]
+        private GameObject _model2Selected;
+        public GameObject Model2Selected
+        {
+            get { return _model2Selected; }
+            set { _model2Selected = value; }
+        }
+
+        [SerializeField]
+        private Button _model3Button;
+        public Button Model3Button
+        {
+            get { return _model3Button; }
+            set { _model3Button = value; }
+        }
+
+        [SerializeField]
+        private GameObject _model3Selected;
+        public GameObject Model3Selected
+        {
+            get { return _model3Selected; }
+            set { _model3Selected = value; }
+        }
+
         private float _createUnderlineOffset;
         private bool _anyStylePicked;
 
         async void Start()
         {
             _helloPopup.SetActive(false);
-            
+
             if (PlayerPrefs.GetInt(_helpDontShowAgainKey) == 0)
             {
                 _helpPopup.SetActive(true);
             }
-            
+
             _viewButton.SetActive(true);
+            _versionSelector.SetActive(true);
             _promptPanel.SetActive(true);
 
             // Initialize values
@@ -378,6 +419,10 @@ namespace BlockadeLabsSDK
 
             _generator.OnErrorChanged += OnErrorChanged;
             OnErrorChanged();
+
+            // Titlebar
+            _model2Button.onClick.AddListener(() => SetModelVersion(SkyboxAiModelVersion.Model2));
+            _model3Button.onClick.AddListener(() => SetModelVersion(SkyboxAiModelVersion.Model3));
 
             // Prompt Panel Controls
             _promptInput.onValueChanged.AddListener(OnPromptInputChanged);
@@ -410,6 +455,7 @@ namespace BlockadeLabsSDK
 
         private void OnGeneratorPropertyChanged()
         {
+            UpdateVersionSelector();
             _promptInput.text = _generator.Prompt;
             _enhancePromptToggle.IsOn = _generator.EnhancePrompt;
             _negativeTextInput.text = _generator.NegativeText;
@@ -506,6 +552,11 @@ namespace BlockadeLabsSDK
             }
         }
 
+        private void SetModelVersion(SkyboxAiModelVersion version)
+        {
+            _generator.ModelVersion = version;
+        }
+
         private void OnPromptInputChanged(string newValue)
         {
             _generator.Prompt = newValue;
@@ -557,7 +608,7 @@ namespace BlockadeLabsSDK
             _generator.Remix = false;
             _remixPopup.SetActive(false);
         }
-        
+
         private void OnHelpDontShowAgainToggle(bool value)
         {
             PlayerPrefs.SetInt(_helpDontShowAgainKey, value ? 1 : 0);
@@ -731,6 +782,17 @@ namespace BlockadeLabsSDK
             {
                 _hintText.text = _generator.Remix ? _remixHint : _createHint;
             }
+        }
+
+        private void UpdateVersionSelector()
+        {
+            bool isModel2 = _generator.ModelVersion == SkyboxAiModelVersion.Model2;
+            bool isModel3 = _generator.ModelVersion == SkyboxAiModelVersion.Model3;
+
+            _model2Button.gameObject.SetActive(!isModel2);
+            _model3Button.gameObject.SetActive(!isModel3);
+            _model2Selected.SetActive(isModel2);
+            _model3Selected.SetActive(isModel3);
         }
 
         private void Update()

@@ -40,6 +40,7 @@ namespace BlockadeLabsSDK
                 if (_modelVersion != value)
                 {
                     _modelVersion = value;
+                    OnPropertyChanged?.Invoke();
                     Reload();
                 }
             }
@@ -313,6 +314,7 @@ namespace BlockadeLabsSDK
             _selectedStyleFamilyIndex = Math.Min(_selectedStyleFamilyIndex, _styleFamilies.Count - 1);
             _selectedStyleIndex = Math.Min(_selectedStyleIndex, _styleFamilies[_selectedStyleFamilyIndex].items.Count - 1);
 
+            OnPropertyChanged?.Invoke();
             SetState(State.Ready);
         }
 
