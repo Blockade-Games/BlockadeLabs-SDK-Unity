@@ -227,7 +227,8 @@ namespace BlockadeLabsSDK
 
         private bool _isCancelled;
 
-        public bool CanRemix => _skyboxMesh?.GetRemixId().HasValue ?? false;
+        public bool CanRemix => _modelVersion == SkyboxAiModelVersion.Model2 &&
+             (_skyboxMesh?.GetRemixId().HasValue ?? false);
 
 #if UNITY_EDITOR
         private int _progressId = 0;
@@ -341,7 +342,7 @@ namespace BlockadeLabsSDK
                 skybox_style_id = SelectedStyle.id,
             };
 
-            if (_remix && !TrySetRemixId(request))
+            if (CanRemix && _remix && !TrySetRemixId(request))
             {
                 return;
             }

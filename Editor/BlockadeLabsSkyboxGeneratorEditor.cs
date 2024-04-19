@@ -147,7 +147,12 @@ namespace BlockadeLabsSDK.Editor
             EditorGUILayout.PropertyField(_prompt, GUILayout.Height(EditorGUIUtility.singleLineHeight * 3));
             EditorStyles.textField.wordWrap = false;
             EditorGUILayout.PropertyField(_negativeText);
-            EditorGUILayout.PropertyField(_remix);
+
+            if (generator.CanRemix)
+            {
+                EditorGUILayout.PropertyField(_remix);
+            }
+
             EditorGUILayout.PropertyField(_seed);
             EditorGUILayout.PropertyField(_enhancePrompt);
         }

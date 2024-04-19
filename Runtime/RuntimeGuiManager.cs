@@ -60,6 +60,14 @@ namespace BlockadeLabsSDK
         }
 
         [SerializeField]
+        private Button _editButton;
+        public Button EditButton
+        {
+            get { return _editButton; }
+            set { _editButton = value; }
+        }
+
+        [SerializeField]
         private Transform _createRemixUnderline;
         public Transform CreateRemixUnderline
         {
@@ -97,6 +105,22 @@ namespace BlockadeLabsSDK
         {
             get { return _remixHint; }
             set { _remixHint = value; }
+        }
+
+        [SerializeField]
+        private string _editHint;
+        public string EditHint
+        {
+            get { return _editHint; }
+            set { _editHint = value; }
+        }
+
+        [SerializeField]
+        private string _meshCreatorHint;
+        public string MeshCreatorHint
+        {
+            get { return _meshCreatorHint; }
+            set { _meshCreatorHint = value; }
         }
 
         [SerializeField]
@@ -436,6 +460,8 @@ namespace BlockadeLabsSDK
             _createUnderlineOffset = _createRemixUnderline.localPosition.x;
             _createButton.GetComponent<Hoverable>().OnHoverChanged.AddListener((_) => UpdateHintText());
             _remixButton.GetComponent<Hoverable>().OnHoverChanged.AddListener((_) => UpdateHintText());
+            _editButton.GetComponent<Hoverable>().OnHoverChanged.AddListener((_) => UpdateHintText());
+            _meshCreatorButton.GetComponent<Hoverable>().OnHoverChanged.AddListener((_) => UpdateHintText());
             _stylePickerPanel.OnStylePicked += OnStylePicked;
             _generateButton.onClick.AddListener(OnGenerateButtonClicked);
             _meshCreatorButton.onClick.AddListener(OnMeshCreatorButtonClicked);
@@ -463,6 +489,7 @@ namespace BlockadeLabsSDK
             UpdateGenerateButton();
             UpdatePromptCharacterLimit();
             UpdateNegativeTextCharacterLimit();
+            UpdateCanRemix();
             _promptCharacterWarning.SetActive(false);
             _negativeTextCharacterWarning.SetActive(false);
 
@@ -519,11 +546,9 @@ namespace BlockadeLabsSDK
         {
             bool canRemix = _generator.CanRemix;
             _remixButton.interactable = _generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Ready && canRemix;
-            _remixButton.GetComponentInChildren<DisabledColor>().Disabled = !_remixButton.interactable;
-
-            if (!canRemix)
+            foreach (var disabledColor in _remixButton.GetComponentsInChildren<DisabledColor>())
             {
-                _generator.Remix = false;
+                disabledColor.Disabled = !_remixButton.interactable;
             }
         }
 
@@ -778,9 +803,17 @@ namespace BlockadeLabsSDK
             {
                 _hintText.text = _remixHint;
             }
+            else if (_editButton.GetComponent<Hoverable>().IsHovered)
+            {
+                _hintText.text = _editHint;
+            }
+            else if (_meshCreatorButton.GetComponent<Hoverable>().IsHovered)
+            {
+                _hintText.text = _meshCreatorHint;
+            }
             else
             {
-                _hintText.text = _generator.Remix ? _remixHint : _createHint;
+                _hintText.text = (_generator.CanRemix && _generator.Remix) ? _remixHint : _createHint;
             }
         }
 
