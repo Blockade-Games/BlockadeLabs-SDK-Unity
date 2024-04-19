@@ -59,6 +59,7 @@ namespace BlockadeLabsSDK
         {
             ShowStyleFamilies();
             _dismissButton.gameObject.SetActive(true);
+            _previewPanelRoot.SetActive(false);
         }
 
         private void OnDisable()
@@ -86,11 +87,14 @@ namespace BlockadeLabsSDK
 
                 if (styleFamily.items.Count == 1)
                 {
-                    styleFamilyItem.Button.onClick.AddListener(() => SelectStyle(styleFamily.items[0]));
+                    var style = styleFamily.items[0];
+                    styleFamilyItem.Button.onClick.AddListener(() => SelectStyle(style));
+                    styleFamilyItem.Hoverable.OnHover.AddListener(() => ShowPreviewAsync(style));
                 }
                 else
                 {
                     styleFamilyItem.Button.onClick.AddListener(() => PickStyleFamily(styleFamily));
+                    styleFamilyItem.Hoverable.OnHover.AddListener(() => ShowPreviewAsync(null));
                 }
             }
         }
@@ -135,7 +139,6 @@ namespace BlockadeLabsSDK
         {
             _styleFamilyContainerRoot.gameObject.SetActive(true);
             _styleContainerRoot.gameObject.SetActive(false);
-            _previewPanelRoot.SetActive(false);
         }
 
         private void SelectStyle(SkyboxStyle style)
@@ -146,13 +149,20 @@ namespace BlockadeLabsSDK
 
         private async void ShowPreviewAsync(SkyboxStyle style)
         {
-            _previewPanelRoot.SetActive(true);
-            _previewText.text = style.description;
+            _previewPanelRoot.SetActive(false);
             _previewStyle = style;
+
+            if (style == null || string.IsNullOrEmpty(style.image_jpg))
+            {
+                return;
+            }
+
+            _previewText.text = style.description;
 
             if (_previewCache.TryGetValue(style.image_jpg, out var sprite))
             {
                 _previewImage.sprite = sprite;
+                _previewPanelRoot.SetActive(true);
                 return;
             }
 
@@ -161,6 +171,11 @@ namespace BlockadeLabsSDK
 
             // Download the image
             var texture = await ApiRequests.DownloadTextureAsync(style.image_jpg);
+            if (texture == null)
+            {
+                return;
+            }
+
             sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector2.zero);
             _previewCache[style.image_jpg] = sprite;
 
@@ -168,6 +183,7 @@ namespace BlockadeLabsSDK
             if (style == _previewStyle)
             {
                 _previewImage.sprite = sprite;
+                _previewPanelRoot.SetActive(true);
             }
         }
     }
