@@ -68,6 +68,7 @@ namespace BlockadeLabsSDK.Editor
                 if (EditorGUI.EndChangeCheck() && generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Ready)
                 {
                     generator.ModelVersion = (SkyboxAiModelVersion)_modelVersion.intValue;
+                    _remix.boolValue = false;
                 }
 
                 EditorGUILayout.PropertyField(_skyboxMesh);
@@ -148,7 +149,7 @@ namespace BlockadeLabsSDK.Editor
             EditorStyles.textField.wordWrap = false;
             EditorGUILayout.PropertyField(_negativeText);
 
-            if (generator.CanRemix)
+            if (generator.ModelVersion == SkyboxAiModelVersion.Model2)
             {
                 EditorGUILayout.PropertyField(_remix);
             }
