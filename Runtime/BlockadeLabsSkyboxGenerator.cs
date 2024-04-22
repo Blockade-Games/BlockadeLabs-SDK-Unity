@@ -569,7 +569,7 @@ namespace BlockadeLabsSDK
             }
 
             var prefix = AssetUtils.CreateValidFilename(prompt);
-            var folderPath = AssetUtils.GetOrCreateFolder(prefix);
+            var folderPath = AssetUtils.CreateUniqueFolder(prefix);
             var texturePath = folderPath + "/" + prefix + " texture.png";
             var depthTexturePath = folderPath + "/" + prefix + " depth texture.png";
             var resultsPath = folderPath + "/" + prefix + " data.txt";
@@ -581,7 +581,7 @@ namespace BlockadeLabsSDK
                 tasks.Add(ApiRequests.DownloadFileAsync(depthMapUrl, depthTexturePath));
             }
 
-            // WriteAllTextAsync not defined in Unity 20202.3
+            // WriteAllTextAsync not defined in Unity 2020.3
             File.WriteAllText(resultsPath, JsonConvert.SerializeObject(result));
 
             await Task.WhenAll(tasks);
