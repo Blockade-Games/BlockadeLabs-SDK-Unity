@@ -307,6 +307,8 @@ namespace BlockadeLabsSDK
                         isNew = style.isNew,
                         experimental = style.experimental,
                         status = style.status,
+                        model = style.model,
+                        model_version = style.model_version,
                         items = new List<SkyboxStyle> { style }
                     };
                 }

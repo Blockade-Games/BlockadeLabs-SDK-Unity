@@ -70,6 +70,8 @@ namespace BlockadeLabsSDK
         public bool isNew;
         public bool experimental;
         public string status;
+        public string model;
+        public string model_version;
     }
 
     [Preserve, Serializable]
