@@ -12,12 +12,13 @@ namespace BlockadeLabsSDK
     {
         private static readonly string ApiEndpoint = "https://backend.blockadelabs.com/api/v1/";
 
-        public static async Task<T> GetAsync<T>(string path, string apiKey, params (string, string)[] queryParams)
+        private static async Task<T> GetAsync<T>(string path, string apiKey, params (string, string)[] queryParams)
         {
-            var queryString = "?api_key=" + apiKey;
+            var queryString = "?api_key=" + UnityWebRequest.EscapeURL(apiKey);
             if (queryParams.Length > 0)
             {
-                queryString += "&" + string.Join("&", queryParams.Select(kv => kv.Item1 + "=" + kv.Item2));
+                queryString += "&" + string.Join("&", queryParams.Select(kv =>
+                    UnityWebRequest.EscapeURL(kv.Item1) + "=" + UnityWebRequest.EscapeURL(kv.Item2)));
             }
 
             using var request = UnityWebRequest.Get(ApiEndpoint + path + queryString);
