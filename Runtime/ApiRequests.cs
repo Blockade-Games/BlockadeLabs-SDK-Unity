@@ -49,7 +49,7 @@ namespace BlockadeLabsSDK
         {
             string requestJson = JsonConvert.SerializeObject(requestData);
             using var request = new UnityWebRequest();
-            request.url = ApiEndpoint + "skybox?api_key=" + apiKey;
+            request.url = ApiEndpoint + "skybox?api_key=" + UnityWebRequest.EscapeURL(apiKey);
             request.method = "POST";
             request.downloadHandler = new DownloadHandlerBuffer();
             request.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(requestJson));
