@@ -588,6 +588,7 @@ namespace BlockadeLabsSDK
         private void SetModelVersion(SkyboxAiModelVersion version)
         {
             _generator.ModelVersion = version;
+            _generator.Remix = false;
         }
 
         private void OnPromptInputChanged(string newValue)
@@ -839,7 +840,7 @@ namespace BlockadeLabsSDK
             {
                 _hintText.text = _meshCreatorHint;
 
-                if (_generator.ModelVersion == SkyboxAiModelVersion.Model3)
+                if (!_skybox.HasDepthTexture && _generator.ModelVersion == SkyboxAiModelVersion.Model3)
                 {
                     tooltipText.text = "Coming soon to SkyboxAI Model 3";
                     _modeTooltip.transform.SetParent(_meshCreatorButton.transform, false);
