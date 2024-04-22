@@ -1,5 +1,12 @@
 ﻿# Changelog
 
+## 1.8.0 - April 22, 2023.
+- Model 3 Preview: Skybox AI has taken a generational leap forward with the release of our Model 3 preview! This overhaul of our generative engine allows you to create stunning worlds and scenes that were previously impossible, with:
+  - Dramatically improved generation quality, including: enhanced realism, extra details, more scene depth and coherency, more prompt adherence
+  - Native 8K resolution (8192x4096 pixels), which is a 77% increase in pixels
+  - 21 new Model 3 styles (try the new one called Playground which is specifically tuned to create your wildest prompt ideas)
+  - Updated Model 3 Prompt Enhancer, tailored for Model 3’s new prompting best practices
+
 ## 1.7.2 - February 7, 2023.
 - Added PanoramicToCubemap, which allows the BlockadeLabsSkyboxGenerator to create cubemaps in a built application.
 - Add XR support with single-pass instanced rendering to the Blockade Depth Skybox shader.

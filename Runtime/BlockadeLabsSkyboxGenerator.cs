@@ -601,7 +601,7 @@ namespace BlockadeLabsSDK
             AssetDatabase.Refresh();
 
             var colorImporter = TextureImporter.GetAtPath(texturePath) as TextureImporter;
-            colorImporter.maxTextureSize = 6144;
+            colorImporter.maxTextureSize = 8192;
             colorImporter.textureCompression = TextureImporterCompression.Uncompressed;
             colorImporter.mipmapEnabled = false;
             colorImporter.textureShape = TextureImporterShape.TextureCube;
