@@ -109,6 +109,18 @@ namespace BlockadeLabsSDK
             LogVerbose("Complete download: " + url);
         }
 
+        public static async Task<SkyboxTip> GetSkyboxTipAsync(string apiKey, SkyboxAiModelVersion modelVersion)
+        {
+            if (modelVersion == SkyboxAiModelVersion.Model3)
+            {
+                return await GetAsync<SkyboxTip>("skybox/get-one-tip-m3", apiKey);
+            }
+            else
+            {
+                return await GetAsync<SkyboxTip>("skybox/get-one-tip", apiKey);
+            }
+        }
+
         [System.Diagnostics.Conditional("BLOCKADE_DEBUG")]
         private static void LogVerbose(string log)
         {
