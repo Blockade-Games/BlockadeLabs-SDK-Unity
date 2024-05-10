@@ -16,6 +16,9 @@ namespace BlockadeLabsSDK
         private GameObject _experimentalSticker;
 
         [SerializeField]
+        private GameObject _model3Sticker;
+
+        [SerializeField]
         private TMP_Text _nameText;
 
         [SerializeField]
@@ -49,6 +52,7 @@ namespace BlockadeLabsSDK
             _newSticker.SetActive(style.isNew);
             _premiumSticker.SetActive(style.premium);
             _experimentalSticker.SetActive(style.experimental);
+            _model3Sticker.SetActive(style.model_version == "3");
             _nextChevron.SetActive(false);
             _selectedIndicator.SetActive(false);
             _style = style;
@@ -60,6 +64,7 @@ namespace BlockadeLabsSDK
             _newSticker.SetActive(styleFamily.isNew);
             _premiumSticker.SetActive(styleFamily.premium);
             _experimentalSticker.SetActive(styleFamily.experimental);
+            _model3Sticker.SetActive(styleFamily.model_version == "3");
             _nextChevron.SetActive(styleFamily.items.Count > 1);
             _selectedIndicator.SetActive(false);
             _style = styleFamily;

@@ -9,3 +9,6 @@
 
 # vscode configuration
 .vscode
+
+# OSX directory attributes
+.DS_Store

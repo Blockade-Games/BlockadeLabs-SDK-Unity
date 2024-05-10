@@ -60,6 +60,14 @@ namespace BlockadeLabsSDK
         }
 
         [SerializeField]
+        private Button _editButton;
+        public Button EditButton
+        {
+            get { return _editButton; }
+            set { _editButton = value; }
+        }
+
+        [SerializeField]
         private Transform _createRemixUnderline;
         public Transform CreateRemixUnderline
         {
@@ -84,6 +92,14 @@ namespace BlockadeLabsSDK
         }
 
         [SerializeField]
+        private GameObject _modeTooltip;
+        public GameObject ModeTooltip
+        {
+            get { return _modeTooltip; }
+            set { _modeTooltip = value; }
+        }
+
+        [SerializeField]
         private string _createHint;
         public string CreateHint
         {
@@ -97,6 +113,22 @@ namespace BlockadeLabsSDK
         {
             get { return _remixHint; }
             set { _remixHint = value; }
+        }
+
+        [SerializeField]
+        private string _editHint;
+        public string EditHint
+        {
+            get { return _editHint; }
+            set { _editHint = value; }
+        }
+
+        [SerializeField]
+        private string _meshCreatorHint;
+        public string MeshCreatorHint
+        {
+            get { return _meshCreatorHint; }
+            set { _meshCreatorHint = value; }
         }
 
         [SerializeField]
@@ -290,7 +322,7 @@ namespace BlockadeLabsSDK
             get { return _helpPopup; }
             set { _helpPopup = value; }
         }
-        
+
         [SerializeField]
         private Toggle _helpDontShowAgainToggle;
         public Toggle HelpDontShowAgainToggle
@@ -347,19 +379,60 @@ namespace BlockadeLabsSDK
             set { _viewButton = value; }
         }
 
+        [SerializeField]
+        private GameObject _versionSelector;
+        public GameObject VersionSelector
+        {
+            get { return _versionSelector; }
+            set { _versionSelector = value; }
+        }
+
+        [SerializeField]
+        private Button _model2Button;
+        public Button Model2Button
+        {
+            get { return _model2Button; }
+            set { _model2Button = value; }
+        }
+
+        [SerializeField]
+        private GameObject _model2Selected;
+        public GameObject Model2Selected
+        {
+            get { return _model2Selected; }
+            set { _model2Selected = value; }
+        }
+
+        [SerializeField]
+        private Button _model3Button;
+        public Button Model3Button
+        {
+            get { return _model3Button; }
+            set { _model3Button = value; }
+        }
+
+        [SerializeField]
+        private GameObject _model3Selected;
+        public GameObject Model3Selected
+        {
+            get { return _model3Selected; }
+            set { _model3Selected = value; }
+        }
+
         private float _createUnderlineOffset;
         private bool _anyStylePicked;
 
         async void Start()
         {
             _helloPopup.SetActive(false);
-            
+
             if (PlayerPrefs.GetInt(_helpDontShowAgainKey) == 0)
             {
                 _helpPopup.SetActive(true);
             }
-            
+
             _viewButton.SetActive(true);
+            _versionSelector.SetActive(true);
             _promptPanel.SetActive(true);
 
             // Initialize values
@@ -379,6 +452,10 @@ namespace BlockadeLabsSDK
             _generator.OnErrorChanged += OnErrorChanged;
             OnErrorChanged();
 
+            // Titlebar
+            _model2Button.onClick.AddListener(() => SetModelVersion(SkyboxAiModelVersion.Model2));
+            _model3Button.onClick.AddListener(() => SetModelVersion(SkyboxAiModelVersion.Model3));
+
             // Prompt Panel Controls
             _promptInput.onValueChanged.AddListener(OnPromptInputChanged);
             _negativeTextToggle.OnValueChanged.AddListener(OnNegativeTextToggleChanged);
@@ -391,6 +468,8 @@ namespace BlockadeLabsSDK
             _createUnderlineOffset = _createRemixUnderline.localPosition.x;
             _createButton.GetComponent<Hoverable>().OnHoverChanged.AddListener((_) => UpdateHintText());
             _remixButton.GetComponent<Hoverable>().OnHoverChanged.AddListener((_) => UpdateHintText());
+            _editButton.GetComponent<Hoverable>().OnHoverChanged.AddListener((_) => UpdateHintText());
+            _meshCreatorButton.GetComponent<Hoverable>().OnHoverChanged.AddListener((_) => UpdateHintText());
             _stylePickerPanel.OnStylePicked += OnStylePicked;
             _generateButton.onClick.AddListener(OnGenerateButtonClicked);
             _meshCreatorButton.onClick.AddListener(OnMeshCreatorButtonClicked);
@@ -410,6 +489,7 @@ namespace BlockadeLabsSDK
 
         private void OnGeneratorPropertyChanged()
         {
+            UpdateVersionSelector();
             _promptInput.text = _generator.Prompt;
             _enhancePromptToggle.IsOn = _generator.EnhancePrompt;
             _negativeTextInput.text = _generator.NegativeText;
@@ -417,6 +497,7 @@ namespace BlockadeLabsSDK
             UpdateGenerateButton();
             UpdatePromptCharacterLimit();
             UpdateNegativeTextCharacterLimit();
+            UpdateCanRemix();
             _promptCharacterWarning.SetActive(false);
             _negativeTextCharacterWarning.SetActive(false);
 
@@ -473,11 +554,9 @@ namespace BlockadeLabsSDK
         {
             bool canRemix = _generator.CanRemix;
             _remixButton.interactable = _generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Ready && canRemix;
-            _remixButton.GetComponentInChildren<DisabledColor>().Disabled = !_remixButton.interactable;
-
-            if (!canRemix)
+            foreach (var disabledColor in _remixButton.GetComponentsInChildren<DisabledColor>())
             {
-                _generator.Remix = false;
+                disabledColor.Disabled = !_remixButton.interactable;
             }
         }
 
@@ -504,6 +583,12 @@ namespace BlockadeLabsSDK
             {
                 _errorPopup.SetActive(false);
             }
+        }
+
+        private void SetModelVersion(SkyboxAiModelVersion version)
+        {
+            _generator.ModelVersion = version;
+            _generator.Remix = false;
         }
 
         private void OnPromptInputChanged(string newValue)
@@ -557,7 +642,7 @@ namespace BlockadeLabsSDK
             _generator.Remix = false;
             _remixPopup.SetActive(false);
         }
-        
+
         private void OnHelpDontShowAgainToggle(bool value)
         {
             PlayerPrefs.SetInt(_helpDontShowAgainKey, value ? 1 : 0);
@@ -719,6 +804,9 @@ namespace BlockadeLabsSDK
 
         private void UpdateHintText()
         {
+            var tooltipText = _modeTooltip.GetComponentInChildren<TextMeshProUGUI>();
+            tooltipText.text = "";
+
             if (_createButton.GetComponent<Hoverable>().IsHovered)
             {
                 _hintText.text = _createHint;
@@ -726,11 +814,57 @@ namespace BlockadeLabsSDK
             else if (_remixButton.GetComponent<Hoverable>().IsHovered)
             {
                 _hintText.text = _remixHint;
+
+                if (_generator.ModelVersion == SkyboxAiModelVersion.Model3)
+                {
+                    tooltipText.text = "Coming soon to SkyboxAI Model 3";
+                    _modeTooltip.transform.SetParent(_remixButton.transform, false);
+                }
+            }
+            else if (_editButton.GetComponent<Hoverable>().IsHovered)
+            {
+                _hintText.text = _editHint;
+
+                if (_generator.ModelVersion == SkyboxAiModelVersion.Model3)
+                {
+                    tooltipText.text = "Coming soon to SkyboxAI Model 3";
+                    _modeTooltip.transform.SetParent(_editButton.transform, false);
+                }
+                else
+                {
+                    tooltipText.text = "Coming soon";
+                    _modeTooltip.transform.SetParent(_editButton.transform, false);
+                }
+            }
+            else if (_meshCreatorButton.GetComponent<Hoverable>().IsHovered)
+            {
+                _hintText.text = _meshCreatorHint;
+
+                if (!_skybox.HasDepthTexture && _generator.ModelVersion == SkyboxAiModelVersion.Model3)
+                {
+                    tooltipText.text = "Coming soon to SkyboxAI Model 3";
+                    _modeTooltip.transform.SetParent(_meshCreatorButton.transform, false);
+                }
             }
             else
             {
-                _hintText.text = _generator.Remix ? _remixHint : _createHint;
+                _hintText.text = (_generator.CanRemix && _generator.Remix) ? _remixHint : _createHint;
             }
+
+            _modeTooltip.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(
+                RectTransform.Axis.Horizontal, tooltipText.GetPreferredValues().x + 20);
+            _modeTooltip.SetActive(tooltipText.text != "");
+        }
+
+        private void UpdateVersionSelector()
+        {
+            bool isModel2 = _generator.ModelVersion == SkyboxAiModelVersion.Model2;
+            bool isModel3 = _generator.ModelVersion == SkyboxAiModelVersion.Model3;
+
+            _model2Button.gameObject.SetActive(!isModel2);
+            _model3Button.gameObject.SetActive(!isModel3);
+            _model2Selected.SetActive(isModel2);
+            _model3Selected.SetActive(isModel3);
         }
 
         private void Update()

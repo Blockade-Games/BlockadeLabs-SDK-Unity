@@ -43,8 +43,11 @@ namespace BlockadeLabsSDK
         public string file_url;
         public string depth_map_url;
         public string status;
-        public string prompt;
         public string error_message;
+        public string prompt;
+        public string negative_text;
+        public int seed;
+        public int skybox_style_id;
     }
 
     [Preserve, Serializable]
@@ -67,11 +70,19 @@ namespace BlockadeLabsSDK
         public bool isNew;
         public bool experimental;
         public string status;
+        public string model;
+        public string model_version;
     }
 
     [Preserve, Serializable]
     public class SkyboxStyleFamily : SkyboxStyle
     {
         public List<SkyboxStyle> items;
+    }
+
+    public enum SkyboxAiModelVersion
+    {
+        Model2 = 2,
+        Model3 = 3
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
@@ -11,9 +12,16 @@ namespace BlockadeLabsSDK
     {
         private static readonly string ApiEndpoint = "https://backend.blockadelabs.com/api/v1/";
 
-        public static async Task<T> GetAsync<T>(string path, string apiKey)
+        private static async Task<T> GetAsync<T>(string path, string apiKey, params (string, string)[] queryParams)
         {
-            using var request = UnityWebRequest.Get(ApiEndpoint + path + "?api_key=" + apiKey);
+            var queryString = "?api_key=" + UnityWebRequest.EscapeURL(apiKey);
+            if (queryParams.Length > 0)
+            {
+                queryString += "&" + string.Join("&", queryParams.Select(kv =>
+                    UnityWebRequest.EscapeURL(kv.Item1) + "=" + UnityWebRequest.EscapeURL(kv.Item2)));
+            }
+
+            using var request = UnityWebRequest.Get(ApiEndpoint + path + queryString);
             LogVerbose("Get Request: " + request.url);
             await request.SendWebRequest();
 
@@ -27,9 +35,9 @@ namespace BlockadeLabsSDK
             return JsonConvert.DeserializeObject<T>(request.downloadHandler.text);
         }
 
-        public static async Task<List<SkyboxStyleFamily>> GetSkyboxStylesMenuAsync(string apiKey)
+        public static async Task<List<SkyboxStyleFamily>> GetSkyboxStylesMenuAsync(string apiKey, SkyboxAiModelVersion modelVersion)
         {
-            return await GetAsync<List<SkyboxStyleFamily>>("skybox/menu", apiKey);
+            return await GetAsync<List<SkyboxStyleFamily>>("skybox/menu", apiKey, ("model_version", ((int)modelVersion).ToString()));
         }
 
         public static async Task<List<SkyboxStyle>> GetSkyboxStylesAsync(string apiKey)
@@ -41,7 +49,7 @@ namespace BlockadeLabsSDK
         {
             string requestJson = JsonConvert.SerializeObject(requestData);
             using var request = new UnityWebRequest();
-            request.url = ApiEndpoint + "skybox?api_key=" + apiKey;
+            request.url = ApiEndpoint + "skybox?api_key=" + UnityWebRequest.EscapeURL(apiKey);
             request.method = "POST";
             request.downloadHandler = new DownloadHandlerBuffer();
             request.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(requestJson));
@@ -101,7 +109,7 @@ namespace BlockadeLabsSDK
             LogVerbose("Complete download: " + url);
         }
 
-        [System.Diagnostics.Conditional("BLOCKADE_SDK_LOG")]
+        [System.Diagnostics.Conditional("BLOCKADE_DEBUG")]
         private static void LogVerbose(string log)
         {
             Debug.Log(log);
