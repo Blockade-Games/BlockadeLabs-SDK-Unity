@@ -811,7 +811,7 @@ namespace BlockadeLabsSDK
             OnPropertyChanged?.Invoke();
         }
 
-        [System.Diagnostics.Conditional("BLOCKADE_SDK_LOG")]
+        [System.Diagnostics.Conditional("BLOCKADE_DEBUG")]
         private static void LogVerbose(string log)
         {
             Debug.Log(log);
