@@ -109,7 +109,7 @@ namespace BlockadeLabsSDK
         internal static void SavePrefabNextTo(GameObject gameObject, Object nextToAsset)
         {
             var folder = AssetUtils.GetFolder(nextToAsset);
-            SaveAsset(gameObject, folder, gameObject.name);
+            SavePrefab(gameObject, folder, gameObject.name);
         }
 
         internal static void SaveAsset(Object asset, string folder, string name)

@@ -371,6 +371,22 @@ namespace BlockadeLabsSDK
             set { _errorText = value; }
         }
 
+        [SerializeField]
+        private GameObject _loadingPopup;
+        public GameObject LoadingPopup
+        {
+            get { return _loadingPopup; }
+            set { _loadingPopup = value; }
+        }
+
+        [SerializeField]
+        private TMP_Text _loadingPopupText;
+        public TMP_Text LoadingPopupText
+        {
+            get { return _loadingPopupText; }
+            set { _loadingPopupText = value; }
+        }
+
         [SerializeField, Header("Titlebar")]
         private GameObject _viewButton;
         public GameObject ViewButton
@@ -436,6 +452,8 @@ namespace BlockadeLabsSDK
             _promptPanel.SetActive(true);
 
             // Initialize values
+            _skybox.BakedMesh = null;
+            _skybox.MeshDensity = MeshDensity.Medium;
             _skybox.DepthScale = _depthScaleSlider.minValue;
             _helpDontShowAgainToggle.isOn = PlayerPrefs.GetInt(_helpDontShowAgainKey) != 0;
 
@@ -445,6 +463,8 @@ namespace BlockadeLabsSDK
 
             _skybox.OnPropertyChanged += OnSkyboxPropertyChanged;
             OnSkyboxPropertyChanged();
+
+            _skybox.OnLoadingChanged += OnSkyboxLoadingChanged;
 
             _generator.OnStateChanged += OnStateChanged;
             OnStateChanged();
@@ -482,7 +502,7 @@ namespace BlockadeLabsSDK
             _highDensityToggle.OnTurnedOn.AddListener(() => _skybox.MeshDensity = MeshDensity.High);
             _epicDensityToggle.OnTurnedOn.AddListener(() => _skybox.MeshDensity = MeshDensity.Epic);
             _depthScaleSlider.onValueChanged.AddListener((_) => _skybox.DepthScale = _depthScaleSlider.value);
-            _savePrefabButton.onClick.AddListener(() => _skybox.SavePrefab());
+            _savePrefabButton.onClick.AddListener(OnSavePrefabButtonClicked);
 
             await _generator.LoadAsync();
         }
@@ -515,10 +535,15 @@ namespace BlockadeLabsSDK
             _highDensityToggle.IsOn = _skybox.MeshDensity == MeshDensity.High;
             _epicDensityToggle.IsOn = _skybox.MeshDensity == MeshDensity.Epic;
             _depthScaleSlider.value = _skybox.DepthScale;
-            _savePrefabButton.interactable = _skybox.CanSave;
 #if !UNITY_EDITOR
             _savePrefabButton.gameObject.SetActive(false);
 #endif
+        }
+
+        private void OnSkyboxLoadingChanged(bool isLoading)
+        {
+            _loadingPopup.SetActive(isLoading);
+            _loadingPopupText.text = _skybox.LoadingText;
         }
 
         private void OnStateChanged()
@@ -741,6 +766,17 @@ namespace BlockadeLabsSDK
             _meshCreator.SetActive(false);
             UpdateSpheres();
             UpdateCamera();
+        }
+
+        private void OnSavePrefabButtonClicked()
+        {
+            if (_skybox.HasDepthTexture)
+            {
+                _skybox.BakeMesh();
+            }
+
+            _skybox.SavePrefab();
+            _skybox.BakedMesh = null;
         }
 
         private void UpdateCamera()

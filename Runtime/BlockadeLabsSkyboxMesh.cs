@@ -3,6 +3,7 @@ using System.IO;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Collections;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -30,7 +31,6 @@ namespace BlockadeLabsSDK
             {
                 if (_meshDensity != value)
                 {
-                    _somethingChangedSinceSave = true;
                     _meshDensity = value;
                     UpdateMesh();
                     OnPropertyChanged?.Invoke();
@@ -47,26 +47,37 @@ namespace BlockadeLabsSDK
             {
                 if (_depthScale != value)
                 {
-                    _somethingChangedSinceSave = true;
                     _depthScale = value;
-                    UpdateDepthScale();
-                    OnPropertyChanged?.Invoke();
+                    OnMaterialPropertyChanged();
                 }
             }
         }
 
-        private bool _somethingChangedSinceSave = true;
-
-        public bool CanSave => MeshRenderer && MeshFilter && MeshRenderer.sharedMaterial &&
-            MeshRenderer.sharedMaterial.mainTexture && MeshFilter.sharedMesh && _somethingChangedSinceSave &&
-            MeshRenderer.sharedMaterial.mainTexture.name != "default_skybox_texture";
+        [SerializeField]
+        private Mesh _bakedMesh;
+        public Mesh BakedMesh
+        {
+            get => _bakedMesh;
+            set
+            {
+                if (_bakedMesh != value)
+                {
+                    _bakedMesh = value;
+                    UpdateMesh();
+                    OnMaterialPropertyChanged();
+                }
+            }
+        }
 
         public event Action OnPropertyChanged;
+        public event Action<bool> OnLoadingChanged;
 
-        public bool HasDepthTexture => _meshRenderer?.sharedMaterial?.GetTexture("_DepthMap") != null;
+        public bool HasDepthTexture => _meshRenderer &&
+            _meshRenderer.sharedMaterial &&
+            _meshRenderer.sharedMaterial.GetTexture("_DepthMap");
 
         private MeshRenderer _meshRenderer;
-        private MeshRenderer MeshRenderer => _meshRenderer ? _meshRenderer : _meshRenderer = GetComponent<MeshRenderer>();
+        public MeshRenderer MeshRenderer => _meshRenderer ? _meshRenderer : _meshRenderer = GetComponent<MeshRenderer>();
 
         private MeshFilter _meshFilter;
         private MeshFilter MeshFilter => _meshFilter ? _meshFilter : _meshFilter = GetComponent<MeshFilter>();
@@ -75,17 +86,27 @@ namespace BlockadeLabsSDK
         private MaterialPropertyBlock _materialPropertyBlock;
         private Dictionary<int, Mesh> _meshes = new Dictionary<int, Mesh>();
 
+        private string _loadingText;
+        public string LoadingText => _loadingText;
+
         internal void SetMetadata(GetImagineResult metadata)
         {
             _metadata = metadata;
-            _somethingChangedSinceSave = true;
         }
 
         private void OnEnable()
         {
-            _meshDensity = MeshDensity.Medium;
             UpdateMesh();
-            UpdateDepthScale();
+            UpdateMaterialProperties();
+        }
+
+        private void OnDisable()
+        {
+            if (MeshRenderer != null && _materialPropertyBlock != null)
+            {
+                MeshRenderer.SetPropertyBlock(null);
+                _materialPropertyBlock = null;
+            }
         }
 
         public int? GetRemixId()
@@ -118,37 +139,51 @@ namespace BlockadeLabsSDK
             return _metadata;
         }
 
-        public void UpdateMesh()
+        private void UpdateMesh()
         {
+            if (BakedMesh != null)
+            {
+                MeshFilter.sharedMesh = BakedMesh;
+                return;
+            }
+
+            int subdivisions = 0;
+
             switch (_meshDensity)
             {
                 case MeshDensity.Low:
-                    MeshFilter.sharedMesh = GetOrCreateMesh(64);
+                    subdivisions = 64;
                     break;
                 case MeshDensity.Medium:
-                    MeshFilter.sharedMesh = GetOrCreateMesh(128);
+                    subdivisions = 128;
                     break;
                 case MeshDensity.High:
-                    MeshFilter.sharedMesh = GetOrCreateMesh(256);
+                    subdivisions = 256;
                     break;
                 case MeshDensity.Epic:
-                    MeshFilter.sharedMesh = GetOrCreateMesh(768);
+                    subdivisions = 768;
                     break;
             }
-        }
 
-        private Mesh GetOrCreateMesh(int subdivisions)
-        {
             if (_meshes.TryGetValue(subdivisions, out var mesh))
             {
-                return mesh;
+                MeshFilter.sharedMesh = mesh;
+                return;
             }
 
+            StartLoading("Generating mesh...", () =>
+            {
+                MeshFilter.sharedMesh = CreateMesh(subdivisions);
+            });
+        }
+
+        private Mesh CreateMesh(int subdivisions)
+        {
 #if UNITY_EDITOR
             // Look for a mesh in the project
             var folder = AssetUtils.GetOrCreateFolder("Meshes");
             var meshPath = $"{folder}/Tetrahedron_{subdivisions}.asset";
-            mesh = AssetDatabase.LoadAssetAtPath<Mesh>(meshPath);
+            var mesh = AssetDatabase.LoadAssetAtPath<Mesh>(meshPath);
             if (mesh != null)
             {
                 _meshes.Add(subdivisions, mesh);
@@ -157,6 +192,7 @@ namespace BlockadeLabsSDK
 #endif
 
             mesh = TetrahedronMesh.GenerateMesh(subdivisions);
+
 #if UNITY_EDITOR
             AssetDatabase.CreateAsset(mesh, meshPath);
             AssetDatabase.SaveAssets();
@@ -165,7 +201,7 @@ namespace BlockadeLabsSDK
             return mesh;
         }
 
-        public void UpdateDepthScale()
+        public void UpdateMaterialProperties()
         {
             if (_materialPropertyBlock == null)
             {
@@ -179,22 +215,66 @@ namespace BlockadeLabsSDK
         public void EditorPropertyChanged()
         {
             UpdateMesh();
-            UpdateDepthScale();
-            _somethingChangedSinceSave = true;
+            OnMaterialPropertyChanged();
+        }
+
+        private void OnMaterialPropertyChanged()
+        {
+            UpdateMaterialProperties();
             OnPropertyChanged?.Invoke();
         }
 
         public void SavePrefab()
         {
 #if UNITY_EDITOR
-            if (!CanSave)
-            {
-                return;
-            }
-
             AssetUtils.SavePrefabNextTo(gameObject, _meshRenderer.sharedMaterial);
             OnPropertyChanged?.Invoke();
 #endif
+        }
+
+        public void BakeMesh()
+        {
+            BakedMesh = null;
+            StartLoading("Baking depth to mesh...", () =>
+            {
+                var depthMap = _meshRenderer.sharedMaterial.GetTexture("_DepthMap") as Texture2D;
+                var depthScale = _materialPropertyBlock.GetFloat("_DepthScale");
+                BakedMesh = BakeDepth.Bake(_meshFilter.sharedMesh, depthMap, depthScale);
+
+#if UNITY_EDITOR
+                AssetUtils.SaveAssetNextTo(_bakedMesh, _meshRenderer.sharedMaterial);
+#endif
+            });
+        }
+
+        private void StartLoading(string text, Action action)
+        {
+            if (Application.isPlaying)
+            {
+                StartCoroutine(CoStartLoading(text, action));
+            }
+            else
+            {
+                action();
+            }
+        }
+
+        private IEnumerator CoStartLoading(string text, Action action)
+        {
+            _loadingText = text;
+            OnLoadingChanged?.Invoke(true);
+
+            yield return null;
+
+            try
+            {
+                action();
+            }
+            finally
+            {
+                _loadingText = null;
+                OnLoadingChanged?.Invoke(false);
+            }
         }
     }
 }
