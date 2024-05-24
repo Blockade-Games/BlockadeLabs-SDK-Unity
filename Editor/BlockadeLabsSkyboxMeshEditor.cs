@@ -18,8 +18,6 @@ namespace BlockadeLabsSDK.Editor
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
-            EditorGUILayout.PropertyField(_meshDensity);
-            EditorGUILayout.PropertyField(_depthScale);
 
             var skybox = (BlockadeLabsSkyboxMesh)target;
 
@@ -28,8 +26,30 @@ namespace BlockadeLabsSDK.Editor
                 SceneView.lastActiveSceneView.AlignViewToObject(skybox.transform);
             }
 
-            BlockadeGUI.DisableGroup(!skybox.CanSave, () =>
+            GUILayout.Space(16);
+
+            BlockadeGUI.DisableGroup(skybox.BakedMesh, () =>
             {
+                EditorGUILayout.PropertyField(_meshDensity);
+                EditorGUILayout.PropertyField(_depthScale);
+            });
+
+            GUILayout.Space(16);
+
+            BlockadeGUI.Horizontal(() =>
+            {
+                BlockadeGUI.DisableGroup(!skybox.HasDepthTexture, () =>
+                {
+                    if (!skybox.BakedMesh && GUILayout.Button("Bake Depth to Mesh"))
+                    {
+                        skybox.BakeMesh();
+                    }
+                    else if (skybox.BakedMesh && GUILayout.Button("Unbake Depth from Mesh"))
+                    {
+                        skybox.BakedMesh = null;
+                    }
+                });
+
                 if (GUILayout.Button("Save Prefab"))
                 {
                     skybox.SavePrefab();
