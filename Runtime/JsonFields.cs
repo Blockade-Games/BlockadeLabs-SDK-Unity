@@ -85,4 +85,10 @@ namespace BlockadeLabsSDK
         Model2 = 2,
         Model3 = 3
     }
+
+    [Preserve, Serializable]
+    public class SkyboxTip
+    {
+        public string tip;
+    }
 }
