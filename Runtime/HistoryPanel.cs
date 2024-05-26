@@ -44,7 +44,7 @@ namespace BlockadeLabsSDK
 
             try
             {
-                historyItems = await ApiRequests.GetSkyboxHistoryAsync(RuntimeGuiManager.Generator.ApiKey, searchParameters);
+                historyItems = await ApiRequests.GetSkyboxHistoryAsync(searchParameters);
             }
             catch (Exception e)
             {

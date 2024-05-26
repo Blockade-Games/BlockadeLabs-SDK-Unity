@@ -12,14 +12,10 @@ namespace BlockadeLabsSDK
     {
         private static readonly string ApiEndpoint = "https://backend.blockadelabs.com/api/v1/";
 
-        private static async Task<T> GetAsync<T>(string path, string apiKey, Dictionary<string, string> queryParams = null)
-        {
-            if (!string.IsNullOrWhiteSpace(apiKey))
-            {
-                queryParams ??= new();
-                queryParams.Add("api_key", UnityWebRequest.EscapeURL(apiKey));
-            }
+        public static string ApiKey { get; set; }
 
+        private static async Task<T> GetAsync<T>(string path, Dictionary<string, string> queryParams = null)
+        {
             var queryString = string.Empty;
 
             if (queryParams != null && queryParams.Count > 0)
@@ -28,6 +24,7 @@ namespace BlockadeLabsSDK
             }
 
             using var request = UnityWebRequest.Get(ApiEndpoint + path + queryString);
+            request.SetRequestHeader("x-api-key", ApiKey);
             LogVerbose("Get Request: " + request.url);
             await request.SendWebRequest();
 
@@ -41,26 +38,27 @@ namespace BlockadeLabsSDK
             return JsonConvert.DeserializeObject<T>(request.downloadHandler.text);
         }
 
-        public static async Task<List<SkyboxStyleFamily>> GetSkyboxStylesMenuAsync(string apiKey, SkyboxAiModelVersion modelVersion)
+        public static async Task<List<SkyboxStyleFamily>> GetSkyboxStylesMenuAsync(SkyboxAiModelVersion modelVersion)
         {
             var modelQuery = new Dictionary<string, string> { { "model_version", ((int)modelVersion).ToString() } };
-            return await GetAsync<List<SkyboxStyleFamily>>("skybox/menu", apiKey, modelQuery);
+            return await GetAsync<List<SkyboxStyleFamily>>("skybox/menu", modelQuery);
         }
 
-        public static async Task<List<SkyboxStyle>> GetSkyboxStylesAsync(string apiKey)
+        public static async Task<List<SkyboxStyle>> GetSkyboxStylesAsync()
         {
-            return await GetAsync<List<SkyboxStyle>>("skybox/styles", apiKey);
+            return await GetAsync<List<SkyboxStyle>>("skybox/styles");
         }
 
-        public static async Task<CreateSkyboxResult> GenerateSkyboxAsync(CreateSkyboxRequest requestData, string apiKey)
+        public static async Task<CreateSkyboxResult> GenerateSkyboxAsync(CreateSkyboxRequest requestData)
         {
             string requestJson = JsonConvert.SerializeObject(requestData);
             using var request = new UnityWebRequest();
-            request.url = ApiEndpoint + "skybox?api_key=" + UnityWebRequest.EscapeURL(apiKey);
+            request.url = ApiEndpoint + "skybox";
             request.method = "POST";
             request.downloadHandler = new DownloadHandlerBuffer();
             request.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(requestJson));
             request.timeout = 60;
+            request.SetRequestHeader("x-api-key", UnityWebRequest.EscapeURL(ApiKey));
             request.SetRequestHeader("Accept", "application/json");
             request.SetRequestHeader("Content-Type", "application/json; charset=UTF-8");
 
@@ -78,9 +76,9 @@ namespace BlockadeLabsSDK
             return JsonConvert.DeserializeObject<CreateSkyboxResult>(request.downloadHandler.text);
         }
 
-        public static async Task<GetImagineResult> GetRequestStatusAsync(string imagineObfuscatedId, string apiKey)
+        public static async Task<GetImagineResult> GetRequestStatusAsync(string imagineObfuscatedId)
         {
-            return await GetAsync<GetImagineResult>("imagine/requests/obfuscated-id/" + imagineObfuscatedId, apiKey);
+            return await GetAsync<GetImagineResult>("imagine/requests/obfuscated-id/" + imagineObfuscatedId);
         }
 
         public static async Task<Texture2D> DownloadTextureAsync(string textureUrl, bool readable = false)
@@ -120,15 +118,15 @@ namespace BlockadeLabsSDK
         {
             if (modelVersion == SkyboxAiModelVersion.Model3)
             {
-                return await GetAsync<SkyboxTip>("skybox/get-one-tip-m3", apiKey);
+                return await GetAsync<SkyboxTip>("skybox/get-one-tip-m3");
             }
             else
             {
-                return await GetAsync<SkyboxTip>("skybox/get-one-tip", apiKey);
+                return await GetAsync<SkyboxTip>("skybox/get-one-tip");
             }
         }
 
-        public static async Task<GetHistoryResult> GetSkyboxHistoryAsync(string apiKey, HistorySearchQueryParameters searchQueryParams = null)
+        public static async Task<GetHistoryResult> GetSkyboxHistoryAsync(HistorySearchQueryParameters searchQueryParams = null)
         {
             Dictionary<string, string> searchQuery = null;
 
@@ -153,7 +151,7 @@ namespace BlockadeLabsSDK
 
                 if (!string.IsNullOrWhiteSpace(searchQueryParams.Order))
                 {
-                    searchQuery.Add("order:", searchQueryParams.Order.ToUpper());
+                    searchQuery.Add("order", searchQueryParams.Order.ToUpper());
                 }
 
                 if (searchQueryParams.ImagineId.HasValue)
@@ -173,7 +171,7 @@ namespace BlockadeLabsSDK
 
                 if (searchQueryParams.FavoritesOnly.HasValue)
                 {
-                    searchQuery.Add("favoritesOnly", searchQueryParams.FavoritesOnly.Value.ToString());
+                    searchQuery.Add("favoritesOnly", searchQueryParams.FavoritesOnly.Value.ToString().ToLower());
                 }
 
                 if (!string.IsNullOrWhiteSpace(searchQueryParams.GeneratedBy))
@@ -187,12 +185,12 @@ namespace BlockadeLabsSDK
                 }
             }
 
-            return await GetAsync<GetHistoryResult>("imagine/myRequests", apiKey, searchQuery);
+            return await GetAsync<GetHistoryResult>("imagine/myRequests", searchQuery);
         }
 
         public static async Task<GetImagineResult> ToggleFavorite(int imagineId)
         {
-            return await GetAsync<GetImagineResult>("toggleFavorite", null, new Dictionary<string, string> { { "id", imagineId.ToString() } });
+            return await GetAsync<GetImagineResult>("toggleFavorite", new Dictionary<string, string> { { "id", imagineId.ToString() } });
         }
 
         [System.Diagnostics.Conditional("BLOCKADE_DEBUG")]
