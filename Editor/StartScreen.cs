@@ -257,7 +257,7 @@ namespace BlockadeLabsSDK.Editor
                     EditorGUILayout.Space();
                 }
                 else
-                 {
+                {
                     Bullet(line);
                     EditorGUILayout.Space();
                 }

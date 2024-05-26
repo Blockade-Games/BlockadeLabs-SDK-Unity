@@ -1,24 +1,30 @@
-﻿using System.Collections.Generic;
+﻿using Newtonsoft.Json;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.Networking;
 
 namespace BlockadeLabsSDK
 {
-    internal class ApiRequests
+    internal static class ApiRequests
     {
         private static readonly string ApiEndpoint = "https://backend.blockadelabs.com/api/v1/";
 
-        private static async Task<T> GetAsync<T>(string path, string apiKey, params (string, string)[] queryParams)
+        private static async Task<T> GetAsync<T>(string path, string apiKey, Dictionary<string, string> queryParams = null)
         {
-            var queryString = "?api_key=" + UnityWebRequest.EscapeURL(apiKey);
-            if (queryParams.Length > 0)
+            if (!string.IsNullOrWhiteSpace(apiKey))
             {
-                queryString += "&" + string.Join("&", queryParams.Select(kv =>
-                    UnityWebRequest.EscapeURL(kv.Item1) + "=" + UnityWebRequest.EscapeURL(kv.Item2)));
+                queryParams ??= new();
+                queryParams.Add("api_key", UnityWebRequest.EscapeURL(apiKey));
+            }
+
+            var queryString = string.Empty;
+
+            if (queryParams != null && queryParams.Count > 0)
+            {
+                queryString = $"?{string.Join("&", queryParams.Select(parameter => $"{UnityWebRequest.EscapeURL(parameter.Key)}={UnityWebRequest.EscapeURL(parameter.Value)}"))}";
             }
 
             using var request = UnityWebRequest.Get(ApiEndpoint + path + queryString);
@@ -27,8 +33,8 @@ namespace BlockadeLabsSDK
 
             if (request.result != UnityWebRequest.Result.Success)
             {
-                Debug.Log("Get error: " + request.error);
-                return default(T);
+                Debug.LogError("Get error: " + request.error);
+                return default;
             }
 
             LogVerbose("Get response: " + request.downloadHandler.text);
@@ -37,7 +43,8 @@ namespace BlockadeLabsSDK
 
         public static async Task<List<SkyboxStyleFamily>> GetSkyboxStylesMenuAsync(string apiKey, SkyboxAiModelVersion modelVersion)
         {
-            return await GetAsync<List<SkyboxStyleFamily>>("skybox/menu", apiKey, ("model_version", ((int)modelVersion).ToString()));
+            var modelQuery = new Dictionary<string, string> { { "model_version", ((int)modelVersion).ToString() } };
+            return await GetAsync<List<SkyboxStyleFamily>>("skybox/menu", apiKey, modelQuery);
         }
 
         public static async Task<List<SkyboxStyle>> GetSkyboxStylesAsync(string apiKey)
@@ -90,7 +97,7 @@ namespace BlockadeLabsSDK
             }
 
             LogVerbose("Complete texture download: " + textureUrl);
-            var texture = (request.downloadHandler as DownloadHandlerTexture).texture;
+            var texture = ((DownloadHandlerTexture)request.downloadHandler).texture;
             return texture;
         }
 
@@ -119,6 +126,73 @@ namespace BlockadeLabsSDK
             {
                 return await GetAsync<SkyboxTip>("skybox/get-one-tip", apiKey);
             }
+        }
+
+        public static async Task<GetHistoryResult> GetSkyboxHistoryAsync(string apiKey, HistorySearchQueryParameters searchQueryParams = null)
+        {
+            Dictionary<string, string> searchQuery = null;
+
+            if (searchQueryParams != null)
+            {
+                searchQuery = new();
+
+                if (!string.IsNullOrWhiteSpace(searchQueryParams.StatusFilter))
+                {
+                    searchQuery.Add("status", searchQueryParams.StatusFilter.ToLower());
+                }
+
+                if (searchQueryParams.Limit.HasValue)
+                {
+                    searchQuery.Add("limit", searchQueryParams.Limit.ToString());
+                }
+
+                if (searchQueryParams.Offset.HasValue)
+                {
+                    searchQuery.Add("offset", searchQueryParams.Offset.ToString());
+                }
+
+                if (!string.IsNullOrWhiteSpace(searchQueryParams.Order))
+                {
+                    searchQuery.Add("order:", searchQueryParams.Order.ToUpper());
+                }
+
+                if (searchQueryParams.ImagineId.HasValue)
+                {
+                    searchQuery.Add("imagine_id", searchQueryParams.ImagineId.ToString());
+                }
+
+                if (!string.IsNullOrWhiteSpace(searchQueryParams.QueryFilter))
+                {
+                    searchQuery.Add("query", UnityWebRequest.EscapeURL(searchQueryParams.QueryFilter));
+                }
+
+                if (!string.IsNullOrWhiteSpace(searchQueryParams.GeneratorFilter))
+                {
+                    searchQuery.Add("generator", UnityWebRequest.EscapeURL(searchQueryParams.GeneratorFilter));
+                }
+
+                if (searchQueryParams.FavoritesOnly.HasValue)
+                {
+                    searchQuery.Add("favoritesOnly", searchQueryParams.FavoritesOnly.Value.ToString());
+                }
+
+                if (!string.IsNullOrWhiteSpace(searchQueryParams.GeneratedBy))
+                {
+                    searchQuery.Add("apiKeyId", searchQueryParams.GeneratedBy);
+                }
+
+                if (!string.IsNullOrWhiteSpace(searchQueryParams.SkyboxStyleId))
+                {
+                    searchQuery.Add("skyboxStyleId", searchQueryParams.SkyboxStyleId);
+                }
+            }
+
+            return await GetAsync<GetHistoryResult>("imagine/myRequests", apiKey, searchQuery);
+        }
+
+        public static async Task<GetImagineResult> ToggleFavorite(int imagineId)
+        {
+            return await GetAsync<GetImagineResult>("toggleFavorite", null, new Dictionary<string, string> { { "id", imagineId.ToString() } });
         }
 
         [System.Diagnostics.Conditional("BLOCKADE_DEBUG")]
