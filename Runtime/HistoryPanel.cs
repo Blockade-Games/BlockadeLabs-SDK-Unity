@@ -32,9 +32,9 @@ namespace BlockadeLabsSDK
             ClearHistory();
         }
 
-        private void OnSearchQueryChanged(HistorySearchQueryParameters searchParameters)
+        private async void OnSearchQueryChanged(HistorySearchQueryParameters searchParameters)
         {
-            // fetch history items with new search query parameters
+            await FetchHistoryAsync(searchParameters);
         }
 
         private async Task FetchHistoryAsync(HistorySearchQueryParameters searchParameters = null)
