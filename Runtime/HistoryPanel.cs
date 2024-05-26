@@ -56,6 +56,7 @@ namespace BlockadeLabsSDK
             {
                 var historyItemBehaviour = Instantiate(_historyItemPrefab, _historyItemsContainer);
                 historyItemBehaviour.SetItemData(item, RuntimeGuiManager);
+                _historyItems.Add(historyItemBehaviour);
             }
         }
 
@@ -63,7 +64,7 @@ namespace BlockadeLabsSDK
         {
             foreach (var historyItem in _historyItems)
             {
-                Destroy(historyItem);
+                Destroy(historyItem.gameObject);
             }
 
             _historyItems.Clear();
