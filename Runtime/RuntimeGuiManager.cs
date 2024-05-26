@@ -398,7 +398,6 @@ namespace BlockadeLabsSDK
         #endregion Popups
 
         [Header("Titlebar")]
-
         #region Titlebar
 
         [SerializeField]
@@ -475,7 +474,7 @@ namespace BlockadeLabsSDK
         private float _createUnderlineOffset;
         private bool _anyStylePicked;
 
-        private async void Start()
+        private void Start()
         {
             _helloPopup.SetActive(false);
             _viewButton.SetActive(true);
@@ -545,7 +544,7 @@ namespace BlockadeLabsSDK
                 _bottomSection.SetActive(!_historyPanel.gameObject.activeSelf);
             });
 
-            await _generator.LoadAsync();
+            _generator.Reload();
         }
 
         private void OnGeneratorPropertyChanged()
