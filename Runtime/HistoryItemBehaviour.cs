@@ -30,7 +30,6 @@ namespace BlockadeLabsSDK
         private MultiToggle _optionsToggle;
 
         private ImagineResult _imagineResult;
-        private RuntimeGuiManager _runtimeGuiManager;
 
         private void OnEnable()
         {
@@ -116,7 +115,6 @@ namespace BlockadeLabsSDK
         internal void SetItemData(ImagineResult item, RuntimeGuiManager runtimeGuiManager)
         {
             _imagineResult = item;
-            _runtimeGuiManager = runtimeGuiManager;
             _descriptionText.text = $"<b>{item.skybox_style_name}</b> | {item.prompt}";
             _timestampText.text = item.completed_at.ToString("G");
             _likeToggle.SetIsOnWithoutNotify(item.isMyFavorite);
