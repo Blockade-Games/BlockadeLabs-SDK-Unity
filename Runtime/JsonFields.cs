@@ -52,6 +52,7 @@ namespace BlockadeLabsSDK
         public string skybox_style_name;
         public DateTime completed_at;
         public bool isMyFavorite;
+        public string model;
     }
 
     [Preserve, Serializable]

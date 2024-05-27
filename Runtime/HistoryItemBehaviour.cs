@@ -29,6 +29,9 @@ namespace BlockadeLabsSDK
         [SerializeField]
         private MultiToggle _optionsToggle;
 
+        [SerializeField]
+        private GameObject _modelBadge;
+
         private ImagineResult _imagineResult;
 
         private void OnEnable()
@@ -112,12 +115,13 @@ namespace BlockadeLabsSDK
             }
         }
 
-        internal void SetItemData(ImagineResult item, RuntimeGuiManager runtimeGuiManager)
+        internal void SetItemData(ImagineResult item)
         {
             _imagineResult = item;
             _descriptionText.text = $"<b>{item.skybox_style_name}</b> | {item.prompt}";
             _timestampText.text = item.completed_at.ToString("G");
             _likeToggle.SetIsOnWithoutNotify(item.isMyFavorite);
+            _modelBadge.SetActive(item.model == "Model 3");
             RequestThumbnail();
         }
     }

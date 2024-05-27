@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace BlockadeLabsSDK
 {
+    [RequireComponent(typeof(ScrollRect))]
     public class HistoryPanel : MonoBehaviour
     {
         [SerializeField]
@@ -16,47 +18,86 @@ namespace BlockadeLabsSDK
         [SerializeField]
         private Transform _historyItemsContainer;
 
+        [SerializeField]
+        private ScrollRect _scrollRect;
+
+        private int _pageSize = 9;
+        private bool _isFetchingHistory;
+        private GetHistoryResult _lastHistoryResult;
+
         private readonly List<HistoryItemBehaviour> _historyItems = new();
 
         public RuntimeGuiManager RuntimeGuiManager { get; set; }
 
+        private void OnValidate()
+        {
+            if (_scrollRect == null)
+            {
+                _scrollRect = GetComponent<ScrollRect>();
+            }
+        }
+
         private async void OnEnable()
         {
+            _scrollRect.onValueChanged.AddListener(OnScrollRectValueChanged);
             _searchToolbar.OnSearchQueryChanged += OnSearchQueryChanged;
             await FetchHistoryAsync();
         }
 
         private void OnDisable()
         {
+            _scrollRect.onValueChanged.RemoveListener(OnScrollRectValueChanged);
             _searchToolbar.OnSearchQueryChanged -= OnSearchQueryChanged;
             ClearHistory();
         }
 
-        private async void OnSearchQueryChanged(HistorySearchQueryParameters searchParameters)
+        private async void OnScrollRectValueChanged(Vector2 scrollPosition)
         {
-            await FetchHistoryAsync(searchParameters);
+            if (_lastHistoryResult is { has_more: true } &&
+                !_isFetchingHistory &&
+                scrollPosition.y <= 0)
+            {
+                await FetchHistoryAsync(new HistorySearchQueryParameters
+                {
+                    Offset = _historyItems.Count / _pageSize
+                }, clearResults: false);
+            }
         }
 
-        private async Task FetchHistoryAsync(HistorySearchQueryParameters searchParameters = null)
+        private async void OnSearchQueryChanged(HistorySearchQueryParameters searchParameters)
+            => await FetchHistoryAsync(searchParameters);
+
+        private async Task FetchHistoryAsync(HistorySearchQueryParameters searchParameters = null, bool clearResults = true)
         {
-            ClearHistory();
-            GetHistoryResult historyItems;
+            if (_isFetchingHistory) { return; }
+            _isFetchingHistory = true;
 
             try
             {
-                historyItems = await ApiRequests.GetSkyboxHistoryAsync(searchParameters);
+                searchParameters ??= new HistorySearchQueryParameters();
+                searchParameters.Limit = _pageSize;
+
+                if (clearResults)
+                {
+                    ClearHistory();
+                }
+
+                _lastHistoryResult = await ApiRequests.GetSkyboxHistoryAsync(searchParameters);
+
+                foreach (var item in _lastHistoryResult.data)
+                {
+                    var historyItemBehaviour = Instantiate(_historyItemPrefab, _historyItemsContainer);
+                    historyItemBehaviour.SetItemData(item);
+                    _historyItems.Add(historyItemBehaviour);
+                }
             }
             catch (Exception e)
             {
                 Debug.LogException(e);
-                return;
             }
-
-            foreach (var item in historyItems.data)
+            finally
             {
-                var historyItemBehaviour = Instantiate(_historyItemPrefab, _historyItemsContainer);
-                historyItemBehaviour.SetItemData(item, RuntimeGuiManager);
-                _historyItems.Add(historyItemBehaviour);
+                _isFetchingHistory = false;
             }
         }
 

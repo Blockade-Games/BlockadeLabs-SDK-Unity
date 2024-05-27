@@ -32,7 +32,7 @@ namespace BlockadeLabsSDK
             _generatedByDropdown.options = new List<TMP_Dropdown.OptionData>
             {
                 new ("All"),
-                new ("WebUI Generated")
+                new ("Web UI")
             };
             _sortDropdown.options = new List<TMP_Dropdown.OptionData>
             {
