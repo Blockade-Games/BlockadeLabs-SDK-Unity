@@ -4,8 +4,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.Rendering;
 using System.Collections;
+
+#if UNITY_HDRP
+using UnityEngine.Rendering;
+#endif
 
 #if UNITY_EDITOR
 using UnityEditor;
