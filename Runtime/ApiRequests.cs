@@ -153,7 +153,7 @@ namespace BlockadeLabsSDK
 
                 if (!string.IsNullOrWhiteSpace(searchQueryParams.Order))
                 {
-                    searchQuery.Add("order:", searchQueryParams.Order.ToUpper());
+                    searchQuery.Add("order", searchQueryParams.Order.ToUpper());
                 }
 
                 if (searchQueryParams.ImagineId.HasValue)
