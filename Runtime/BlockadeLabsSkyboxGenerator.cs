@@ -546,9 +546,9 @@ namespace BlockadeLabsSDK
 #if UNITY_EDITOR
             await Task.Delay((int)(seconds * 1000)).ConfigureAwait(true);
 #else
-                var tcs = new TaskCompletionSource<object>();
-                StartCoroutine(WaitForSecondsEnumerator(tcs, seconds));
-                await tcs.Task;
+            var tcs = new TaskCompletionSource<object>();
+            StartCoroutine(WaitForSecondsEnumerator(tcs, seconds));
+            await tcs.Task;
 #endif
         }
 
