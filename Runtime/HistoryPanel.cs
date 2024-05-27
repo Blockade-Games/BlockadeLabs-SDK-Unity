@@ -87,7 +87,6 @@ namespace BlockadeLabsSDK
                 foreach (var item in _lastHistoryResult.data)
                 {
                     var historyItemBehaviour = Instantiate(_historyItemPrefab, _historyItemsContainer);
-                    Debug.Log($"[{item.obfuscated_id}]{item.api_key_id}");
                     historyItemBehaviour.SetItemData(item);
                     _historyItems.Add(historyItemBehaviour);
                 }
