@@ -21,6 +21,7 @@ namespace BlockadeLabsSDK
         [SerializeField]
         private ScrollRect _scrollRect;
 
+        private int _pageSize = 9;
         private bool _isFetchingHistory;
         private GetHistoryResult _lastHistoryResult;
 
@@ -57,10 +58,9 @@ namespace BlockadeLabsSDK
                 !_isFetchingHistory &&
                 scrollPosition.y <= 0)
             {
-                Debug.Log("load more items...");
                 await FetchHistoryAsync(new HistorySearchQueryParameters
                 {
-                    Offset = _historyItems.Count
+                    Offset = _historyItems.Count / _pageSize
                 }, clearResults: false);
             }
         }
@@ -75,6 +75,9 @@ namespace BlockadeLabsSDK
 
             try
             {
+                searchParameters ??= new HistorySearchQueryParameters();
+                searchParameters.Limit = _pageSize;
+
                 if (clearResults)
                 {
                     ClearHistory();
