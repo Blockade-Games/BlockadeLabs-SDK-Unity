@@ -28,8 +28,6 @@ namespace BlockadeLabsSDK
 
         private readonly List<HistoryItemBehaviour> _historyItems = new List<HistoryItemBehaviour>();
 
-        public RuntimeGuiManager RuntimeGuiManager { get; set; }
-
         private void OnValidate()
         {
             if (_scrollRect == null)

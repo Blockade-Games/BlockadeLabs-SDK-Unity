@@ -535,7 +535,6 @@ namespace BlockadeLabsSDK
             _savePrefabButton.onClick.AddListener(OnSavePrefabButtonClicked);
 
             // History Panel Controls
-            _historyPanel.RuntimeGuiManager = this;
             _historyButton.onClick.AddListener(() =>
             {
                 _historyPanel.gameObject.SetActive(!_historyPanel.gameObject.activeSelf);
