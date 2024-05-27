@@ -84,7 +84,7 @@ namespace BlockadeLabsSDK
 
                 searchParameters ??= _lastQueryParams ??= new HistorySearchQueryParameters();
                 searchParameters.Limit = _pageSize;
-                _lastHistoryResult = await ApiRequests.GetSkyboxHistoryAsync(RuntimeGuiManager.Generator.ApiKey, _lastQueryParams = searchParameters);
+                _lastHistoryResult = await ApiRequests.GetSkyboxHistoryAsync(_lastQueryParams = searchParameters);
 
                 foreach (var item in _lastHistoryResult.data)
                 {

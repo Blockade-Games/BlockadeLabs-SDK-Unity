@@ -2,11 +2,13 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.Rendering;
 using System.Collections;
+
+#if UNITY_HDRP
+using UnityEngine.Rendering;
+#endif
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -14,6 +16,7 @@ using UnityEditor;
 
 #if PUSHER_PRESENT
 using PusherClient;
+using System.Linq;
 #endif
 
 namespace BlockadeLabsSDK
@@ -26,7 +29,12 @@ namespace BlockadeLabsSDK
         public string ApiKey
         {
             get => _apiKey;
-            set => _apiKey = value;
+            set
+            {
+                if (_apiKey == value) { return; }
+                _apiKey = value;
+                CheckApiKeyValid();
+            }
         }
 
         [Tooltip("The version of the generation engine to use.")]
@@ -243,6 +251,7 @@ namespace BlockadeLabsSDK
                 return false;
             }
 
+            ApiRequests.ApiKey = _apiKey;
             return true;
         }
 
@@ -277,7 +286,7 @@ namespace BlockadeLabsSDK
         {
             ClearError();
 
-            _styleFamilies = await ApiRequests.GetSkyboxStylesMenuAsync(_apiKey, _modelVersion);
+            _styleFamilies = await ApiRequests.GetSkyboxStylesMenuAsync(_modelVersion);
             if (_styleFamilies == null || _styleFamilies.Count == 0)
             {
                 SetError("Something went wrong. Please recheck you API key.");
@@ -357,7 +366,7 @@ namespace BlockadeLabsSDK
 
             try
             {
-                var response = await ApiRequests.GenerateSkyboxAsync(request, _apiKey);
+                var response = await ApiRequests.GenerateSkyboxAsync(request);
                 if (_isCancelled)
                 {
                     return;
@@ -382,11 +391,11 @@ namespace BlockadeLabsSDK
 
                 UpdateProgress(33);
 
-    #if PUSHER_PRESENT
+#if PUSHER_PRESENT
                 var result = await WaitForPusherResultAsync(response.pusher_channel, response.pusher_event);
-    #else
+#else
                 var result = await PollForResultAsync(response.obfuscated_id);
-    #endif
+#endif
                 if (_isCancelled || result == null)
                 {
                     return;
@@ -511,7 +520,7 @@ namespace BlockadeLabsSDK
                     break;
                 }
 
-                var result = await ApiRequests.GetRequestStatusAsync(imagineObfuscatedId, _apiKey);
+                var result = await ApiRequests.GetRequestStatusAsync(imagineObfuscatedId);
                 if (_isCancelled)
                 {
                     break;
@@ -534,13 +543,13 @@ namespace BlockadeLabsSDK
 
         private async Task WaitForSeconds(float seconds)
         {
-            #if UNITY_EDITOR
-                await Task.Delay((int)(seconds * 1000)).ConfigureAwait(true);
-            #else
-                var tcs = new TaskCompletionSource<object>();
-                StartCoroutine(WaitForSecondsEnumerator(tcs, seconds));
-                await tcs.Task;
-            #endif
+#if UNITY_EDITOR
+            await Task.Delay((int)(seconds * 1000)).ConfigureAwait(true);
+#else
+            var tcs = new TaskCompletionSource<object>();
+            StartCoroutine(WaitForSecondsEnumerator(tcs, seconds));
+            await tcs.Task;
+#endif
         }
 
         private IEnumerator WaitForSecondsEnumerator(TaskCompletionSource<object> tcs, float seconds)
