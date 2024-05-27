@@ -49,7 +49,7 @@ namespace BlockadeLabsSDK
         /// <summary>
         /// Filter by API generation type. Options are 'all' or 'web-ui'
         /// </summary>
-        public string GeneratedBy { get; set; } = null;
+        public int? GeneratedBy { get; set; } = null;
 
         /// <summary>
         /// Filter by Skybox Style Id. Defaults to any.

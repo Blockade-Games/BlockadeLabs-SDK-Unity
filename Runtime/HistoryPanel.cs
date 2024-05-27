@@ -24,6 +24,7 @@ namespace BlockadeLabsSDK
         private int _pageSize = 9;
         private bool _isFetchingHistory;
         private GetHistoryResult _lastHistoryResult;
+        private HistorySearchQueryParameters _lastQueryParams;
 
         private readonly List<HistoryItemBehaviour> _historyItems = new();
 
@@ -57,15 +58,17 @@ namespace BlockadeLabsSDK
                 !_isFetchingHistory &&
                 scrollPosition.y <= 0)
             {
-                await FetchHistoryAsync(new HistorySearchQueryParameters
-                {
-                    Offset = _historyItems.Count / _pageSize
-                }, clearResults: false);
+                _lastQueryParams ??= new HistorySearchQueryParameters();
+                _lastQueryParams.Offset = _historyItems.Count / _pageSize;
+                await FetchHistoryAsync(_lastQueryParams, clearResults: false);
             }
         }
 
         private async void OnSearchQueryChanged(HistorySearchQueryParameters searchParameters)
-            => await FetchHistoryAsync(searchParameters);
+        {
+            searchParameters.Offset = 0;
+            await FetchHistoryAsync(searchParameters);
+        }
 
         private async Task FetchHistoryAsync(HistorySearchQueryParameters searchParameters = null, bool clearResults = true)
         {
@@ -74,19 +77,19 @@ namespace BlockadeLabsSDK
 
             try
             {
-                searchParameters ??= new HistorySearchQueryParameters();
-                searchParameters.Limit = _pageSize;
-
                 if (clearResults)
                 {
                     ClearHistory();
                 }
 
-                _lastHistoryResult = await ApiRequests.GetSkyboxHistoryAsync(RuntimeGuiManager.Generator.ApiKey, searchParameters);
+                searchParameters ??= _lastQueryParams ??= new HistorySearchQueryParameters();
+                searchParameters.Limit = _pageSize;
+                _lastHistoryResult = await ApiRequests.GetSkyboxHistoryAsync(RuntimeGuiManager.Generator.ApiKey, _lastQueryParams = searchParameters);
 
                 foreach (var item in _lastHistoryResult.data)
                 {
                     var historyItemBehaviour = Instantiate(_historyItemPrefab, _historyItemsContainer);
+                    Debug.Log($"[{item.obfuscated_id}]{item.api_key_id}");
                     historyItemBehaviour.SetItemData(item);
                     _historyItems.Add(historyItemBehaviour);
                 }
@@ -103,6 +106,8 @@ namespace BlockadeLabsSDK
 
         private void ClearHistory()
         {
+            _lastQueryParams = null;
+
             foreach (var historyItem in _historyItems)
             {
                 Destroy(historyItem.gameObject);

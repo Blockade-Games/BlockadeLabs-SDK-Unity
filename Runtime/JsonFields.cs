@@ -39,6 +39,7 @@ namespace BlockadeLabsSDK
     internal class ImagineResult
     {
         public int id;
+        public int api_key_id;
         public string obfuscated_id;
         public string file_url;
         public string thumb_url;

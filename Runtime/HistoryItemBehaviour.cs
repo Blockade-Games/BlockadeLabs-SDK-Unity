@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -106,12 +107,19 @@ namespace BlockadeLabsSDK
         {
             try
             {
-                _thumbnailImage.texture = await ApiRequests.DownloadTextureAsync(_imagineResult.thumb_url);
+                _thumbnailImage.texture = await ApiRequests.DownloadTextureAsync(_imagineResult.thumb_url, cancellationToken: destroyCancellationToken);
                 gameObject.SetActive(true);
             }
             catch (Exception e)
             {
-                Debug.LogException(e);
+                switch (e)
+                {
+                    case TaskCanceledException:
+                        break;
+                    default:
+                        Debug.LogException(e);
+                        break;
+                }
             }
         }
 
