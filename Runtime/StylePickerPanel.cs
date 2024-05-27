@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -169,8 +170,25 @@ namespace BlockadeLabsSDK
             // Ensure we only make one download request.
             _previewCache.Add(style.image_jpg, null);
 
+            Texture2D texture = null;
+
             // Download the image
-            var texture = await ApiRequests.DownloadTextureAsync(style.image_jpg);
+            try
+            {
+                texture = await ApiRequests.DownloadTextureAsync(style.image_jpg, cancellationToken: destroyCancellationToken);
+            }
+            catch (Exception e)
+            {
+                switch (e)
+                {
+                    case TaskCanceledException:
+                        break;
+                    default:
+                        Debug.LogException(e);
+                        break;
+                }
+            }
+
             if (texture == null)
             {
                 return;

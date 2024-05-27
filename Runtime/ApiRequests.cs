@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -81,12 +82,17 @@ namespace BlockadeLabsSDK
             return await GetAsync<GetImagineResult>("imagine/requests/obfuscated-id/" + imagineObfuscatedId);
         }
 
-        public static async Task<Texture2D> DownloadTextureAsync(string textureUrl, bool readable = false)
+        public static async Task<Texture2D> DownloadTextureAsync(string textureUrl, bool readable = false, CancellationToken cancellationToken = default)
         {
             LogVerbose("Start texture download: " + textureUrl);
             using var request = UnityWebRequest.Get(textureUrl);
             request.downloadHandler = new DownloadHandlerTexture(readable);
             await request.SendWebRequest();
+
+            if (cancellationToken.IsCancellationRequested)
+            {
+                throw new TaskCanceledException();
+            }
 
             if (request.result != UnityWebRequest.Result.Success)
             {
@@ -169,20 +175,21 @@ namespace BlockadeLabsSDK
                     searchQuery.Add("generator", UnityWebRequest.EscapeURL(searchQueryParams.GeneratorFilter));
                 }
 
-                if (searchQueryParams.FavoritesOnly.HasValue)
+                if (searchQueryParams.FavoritesOnly.HasValue &&
+                    searchQueryParams.FavoritesOnly.Value)
                 {
-                    searchQuery.Add("favoritesOnly", searchQueryParams.FavoritesOnly.Value.ToString().ToLower());
+                    searchQuery.Add("my_likes", searchQueryParams.FavoritesOnly.Value.ToString().ToLower());
                 }
 
-                if (!string.IsNullOrWhiteSpace(searchQueryParams.GeneratedBy))
+                if (searchQueryParams.GeneratedBy.HasValue)
                 {
-                    searchQuery.Add("apiKeyId", searchQueryParams.GeneratedBy);
+                    searchQuery.Add("api_key_id", searchQueryParams.GeneratedBy.Value.ToString());
                 }
 
-                if (!string.IsNullOrWhiteSpace(searchQueryParams.SkyboxStyleId))
-                {
-                    searchQuery.Add("skyboxStyleId", searchQueryParams.SkyboxStyleId);
-                }
+                //if (!string.IsNullOrWhiteSpace(searchQueryParams.SkyboxStyleId))
+                //{
+                //    searchQuery.Add("skybox_style_id", searchQueryParams.SkyboxStyleId);
+                //}
             }
 
             return await GetAsync<GetHistoryResult>("imagine/myRequests", searchQuery);

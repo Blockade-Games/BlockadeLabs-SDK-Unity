@@ -75,8 +75,8 @@ namespace BlockadeLabsSDK
         {
             _searchQueryParameters.GeneratedBy = value switch
             {
-                1 => "web-ui",
-                _ => "all"
+                1 => 0,
+                _ => null
             };
             OnSearchQueryChanged?.Invoke(_searchQueryParameters);
         }
