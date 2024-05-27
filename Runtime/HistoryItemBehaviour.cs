@@ -34,6 +34,9 @@ namespace BlockadeLabsSDK
         [SerializeField]
         private GameObject _modelBadge;
 
+        [SerializeField]
+        private GameObject _apiBadge;
+
         private ImagineResult _imagineResult;
 
 #if !UNITY_2022_1_OR_NEWER
@@ -150,6 +153,7 @@ namespace BlockadeLabsSDK
             _timestampText.text = item.completed_at.ToString("G");
             _likeToggle.SetIsOnWithoutNotify(item.isMyFavorite);
             _modelBadge.SetActive(item.model == "Model 3");
+            _apiBadge.SetActive(item.api_key_id != 0);
             RequestThumbnail();
         }
     }
