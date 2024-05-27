@@ -87,12 +87,13 @@ namespace BlockadeLabsSDK
         private void OnRemoveButtonClicked()
         {
             Debug.Log($"Remove {_imagineResult.id}");
-            // TODO show confirmation dialog
+            // TODO show a confirmation dialog
         }
 
         private void OnDownloadButtonClicked()
         {
             Debug.Log($"Download {_imagineResult.id}");
+            // TODO figure how we want to handle loading skybox into scene
         }
 
         private void OnOptionsToggleValueChanged(bool value)
