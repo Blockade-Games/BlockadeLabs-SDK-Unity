@@ -138,7 +138,7 @@ namespace BlockadeLabsSDK
 
             if (searchQueryParams != null)
             {
-                searchQuery = new();
+                searchQuery = new Dictionary<string, string>();
 
                 if (!string.IsNullOrWhiteSpace(searchQueryParams.StatusFilter))
                 {

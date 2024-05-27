@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
@@ -47,13 +48,29 @@ namespace BlockadeLabsSDK
 
         private Dictionary<string, Sprite> _previewCache = new Dictionary<string, Sprite>();
 
+#if !UNITY_2022_1_OR_NEWER
+        private CancellationTokenSource _destroyCancellationTokenSource;
+        // ReSharper disable once InconsistentNaming
+        // this is the same name as the unity property introduced in 2022+
+        private CancellationToken destroyCancellationToken => _destroyCancellationTokenSource.Token;
+#endif
+
         private void Awake()
         {
+#if !UNITY_2022_1_OR_NEWER
+            _destroyCancellationTokenSource = new CancellationTokenSource();
+#endif
             var backHoverable = _backButton.GetComponent<Hoverable>();
             var backText = backHoverable.GetComponentInChildren<TMP_Text>();
             var backTextColor = backText.color;
             backHoverable.OnHover.AddListener(() => backText.color = Color.white);
             backHoverable.OnUnhover.AddListener(() => backText.color = backTextColor);
+        }
+
+        private void Start()
+        {
+            _backButton.onClick.AddListener(ShowStyleFamilies);
+            _dismissButton.onClick.AddListener(() => gameObject.SetActive(false));
         }
 
         private void OnEnable()
@@ -68,10 +85,12 @@ namespace BlockadeLabsSDK
             _dismissButton.gameObject.SetActive(false);
         }
 
-        private void Start()
+        private void OnDestroy()
         {
-            _backButton.onClick.AddListener(ShowStyleFamilies);
-            _dismissButton.onClick.AddListener(() => gameObject.SetActive(false));
+#if !UNITY_2022_1_OR_NEWER
+            _destroyCancellationTokenSource.Cancel();
+            _destroyCancellationTokenSource.Dispose();
+#endif
         }
 
         public void SetStyles(IReadOnlyList<SkyboxStyleFamily> styleFamilies)
@@ -177,16 +196,13 @@ namespace BlockadeLabsSDK
             {
                 texture = await ApiRequests.DownloadTextureAsync(style.image_jpg, cancellationToken: destroyCancellationToken);
             }
+            catch (TaskCanceledException)
+            {
+                // ignored
+            }
             catch (Exception e)
             {
-                switch (e)
-                {
-                    case TaskCanceledException:
-                        break;
-                    default:
-                        Debug.LogException(e);
-                        break;
-                }
+                Debug.LogException(e);
             }
 
             if (texture == null)

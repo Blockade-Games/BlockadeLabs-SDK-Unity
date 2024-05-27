@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Threading;
 using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
@@ -35,6 +36,18 @@ namespace BlockadeLabsSDK
 
         private ImagineResult _imagineResult;
 
+#if !UNITY_2022_1_OR_NEWER
+        private CancellationTokenSource _destroyCancellationTokenSource;
+        // ReSharper disable once InconsistentNaming
+        // this is the same name as the unity property introduced in 2022+
+        private CancellationToken destroyCancellationToken => _destroyCancellationTokenSource.Token;
+
+        private void Awake()
+        {
+            _destroyCancellationTokenSource = new CancellationTokenSource();
+        }
+#endif
+
         private void OnEnable()
         {
             _likeToggle.onValueChanged.AddListener(OnLikeToggleValueChanged);
@@ -49,6 +62,14 @@ namespace BlockadeLabsSDK
             _removeButton.onClick.RemoveListener(OnRemoveButtonClicked);
             _downloadButton.onClick.RemoveListener(OnDownloadButtonClicked);
             _optionsToggle.OnValueChanged.RemoveListener(OnOptionsToggleValueChanged);
+        }
+
+        private void OnDestroy()
+        {
+#if !UNITY_2022_1_OR_NEWER
+            _destroyCancellationTokenSource.Cancel();
+            _destroyCancellationTokenSource.Dispose();
+#endif
         }
 
         private async void OnLikeToggleValueChanged(bool value)
@@ -110,16 +131,13 @@ namespace BlockadeLabsSDK
                 _thumbnailImage.texture = await ApiRequests.DownloadTextureAsync(_imagineResult.thumb_url, cancellationToken: destroyCancellationToken);
                 gameObject.SetActive(true);
             }
+            catch (TaskCanceledException)
+            {
+                // ignored
+            }
             catch (Exception e)
             {
-                switch (e)
-                {
-                    case TaskCanceledException:
-                        break;
-                    default:
-                        Debug.LogException(e);
-                        break;
-                }
+                Debug.LogException(e);
             }
         }
 

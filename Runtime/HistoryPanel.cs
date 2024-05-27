@@ -26,7 +26,7 @@ namespace BlockadeLabsSDK
         private GetHistoryResult _lastHistoryResult;
         private HistorySearchQueryParameters _lastQueryParams;
 
-        private readonly List<HistoryItemBehaviour> _historyItems = new();
+        private readonly List<HistoryItemBehaviour> _historyItems = new List<HistoryItemBehaviour>();
 
         public RuntimeGuiManager RuntimeGuiManager { get; set; }
 

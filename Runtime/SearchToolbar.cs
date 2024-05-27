@@ -23,7 +23,7 @@ namespace BlockadeLabsSDK
         [SerializeField]
         private TMP_Dropdown _sortDropdown;
 
-        private HistorySearchQueryParameters _searchQueryParameters = new();
+        private HistorySearchQueryParameters _searchQueryParameters = new HistorySearchQueryParameters();
 
         public event Action<HistorySearchQueryParameters> OnSearchQueryChanged;
 
@@ -31,13 +31,13 @@ namespace BlockadeLabsSDK
         {
             _generatedByDropdown.options = new List<TMP_Dropdown.OptionData>
             {
-                new ("All"),
-                new ("Web UI")
+                new TMP_Dropdown.OptionData("All"),
+                new TMP_Dropdown.OptionData("Web UI")
             };
             _sortDropdown.options = new List<TMP_Dropdown.OptionData>
             {
-                new ("Newest First"),
-                new ("Oldest First")
+                new TMP_Dropdown.OptionData("Newest First"),
+                new TMP_Dropdown.OptionData("Oldest First")
             };
         }
 
