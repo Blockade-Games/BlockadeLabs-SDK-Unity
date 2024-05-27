@@ -238,6 +238,7 @@ namespace BlockadeLabsSDK
         {
             if (string.IsNullOrWhiteSpace(_apiKey) || _apiKey.Contains("api.blockadelabs.com"))
             {
+                SetError("Something went wrong. Please recheck you API key.");
                 _state = State.NeedApiKey;
                 return false;
             }
