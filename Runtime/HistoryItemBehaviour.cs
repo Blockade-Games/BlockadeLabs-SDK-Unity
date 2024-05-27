@@ -112,7 +112,7 @@ namespace BlockadeLabsSDK
             }
         }
 
-        internal void SetItemData(ImagineResult item, RuntimeGuiManager runtimeGuiManager)
+        internal void SetItemData(ImagineResult item)
         {
             _imagineResult = item;
             _descriptionText.text = $"<b>{item.skybox_style_name}</b> | {item.prompt}";
