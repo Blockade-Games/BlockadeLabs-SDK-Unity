@@ -25,7 +25,13 @@ namespace BlockadeLabsSDK
         private string _apiKey = "API key needed. Get one at api.blockadelabs.com";
         public string ApiKey
         {
-            get => ApiRequests.ApiKey;
+            get => _apiKey;
+            set
+            {
+                if (_apiKey == value) { return; }
+                _apiKey = value;
+                CheckApiKeyValid();
+            }
         }
 
         [Tooltip("The version of the generation engine to use.")]
