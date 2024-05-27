@@ -106,15 +106,16 @@ namespace BlockadeLabsSDK
 
         private IEnumerator ListenForMouseClick()
         {
+            var waitForEndOfFrame = new WaitForEndOfFrame();
             // wait one frame to make sure we don't close the menu
-            yield return new WaitForEndOfFrame();
+            yield return waitForEndOfFrame;
 
             while (true)
             {
                 if (Input.GetMouseButtonUp(0))
                 {
                     // wait one frame to make sure to capture the click from remove button
-                    yield return new WaitForEndOfFrame();
+                    yield return waitForEndOfFrame;
                     _optionsToggle.IsOn = false;
                     StopAllCoroutines();
                     yield break;
