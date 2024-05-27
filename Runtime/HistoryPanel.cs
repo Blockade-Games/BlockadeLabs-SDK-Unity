@@ -53,8 +53,7 @@ namespace BlockadeLabsSDK
 
         private async void OnScrollRectValueChanged(Vector2 scrollPosition)
         {
-            if (_lastHistoryResult != null &&
-                _lastHistoryResult.has_more &&
+            if (_lastHistoryResult is { has_more: true } &&
                 !_isFetchingHistory &&
                 scrollPosition.y <= 0)
             {
