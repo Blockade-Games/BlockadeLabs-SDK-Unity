@@ -10,6 +10,9 @@ namespace BlockadeLabsSDK
     public class HistoryItemBehaviour : MonoBehaviour
     {
         [SerializeField]
+        private Button _button;
+
+        [SerializeField]
         private RawImage _thumbnailImage;
 
         [SerializeField]
@@ -37,6 +40,7 @@ namespace BlockadeLabsSDK
         private GameObject _apiBadge;
 
         private ImagineResult _imagineResult;
+        private Action<ImagineResult> _clickCallback;
         private Action<ImagineResult> _deleteCallback;
         private Action<ImagineResult> _downloadCallback;
 
@@ -54,6 +58,7 @@ namespace BlockadeLabsSDK
 
         private void OnEnable()
         {
+            _button.onClick.AddListener(OnClick);
             _likeToggle.onValueChanged.AddListener(OnLikeToggleValueChanged);
             _removeButton.onClick.AddListener(OnRemoveButtonClicked);
             _downloadButton.onClick.AddListener(OnDownloadButtonClicked);
@@ -62,6 +67,7 @@ namespace BlockadeLabsSDK
 
         private void OnDisable()
         {
+            _button.onClick.RemoveListener(OnClick);
             _likeToggle.onValueChanged.RemoveListener(OnLikeToggleValueChanged);
             _removeButton.onClick.RemoveListener(OnRemoveButtonClicked);
             _downloadButton.onClick.RemoveListener(OnDownloadButtonClicked);
@@ -88,6 +94,9 @@ namespace BlockadeLabsSDK
             var result = await ApiRequests.ToggleFavorite(_imagineResult.id);
             _likeToggle.SetIsOnWithoutNotify(result != null && result.request.isMyFavorite);
         }
+
+        private void OnClick()
+            => _clickCallback?.Invoke(_imagineResult);
 
         private void OnRemoveButtonClicked()
             => _deleteCallback?.Invoke(_imagineResult);
@@ -142,9 +151,10 @@ namespace BlockadeLabsSDK
             }
         }
 
-        internal void SetItemData(ImagineResult item, Action<ImagineResult> deleteCallback, Action<ImagineResult> downloadCallback)
+        internal void SetItemData(ImagineResult item, Action<ImagineResult> clickCallback, Action<ImagineResult> deleteCallback, Action<ImagineResult> downloadCallback)
         {
             _imagineResult = item;
+            _clickCallback = clickCallback;
             _deleteCallback = deleteCallback;
             _downloadCallback = downloadCallback;
             _descriptionText.text = $"<b>{item.skybox_style_name}</b> | {item.prompt}";

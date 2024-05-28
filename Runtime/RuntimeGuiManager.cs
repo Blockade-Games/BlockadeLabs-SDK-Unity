@@ -403,6 +403,14 @@ namespace BlockadeLabsSDK
             set { _dialogPopup = value; }
         }
 
+        [SerializeField]
+        private SkyboxPreviewPopup _previewPopup;
+        public SkyboxPreviewPopup PreviewPopup
+        {
+            get => _previewPopup;
+            set => _previewPopup = value;
+        }
+
         #endregion Popups
 
         [Header("Titlebar")]
@@ -491,6 +499,7 @@ namespace BlockadeLabsSDK
             _tipContainer.SetActive(false);
             _historyPanel.gameObject.SetActive(false);
             _historyButton.gameObject.SetActive(true);
+            _previewPopup.gameObject.SetActive(false);
 
             // Initialize values
             _skybox.BakedMesh = null;

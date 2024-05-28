@@ -54,6 +54,7 @@ namespace BlockadeLabsSDK
         public DateTime completed_at;
         public bool isMyFavorite;
         public string model;
+        public string type;
     }
 
     [Preserve, Serializable]

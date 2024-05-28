@@ -90,7 +90,7 @@ namespace BlockadeLabsSDK
                 foreach (var item in _lastHistoryResult.data)
                 {
                     var historyItemBehaviour = Instantiate(_historyItemPrefab, _historyItemsContainer);
-                    historyItemBehaviour.SetItemData(item, OnHistoryItemDelete, OnHistoryItemDownload);
+                    historyItemBehaviour.SetItemData(item, OnHistoryItemClick, OnHistoryItemDelete, OnHistoryItemDownload);
                     _historyItems.Add(historyItemBehaviour);
                 }
             }
@@ -116,6 +116,9 @@ namespace BlockadeLabsSDK
             _historyItems.Clear();
         }
 
+        private void OnHistoryItemClick(ImagineResult imagineResult)
+            => _runtimeGuiManager.PreviewPopup.ShowPreviewPopup(imagineResult);
+
         private void OnHistoryItemDelete(ImagineResult imagineResult)
             => _runtimeGuiManager.DialogPopup.ShowDialog(
                 "Are you absolutely sure?",
@@ -127,7 +130,7 @@ namespace BlockadeLabsSDK
                 },
                 onCancel: () =>
                 {
-                    // close dialog
+                    // empty callback will close dialog
                 });
 
         private void OnHistoryItemDownload(ImagineResult imagineResult)
