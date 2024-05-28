@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections;
-using System.Threading;
 using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
@@ -40,7 +39,7 @@ namespace BlockadeLabsSDK
         private ImagineResult _imagineResult;
 
 #if !UNITY_2022_1_OR_NEWER
-        private CancellationTokenSource _destroyCancellationTokenSource;
+        private System.Threading.CancellationTokenSource _destroyCancellationTokenSource;
         // ReSharper disable once InconsistentNaming
         // this is the same name as the unity property introduced in 2022+
         private CancellationToken destroyCancellationToken => _destroyCancellationTokenSource.Token;
@@ -69,6 +68,7 @@ namespace BlockadeLabsSDK
 
         private void OnDestroy()
         {
+            StopAllCoroutines();
 #if !UNITY_2022_1_OR_NEWER
             _destroyCancellationTokenSource.Cancel();
             _destroyCancellationTokenSource.Dispose();
@@ -104,11 +104,11 @@ namespace BlockadeLabsSDK
             if (value)
             {
                 // listen if mouse button click occurs and turn off the options toggle
-                StartCoroutine(ListenForMouseClick());
+                StartCoroutine(CoListenForMouseClick());
             }
         }
 
-        private IEnumerator ListenForMouseClick()
+        private IEnumerator CoListenForMouseClick()
         {
             var waitForEndOfFrame = new WaitForEndOfFrame();
             // wait one frame to make sure we don't close the menu

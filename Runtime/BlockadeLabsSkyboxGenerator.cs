@@ -583,18 +583,26 @@ namespace BlockadeLabsSDK
             var texturePath = folderPath + "/" + prefix + " texture.png";
             var depthTexturePath = folderPath + "/" + prefix + " depth texture.png";
             var resultsPath = folderPath + "/" + prefix + " data.txt";
+            var tasks = new List<Task>
+            {
+                ApiRequests.DownloadFileAsync(textureUrl, texturePath)
+            };
 
-            var tasks = new List<Task>();
-            tasks.Add(ApiRequests.DownloadFileAsync(textureUrl, texturePath));
             if (haveDepthMap)
             {
                 tasks.Add(ApiRequests.DownloadFileAsync(depthMapUrl, depthTexturePath));
             }
 
+#if !UNITY_2021_1_OR_NEWER
+            // ReSharper disable once MethodHasAsyncOverload
             // WriteAllTextAsync not defined in Unity 2020.3
             File.WriteAllText(resultsPath, JsonConvert.SerializeObject(result));
+#else
+            await File.WriteAllTextAsync(resultsPath, JsonConvert.SerializeObject(result)).ConfigureAwait(true);
+#endif
 
-            await Task.WhenAll(tasks);
+            await Task.WhenAll(tasks).ConfigureAwait(true);
+
             if (_isCancelled)
             {
                 Directory.Delete(folderPath, true);
@@ -610,7 +618,7 @@ namespace BlockadeLabsSDK
 
             AssetDatabase.Refresh();
 
-            var colorImporter = TextureImporter.GetAtPath(texturePath) as TextureImporter;
+            var colorImporter = (TextureImporter)AssetImporter.GetAtPath(texturePath);
             colorImporter.maxTextureSize = 8192;
             colorImporter.textureCompression = TextureImporterCompression.Uncompressed;
             colorImporter.mipmapEnabled = false;
@@ -619,7 +627,7 @@ namespace BlockadeLabsSDK
 
             if (haveDepthMap)
             {
-                var depthImporter = TextureImporter.GetAtPath(depthTexturePath) as TextureImporter;
+                var depthImporter = (TextureImporter)AssetImporter.GetAtPath(depthTexturePath);
                 depthImporter.maxTextureSize = 2048;
                 depthImporter.textureCompression = TextureImporterCompression.Uncompressed;
                 depthImporter.mipmapEnabled = false;
@@ -655,7 +663,7 @@ namespace BlockadeLabsSDK
 
         private string ValidateFilename(string prompt)
         {
-            foreach (char c in System.IO.Path.GetInvalidFileNameChars())
+            foreach (char c in Path.GetInvalidFileNameChars())
             {
                 prompt = prompt.Replace(c, '_');
             }
@@ -721,8 +729,10 @@ namespace BlockadeLabsSDK
                 return null;
             }
 
-            var material = new Material(_depthMaterial);
-            material.mainTexture = texture;
+            var material = new Material(_depthMaterial)
+            {
+                mainTexture = texture
+            };
             if (material.HasProperty("_DepthMap"))
             {
                 material.SetTexture("_DepthMap", depthTexture);
