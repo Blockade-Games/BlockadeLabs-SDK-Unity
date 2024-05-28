@@ -123,10 +123,14 @@ namespace BlockadeLabsSDK
             => _runtimeGuiManager.DialogPopup.ShowDialog(
                 "Are you absolutely sure?",
                 "Are you sure you want to remove your skybox? This is not reversible.",
-                onConfirm: () =>
+                onConfirm: async () =>
                 {
-                    // TODO
-                    Debug.Log($"Delete {imagineResult.obfuscated_id}");
+                    var result = await ApiRequests.DeleteSkyboxAsync(imagineResult.id);
+
+                    if (result)
+                    {
+                        await FetchHistoryAsync();
+                    }
                 },
                 onCancel: () =>
                 {

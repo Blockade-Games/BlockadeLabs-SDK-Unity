@@ -106,4 +106,11 @@ namespace BlockadeLabsSDK
         public int totalCount;
         public bool has_more;
     }
+
+    [Preserve, Serializable]
+    internal class OperationResult
+    {
+        public string error;
+        public string success;
+    }
 }

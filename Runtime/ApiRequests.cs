@@ -15,7 +15,7 @@ namespace BlockadeLabsSDK
 
         public static string ApiKey { get; set; }
 
-        private static async Task<T> GetAsync<T>(string path, Dictionary<string, string> queryParams = null)
+        private static async Task<T> GetAsync<T>(string path, Dictionary<string, string> queryParams = null, CancellationToken cancellationToken = default)
         {
             var queryString = string.Empty;
 
@@ -28,6 +28,11 @@ namespace BlockadeLabsSDK
             request.SetRequestHeader("x-api-key", ApiKey);
             LogVerbose("Get Request: " + request.url);
             await request.SendWebRequest();
+
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return default;
+            }
 
             if (request.result != UnityWebRequest.Result.Success)
             {
@@ -198,6 +203,31 @@ namespace BlockadeLabsSDK
         public static async Task<GetImagineResult> ToggleFavorite(int imagineId)
         {
             return await GetAsync<GetImagineResult>("toggleFavorite", new Dictionary<string, string> { { "id", imagineId.ToString() } });
+        }
+
+        public static async Task<bool> DeleteSkyboxAsync(int id, CancellationToken cancellationToken = default)
+        {
+            using var request = UnityWebRequest.Delete($"{ApiEndpoint}imagine/deleteImagine/{id}");
+            request.SetRequestHeader("x-api-key", ApiKey);
+            using var downloadHandler = new DownloadHandlerBuffer();
+            request.downloadHandler = downloadHandler;
+            LogVerbose("Delete Request: " + request.url);
+            await request.SendWebRequest();
+
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return false;
+            }
+
+            if (request.result != UnityWebRequest.Result.Success)
+            {
+                Debug.LogError("Get error: " + request.error);
+                return false;
+            }
+
+            LogVerbose("Delete response: " + downloadHandler.text);
+            var result = JsonConvert.DeserializeObject<OperationResult>(downloadHandler.text);
+            return !string.IsNullOrWhiteSpace(result?.success) && result.success == "Item deleted successfully";
         }
 
         [System.Diagnostics.Conditional("BLOCKADE_DEBUG")]
