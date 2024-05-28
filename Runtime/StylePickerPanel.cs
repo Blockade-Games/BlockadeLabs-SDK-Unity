@@ -1,7 +1,5 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
@@ -49,7 +47,7 @@ namespace BlockadeLabsSDK
         private Dictionary<string, Sprite> _previewCache = new Dictionary<string, Sprite>();
 
 #if !UNITY_2022_1_OR_NEWER
-        private CancellationTokenSource _destroyCancellationTokenSource;
+        private System.Threading.CancellationTokenSource _destroyCancellationTokenSource;
         // ReSharper disable once InconsistentNaming
         // this is the same name as the unity property introduced in 2022+
         private CancellationToken destroyCancellationToken => _destroyCancellationTokenSource.Token;
@@ -58,7 +56,7 @@ namespace BlockadeLabsSDK
         private void Awake()
         {
 #if !UNITY_2022_1_OR_NEWER
-            _destroyCancellationTokenSource = new CancellationTokenSource();
+            _destroyCancellationTokenSource = new System.Threading.CancellationTokenSource();
 #endif
             var backHoverable = _backButton.GetComponent<Hoverable>();
             var backText = backHoverable.GetComponentInChildren<TMP_Text>();

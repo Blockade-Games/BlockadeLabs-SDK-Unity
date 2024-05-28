@@ -46,7 +46,7 @@ namespace BlockadeLabsSDK
 
         private void Awake()
         {
-            _destroyCancellationTokenSource = new CancellationTokenSource();
+            _destroyCancellationTokenSource = new System.Threading.CancellationTokenSource();
         }
 #endif
 
