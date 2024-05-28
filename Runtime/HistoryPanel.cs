@@ -116,8 +116,8 @@ namespace BlockadeLabsSDK
             _historyItems.Clear();
         }
 
-        private void OnHistoryItemClick(ImagineResult imagineResult)
-            => _runtimeGuiManager.PreviewPopup.ShowPreviewPopup(imagineResult);
+        private void OnHistoryItemClick(ImagineResult imagineResult, Texture preview)
+            => _runtimeGuiManager.PreviewPopup.ShowPreviewPopup(imagineResult, preview);
 
         private void OnHistoryItemDelete(ImagineResult imagineResult)
             => _runtimeGuiManager.DialogPopup.ShowDialog(

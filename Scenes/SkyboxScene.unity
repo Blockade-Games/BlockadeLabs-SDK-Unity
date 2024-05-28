@@ -27853,6 +27853,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _runtimeGuiManager: {fileID: 1700559437}
   _titleText: {fileID: 1201604178}
+  _skyboxPreviewImage: {fileID: 645561055}
   _statusText: {fileID: 1344165005}
   _promptText: {fileID: 409695624}
   _depthMapText: {fileID: 1265620825}

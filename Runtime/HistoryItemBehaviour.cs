@@ -40,7 +40,7 @@ namespace BlockadeLabsSDK
         private GameObject _apiBadge;
 
         private ImagineResult _imagineResult;
-        private Action<ImagineResult> _clickCallback;
+        private Action<ImagineResult, Texture> _clickCallback;
         private Action<ImagineResult> _deleteCallback;
         private Action<ImagineResult> _downloadCallback;
 
@@ -96,7 +96,7 @@ namespace BlockadeLabsSDK
         }
 
         private void OnClick()
-            => _clickCallback?.Invoke(_imagineResult);
+            => _clickCallback?.Invoke(_imagineResult, _thumbnailImage.texture);
 
         private void OnRemoveButtonClicked()
             => _deleteCallback?.Invoke(_imagineResult);
@@ -151,7 +151,7 @@ namespace BlockadeLabsSDK
             }
         }
 
-        internal void SetItemData(ImagineResult item, Action<ImagineResult> clickCallback, Action<ImagineResult> deleteCallback, Action<ImagineResult> downloadCallback)
+        internal void SetItemData(ImagineResult item, Action<ImagineResult, Texture> clickCallback, Action<ImagineResult> deleteCallback, Action<ImagineResult> downloadCallback)
         {
             _imagineResult = item;
             _clickCallback = clickCallback;

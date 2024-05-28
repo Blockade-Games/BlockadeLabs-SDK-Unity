@@ -13,6 +13,9 @@ namespace BlockadeLabsSDK
         private TextMeshProUGUI _titleText;
 
         [SerializeField]
+        private RawImage _skyboxPreviewImage;
+
+        [SerializeField]
         private TextMeshProUGUI _statusText;
 
         [SerializeField]
@@ -65,10 +68,11 @@ namespace BlockadeLabsSDK
         private void OnCloseButtonClicked()
             => gameObject.SetActive(false);
 
-        internal void ShowPreviewPopup(ImagineResult imagineResult)
+        internal void ShowPreviewPopup(ImagineResult imagineResult, Texture preview)
         {
             _imagineResult = imagineResult;
             _titleText.text = $"World #{imagineResult.id}";
+            _skyboxPreviewImage.texture = preview;
             _statusText.text = $"Status: <color=\"white\">{imagineResult.status}</color>";
             _promptText.text = $"Prompt: <color=\"white\">{imagineResult.prompt}</color>";
             _depthMapText.text = $"Depth Map: <color=\"white\">{(string.IsNullOrWhiteSpace(imagineResult.depth_map_url) ? "Off" : "On")}</color>";
