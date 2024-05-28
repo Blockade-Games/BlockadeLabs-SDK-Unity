@@ -395,6 +395,14 @@ namespace BlockadeLabsSDK
             set { _loadingPopupText = value; }
         }
 
+        [SerializeField]
+        private DialogBox _dialogPopup;
+        public DialogBox DialogPopup
+        {
+            get { return _dialogPopup; }
+            set { _dialogPopup = value; }
+        }
+
         #endregion Popups
 
         [Header("Titlebar")]

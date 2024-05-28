@@ -10,6 +10,9 @@ namespace BlockadeLabsSDK
     public class HistoryPanel : MonoBehaviour
     {
         [SerializeField]
+        private RuntimeGuiManager _runtimeGuiManager;
+
+        [SerializeField]
         private HistoryItemBehaviour _historyItemPrefab;
 
         [SerializeField]
@@ -87,7 +90,7 @@ namespace BlockadeLabsSDK
                 foreach (var item in _lastHistoryResult.data)
                 {
                     var historyItemBehaviour = Instantiate(_historyItemPrefab, _historyItemsContainer);
-                    historyItemBehaviour.SetItemData(item);
+                    historyItemBehaviour.SetItemData(item, OnHistoryItemDelete, OnHistoryItemDownload);
                     _historyItems.Add(historyItemBehaviour);
                 }
             }
@@ -111,6 +114,25 @@ namespace BlockadeLabsSDK
             }
 
             _historyItems.Clear();
+        }
+
+        private void OnHistoryItemDelete(ImagineResult imagineResult)
+            => _runtimeGuiManager.DialogPopup.ShowDialog(
+                "Are you absolutely sure?",
+                "Are you sure you want to remove your skybox? This is not reversible.",
+                onConfirm: () =>
+                {
+                    // TODO
+                    Debug.Log($"Delete {imagineResult.obfuscated_id}");
+                },
+                onCancel: () =>
+                {
+                    // close dialog
+                });
+
+        private void OnHistoryItemDownload(ImagineResult imagineResult)
+        {
+            Debug.Log($"Download {imagineResult.obfuscated_id}");
         }
     }
 }

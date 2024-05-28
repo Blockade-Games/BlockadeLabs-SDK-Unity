@@ -37,6 +37,8 @@ namespace BlockadeLabsSDK
         private GameObject _apiBadge;
 
         private ImagineResult _imagineResult;
+        private Action<ImagineResult> _deleteCallback;
+        private Action<ImagineResult> _downloadCallback;
 
 #if !UNITY_2022_1_OR_NEWER
         private System.Threading.CancellationTokenSource _destroyCancellationTokenSource;
@@ -88,16 +90,10 @@ namespace BlockadeLabsSDK
         }
 
         private void OnRemoveButtonClicked()
-        {
-            Debug.Log($"Remove {_imagineResult.id}");
-            // TODO show a confirmation dialog
-        }
+            => _deleteCallback?.Invoke(_imagineResult);
 
         private void OnDownloadButtonClicked()
-        {
-            Debug.Log($"Download {_imagineResult.id}");
-            // TODO figure how we want to handle loading skybox into scene
-        }
+            => _downloadCallback?.Invoke(_imagineResult);
 
         private void OnOptionsToggleValueChanged(bool value)
         {
@@ -146,9 +142,11 @@ namespace BlockadeLabsSDK
             }
         }
 
-        internal void SetItemData(ImagineResult item)
+        internal void SetItemData(ImagineResult item, Action<ImagineResult> deleteCallback, Action<ImagineResult> downloadCallback)
         {
             _imagineResult = item;
+            _deleteCallback = deleteCallback;
+            _downloadCallback = downloadCallback;
             _descriptionText.text = $"<b>{item.skybox_style_name}</b> | {item.prompt}";
             _timestampText.text = item.completed_at.ToString("G");
             _likeToggle.SetIsOnWithoutNotify(item.isMyFavorite);
