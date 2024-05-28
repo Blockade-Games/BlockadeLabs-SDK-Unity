@@ -56,15 +56,14 @@ namespace BlockadeLabsSDK
         private void OnViewButtonClicked()
         {
             // TODO set skybox as active in main scene
+            // TODO set imagine parameters to generate properties
             Debug.Log("On view skybox");
             gameObject.SetActive(false);
-            _runtimeGuiManager.HistoryPanel.gameObject.SetActive(false);
+            _runtimeGuiManager.ToggleHistoryPanel();
         }
 
         private void OnCloseButtonClicked()
-        {
-            gameObject.SetActive(false);
-        }
+            => gameObject.SetActive(false);
 
         internal void ShowPreviewPopup(ImagineResult imagineResult)
         {

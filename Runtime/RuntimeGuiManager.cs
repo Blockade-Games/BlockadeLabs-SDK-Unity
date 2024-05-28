@@ -552,13 +552,7 @@ namespace BlockadeLabsSDK
             _savePrefabButton.onClick.AddListener(OnSavePrefabButtonClicked);
 
             // History Panel Controls
-            _historyButton.onClick.AddListener(() =>
-            {
-                _historyPanel.gameObject.SetActive(!_historyPanel.gameObject.activeSelf);
-                _viewButton.gameObject.SetActive(!_historyPanel.gameObject.activeSelf);
-                _versionSelector.gameObject.SetActive(!_historyPanel.gameObject.activeSelf);
-                _bottomSection.SetActive(!_historyPanel.gameObject.activeSelf);
-            });
+            _historyButton.onClick.AddListener(ToggleHistoryPanel);
 
             _generator.Reload();
         }
@@ -952,6 +946,14 @@ namespace BlockadeLabsSDK
             {
                 _tipContainer.SetActive(false);
             }
+        }
+
+        public void ToggleHistoryPanel()
+        {
+            _historyPanel.gameObject.SetActive(!_historyPanel.gameObject.activeSelf);
+            _viewButton.gameObject.SetActive(!_historyPanel.gameObject.activeSelf);
+            _versionSelector.gameObject.SetActive(!_historyPanel.gameObject.activeSelf);
+            _bottomSection.SetActive(!_historyPanel.gameObject.activeSelf);
         }
 
         private void Update()
