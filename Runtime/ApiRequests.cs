@@ -227,7 +227,7 @@ namespace BlockadeLabsSDK
 
             LogVerbose("Delete response: " + downloadHandler.text);
             var result = JsonConvert.DeserializeObject<OperationResult>(downloadHandler.text);
-            return !string.IsNullOrWhiteSpace(result?.success) && result.success == "Item deleted successfully";
+            return !string.IsNullOrWhiteSpace(result?.success);
         }
 
         [System.Diagnostics.Conditional("BLOCKADE_DEBUG")]
