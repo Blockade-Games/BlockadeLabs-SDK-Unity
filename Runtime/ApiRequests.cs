@@ -120,7 +120,7 @@ namespace BlockadeLabsSDK
             LogVerbose("Complete download: " + url);
         }
 
-        public static async Task<SkyboxTip> GetSkyboxTipAsync(string apiKey, SkyboxAiModelVersion modelVersion)
+        public static async Task<SkyboxTip> GetSkyboxTipAsync(SkyboxAiModelVersion modelVersion)
         {
             if (modelVersion == SkyboxAiModelVersion.Model3)
             {

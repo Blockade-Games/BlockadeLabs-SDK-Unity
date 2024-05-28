@@ -938,7 +938,7 @@ namespace BlockadeLabsSDK
         {
             if (_generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Generating)
             {
-                var tip = await ApiRequests.GetSkyboxTipAsync(_generator.ApiKey, _generator.ModelVersion);
+                var tip = await ApiRequests.GetSkyboxTipAsync(_generator.ModelVersion);
                 _tipText.text = "<b>Tip:</b> " + tip.tip.Replace("<p>", "").Replace("</p>", "");
                 _tipContainer.SetActive(true);
             }
