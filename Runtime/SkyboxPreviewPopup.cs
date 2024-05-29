@@ -74,7 +74,7 @@ namespace BlockadeLabsSDK
             _titleText.text = $"World #{imagineResult.id}";
             _skyboxPreviewImage.texture = preview;
             _statusText.text = $"Status: <color=\"white\">{imagineResult.status}</color>";
-            _promptText.text = $"Prompt: <color=\"white\">{imagineResult.prompt}</color>";
+            _promptText.text = $"<color=\"white\">{imagineResult.prompt}</color>";
             _depthMapText.text = $"Depth Map: <color=\"white\">{(string.IsNullOrWhiteSpace(imagineResult.depth_map_url) ? "Off" : "On")}</color>";
             _seedText.text = $"Seed: <color=\"white\">{imagineResult.seed}</color>";
             _styleText.text = $"Style: <color=\"white\">{imagineResult.skybox_style_name}</color>";
