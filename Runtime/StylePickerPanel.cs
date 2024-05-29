@@ -50,7 +50,7 @@ namespace BlockadeLabsSDK
         private System.Threading.CancellationTokenSource _destroyCancellationTokenSource;
         // ReSharper disable once InconsistentNaming
         // this is the same name as the unity property introduced in 2022+
-        private CancellationToken destroyCancellationToken => _destroyCancellationTokenSource.Token;
+        private System.Threading.CancellationToken destroyCancellationToken => _destroyCancellationTokenSource.Token;
 #endif
 
         private void Awake()
