@@ -38,7 +38,6 @@ namespace BlockadeLabsSDK
         #endregion Core Components
 
         [Header("Skybox Generator")]
-
         #region Skybox Generator
 
         [SerializeField]

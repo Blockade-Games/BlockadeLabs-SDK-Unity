@@ -90,7 +90,6 @@ namespace BlockadeLabsSDK
         private async void OnLikeToggleValueChanged(bool value)
         {
             var result = await ApiRequests.ToggleFavorite(_imagineResult.id);
-            Debug.Log($"{nameof(OnLikeToggleValueChanged)}::{value} -> {result.isMyFavorite}");
             _likeToggle.SetIsOnWithoutNotify(result.isMyFavorite);
         }
 
