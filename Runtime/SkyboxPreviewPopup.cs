@@ -7,13 +7,19 @@ namespace BlockadeLabsSDK
     public class SkyboxPreviewPopup : MonoBehaviour
     {
         [SerializeField]
+        private Camera _previewCamera;
+
+        [SerializeField]
+        private Renderer _previewSkyboxRenderer;
+
+        [SerializeField]
+        private Shader _skyboxShader;
+
+        [SerializeField]
         private RuntimeGuiManager _runtimeGuiManager;
 
         [SerializeField]
         private TextMeshProUGUI _titleText;
-
-        [SerializeField]
-        private RawImage _skyboxPreviewImage;
 
         [SerializeField]
         private RawImage _depthPreviewImage;
@@ -61,6 +67,24 @@ namespace BlockadeLabsSDK
         private Button _closeButton;
 
         private ImagineResult _imagineResult;
+        private Material _previewMaterial;
+
+        private Material PreviewMaterial
+        {
+            get
+            {
+                if (_previewMaterial == null)
+                {
+                    _previewMaterial = new Material(_skyboxShader)
+                    {
+                        name = "Skybox Preview Material"
+                    };
+                    _previewSkyboxRenderer.sharedMaterial = _previewMaterial;
+                }
+
+                return _previewMaterial;
+            }
+        }
 
         private void OnEnable()
         {
@@ -74,6 +98,14 @@ namespace BlockadeLabsSDK
             _viewButton.onClick.RemoveListener(OnViewButtonClicked);
             _closeButton.onClick.RemoveListener(OnCloseButtonClicked);
             _likeToggle.onValueChanged.RemoveListener(OnLikeToggleValueChanged);
+        }
+
+        private void OnDestroy()
+        {
+            if (_previewMaterial)
+            {
+                Destroy(_previewMaterial);
+            }
         }
 
         private void OnViewButtonClicked()
@@ -100,11 +132,11 @@ namespace BlockadeLabsSDK
             _likeToggle.SetIsOnWithoutNotify(result != null && result.request.isMyFavorite || !value);
         }
 
-        internal void ShowPreviewPopup(ImagineResult imagineResult, Texture preview, Texture depth = null)
+        internal void ShowPreviewPopup(ImagineResult imagineResult, Texture2D preview, Texture2D depth = null)
         {
             _imagineResult = imagineResult;
             _titleText.text = $"World #{imagineResult.id}";
-            _skyboxPreviewImage.texture = preview;
+            PreviewMaterial.mainTexture = preview;
             _depthPreviewImage.texture = depth;
             _depthPreviewImage.enabled = depth != null;
             _likeToggle.SetIsOnWithoutNotify(imagineResult.isMyFavorite);

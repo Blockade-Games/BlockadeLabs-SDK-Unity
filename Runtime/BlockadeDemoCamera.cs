@@ -164,8 +164,11 @@ namespace BlockadeLabsSDK
                     break;
             }
 
-            bool mouseOverGameView = Input.mousePosition.x >= 0 && Input.mousePosition.x < Screen.width &&
-                Input.mousePosition.y >= 0 && Input.mousePosition.y < Screen.height;
+            bool mouseOverGameView = Input.mousePosition.x >= 0 &&
+                                     Input.mousePosition.x < Screen.width &&
+                                     Input.mousePosition.y >= 0 &&
+                                     Input.mousePosition.y < Screen.height;
+
             if (!MouseIsOverUI() && Input.mouseScrollDelta.y != 0 && mouseOverGameView)
             {
                 _zoom += Input.mouseScrollDelta.y * _zoomSpeed * 0.001f;
