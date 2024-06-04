@@ -202,7 +202,7 @@ namespace BlockadeLabsSDK
 
         public static async Task<GetImagineResult> ToggleFavorite(int imagineId)
         {
-            return await GetAsync<GetImagineResult>("toggleFavorite", new Dictionary<string, string> { { "id", imagineId.ToString() } });
+            return await GetAsync<GetImagineResult>($"imagine/favorite/{imagineId}");
         }
 
         public static async Task<bool> DeleteSkyboxAsync(int id, CancellationToken cancellationToken = default)

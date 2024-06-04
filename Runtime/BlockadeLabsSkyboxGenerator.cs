@@ -377,7 +377,7 @@ namespace BlockadeLabsSDK
                     throw new Exception("Error generating skybox.");
                 }
 
-                if (response.status == "error")
+                if (response.status == Status.Error)
                 {
                     throw new Exception(response.error_message);
                 }
@@ -526,13 +526,13 @@ namespace BlockadeLabsSDK
                     break;
                 }
 
-                if (result.request.status == "error")
+                if (result.request.status == Status.Error)
                 {
                     SetGenerateFailed(result.request.error_message);
                     break;
                 }
 
-                if (result.request.status == "complete")
+                if (result.request.status == Status.Complete)
                 {
                     return result;
                 }

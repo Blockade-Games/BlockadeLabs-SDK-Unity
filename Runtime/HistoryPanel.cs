@@ -90,6 +90,7 @@ namespace BlockadeLabsSDK
                 foreach (var item in _lastHistoryResult.data)
                 {
                     var historyItemBehaviour = Instantiate(_historyItemPrefab, _historyItemsContainer);
+                    historyItemBehaviour.gameObject.SetActive(false);
                     historyItemBehaviour.SetItemData(item, OnHistoryItemClick, OnHistoryItemDelete, OnHistoryItemDownload);
                     _historyItems.Add(historyItemBehaviour);
                 }
@@ -116,8 +117,8 @@ namespace BlockadeLabsSDK
             _historyItems.Clear();
         }
 
-        private void OnHistoryItemClick(ImagineResult imagineResult, Texture preview)
-            => _runtimeGuiManager.PreviewPopup.ShowPreviewPopup(imagineResult, preview);
+        private void OnHistoryItemClick(ImagineResult imagineResult, Texture preview, Texture depth)
+            => _runtimeGuiManager.PreviewPopup.ShowPreviewPopup(imagineResult, preview, depth);
 
         private void OnHistoryItemDelete(ImagineResult imagineResult)
             => _runtimeGuiManager.DialogPopup.ShowDialog(

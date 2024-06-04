@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
@@ -14,6 +15,9 @@ namespace BlockadeLabsSDK
 
         [SerializeField]
         private RawImage _thumbnailImage;
+
+        [SerializeField]
+        private RawImage _depthImage;
 
         [SerializeField]
         private TMP_Text _descriptionText;
@@ -40,7 +44,7 @@ namespace BlockadeLabsSDK
         private GameObject _apiBadge;
 
         private ImagineResult _imagineResult;
-        private Action<ImagineResult, Texture> _clickCallback;
+        private Action<ImagineResult, Texture, Texture> _clickCallback;
         private Action<ImagineResult> _deleteCallback;
         private Action<ImagineResult> _downloadCallback;
 
@@ -92,11 +96,11 @@ namespace BlockadeLabsSDK
             }
 
             var result = await ApiRequests.ToggleFavorite(_imagineResult.id);
-            _likeToggle.SetIsOnWithoutNotify(result != null && result.request.isMyFavorite);
+            _likeToggle.SetIsOnWithoutNotify(result != null && result.request.isMyFavorite || !value);
         }
 
         private void OnClick()
-            => _clickCallback?.Invoke(_imagineResult, _thumbnailImage.texture);
+            => _clickCallback?.Invoke(_imagineResult, _thumbnailImage.texture, _depthImage.texture);
 
         private void OnRemoveButtonClicked()
             => _deleteCallback?.Invoke(_imagineResult);
@@ -134,12 +138,11 @@ namespace BlockadeLabsSDK
             }
         }
 
-        private async void RequestThumbnail()
+        private async Task RequestThumbnailAsync(RawImage dest, string url)
         {
             try
             {
-                _thumbnailImage.texture = await ApiRequests.DownloadTextureAsync(_imagineResult.thumb_url, cancellationToken: destroyCancellationToken);
-                gameObject.SetActive(true);
+                dest.texture = await ApiRequests.DownloadTextureAsync(url, cancellationToken: destroyCancellationToken);
             }
             catch (TaskCanceledException)
             {
@@ -151,18 +154,39 @@ namespace BlockadeLabsSDK
             }
         }
 
-        internal void SetItemData(ImagineResult item, Action<ImagineResult, Texture> clickCallback, Action<ImagineResult> deleteCallback, Action<ImagineResult> downloadCallback)
+        internal async void SetItemData(ImagineResult item, Action<ImagineResult, Texture, Texture> clickCallback, Action<ImagineResult> deleteCallback, Action<ImagineResult> downloadCallback)
         {
-            _imagineResult = item;
-            _clickCallback = clickCallback;
-            _deleteCallback = deleteCallback;
-            _downloadCallback = downloadCallback;
-            _descriptionText.text = $"<b>{item.skybox_style_name}</b> | {item.prompt}";
-            _timestampText.text = item.completed_at.ToString("G");
-            _likeToggle.SetIsOnWithoutNotify(item.isMyFavorite);
-            _modelBadge.SetActive(item.model == "Model 3");
-            _apiBadge.SetActive(item.api_key_id != 0);
-            RequestThumbnail();
+            _button.interactable = false;
+
+            try
+            {
+                _imagineResult = item;
+                _clickCallback = clickCallback;
+                _deleteCallback = deleteCallback;
+                _downloadCallback = downloadCallback;
+                _descriptionText.text = $"<b>{item.skybox_style_name}</b> | {item.prompt}";
+                _timestampText.text = item.completed_at.ToString("G");
+                _likeToggle.SetIsOnWithoutNotify(item.isMyFavorite);
+                _modelBadge.SetActive(item.model == "Model 3");
+                _apiBadge.SetActive(item.api_key_id != 0);
+
+                var tasks = new List<Task>
+                {
+                    RequestThumbnailAsync(_thumbnailImage, _imagineResult.thumb_url)
+                };
+
+                if (!string.IsNullOrWhiteSpace(_imagineResult.depth_map_url))
+                {
+                    tasks.Add(RequestThumbnailAsync(_depthImage, _imagineResult.depth_map_url));
+                }
+
+                await Task.WhenAll(tasks).ConfigureAwait(true);
+            }
+            finally
+            {
+                gameObject.SetActive(true);
+                _button.interactable = true;
+            }
         }
     }
 }

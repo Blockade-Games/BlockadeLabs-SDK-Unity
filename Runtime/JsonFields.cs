@@ -23,7 +23,7 @@ namespace BlockadeLabsSDK
         public string id;
         public string obfuscated_id;
         public string prompt;
-        public string status;
+        public Status status;
         public string error_message;
         public string pusher_channel;
         public string pusher_event;
@@ -44,7 +44,7 @@ namespace BlockadeLabsSDK
         public string file_url;
         public string thumb_url;
         public string depth_map_url;
-        public string status;
+        public Status status;
         public string error_message;
         public string prompt;
         public string negative_text;
@@ -55,6 +55,18 @@ namespace BlockadeLabsSDK
         public bool isMyFavorite;
         public string model;
         public string type;
+    }
+
+    [Preserve]
+    internal enum Status
+    {
+        All,
+        Pending,
+        Dispatched,
+        Processing,
+        Complete,
+        Abort,
+        Error
     }
 
     [Preserve, Serializable]
