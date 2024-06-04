@@ -568,6 +568,7 @@ namespace BlockadeLabsSDK
             UpdatePromptCharacterLimit();
             UpdateNegativeTextCharacterLimit();
             UpdateCanRemix();
+            _historyButton.interactable = _generator.CurrentState != BlockadeLabsSkyboxGenerator.State.NeedApiKey;
             _promptCharacterWarning.SetActive(false);
             _negativeTextCharacterWarning.SetActive(false);
 
