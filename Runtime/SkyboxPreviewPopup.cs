@@ -7,7 +7,7 @@ namespace BlockadeLabsSDK
     public class SkyboxPreviewPopup : MonoBehaviour
     {
         [SerializeField]
-        private Camera _previewCamera;
+        private BlockadeDemoCamera _previewCamera;
 
         [SerializeField]
         private Renderer _previewSkyboxRenderer;
@@ -118,7 +118,10 @@ namespace BlockadeLabsSDK
         }
 
         private void OnCloseButtonClicked()
-            => gameObject.SetActive(false);
+        {
+            gameObject.SetActive(false);
+            _previewCamera.ResetView();
+        }
 
         private async void OnLikeToggleValueChanged(bool value)
         {
