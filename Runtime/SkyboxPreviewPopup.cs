@@ -125,14 +125,8 @@ namespace BlockadeLabsSDK
 
         private async void OnLikeToggleValueChanged(bool value)
         {
-            if (_imagineResult == null)
-            {
-                _likeToggle.SetIsOnWithoutNotify(false);
-                return;
-            }
-
             var result = await ApiRequests.ToggleFavorite(_imagineResult.id);
-            _likeToggle.SetIsOnWithoutNotify(result != null && result.request.isMyFavorite || !value);
+            _likeToggle.SetIsOnWithoutNotify(result.isMyFavorite);
         }
 
         internal void ShowPreviewPopup(ImagineResult imagineResult, Texture2D preview, Texture2D depth = null)

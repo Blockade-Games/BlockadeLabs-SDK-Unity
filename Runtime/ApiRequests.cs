@@ -200,9 +200,24 @@ namespace BlockadeLabsSDK
             return await GetAsync<GetHistoryResult>("imagine/myRequests", searchQuery);
         }
 
-        public static async Task<GetImagineResult> ToggleFavorite(int imagineId)
+        public static async Task<ImagineResult> ToggleFavorite(int imagineId)
         {
-            return await GetAsync<GetImagineResult>($"imagine/favorite/{imagineId}");
+            using var request = UnityWebRequest.PostWwwForm($"{ApiEndpoint}imagine/favorite/{imagineId}", null);
+            request.SetRequestHeader("x-api-key", ApiKey);
+            using var downloadHandler = new DownloadHandlerBuffer();
+            request.downloadHandler = downloadHandler;
+            LogVerbose("Toggle Favorite Request: " + request.url);
+            await request.SendWebRequest();
+
+            if (request.result != UnityWebRequest.Result.Success)
+            {
+                Debug.LogError("Get error: " + request.error);
+                return null;
+            }
+
+            LogVerbose("Toggle Favorite response: " + downloadHandler.text);
+            var result = JsonConvert.DeserializeObject<GetImagineResult>(downloadHandler.text);
+            return result.imagine ?? result.request;
         }
 
         public static async Task<bool> DeleteSkyboxAsync(int id, CancellationToken cancellationToken = default)
@@ -211,7 +226,7 @@ namespace BlockadeLabsSDK
             request.SetRequestHeader("x-api-key", ApiKey);
             using var downloadHandler = new DownloadHandlerBuffer();
             request.downloadHandler = downloadHandler;
-            LogVerbose("Delete Request: " + request.url);
+            LogVerbose("Delete Skybox Request: " + request.url);
             await request.SendWebRequest();
 
             if (cancellationToken.IsCancellationRequested)
@@ -225,7 +240,7 @@ namespace BlockadeLabsSDK
                 return false;
             }
 
-            LogVerbose("Delete response: " + downloadHandler.text);
+            LogVerbose("Delete Skybox Response: " + downloadHandler.text);
             var result = JsonConvert.DeserializeObject<OperationResult>(downloadHandler.text);
             const string successStatus = "Item deleted successfully";
             return result.success.Equals(successStatus);

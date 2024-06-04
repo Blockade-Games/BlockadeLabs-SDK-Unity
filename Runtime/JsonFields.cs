@@ -33,6 +33,7 @@ namespace BlockadeLabsSDK
     internal class GetImagineResult
     {
         public ImagineResult request;
+        public ImagineResult imagine;
     }
 
     [Preserve, Serializable]
