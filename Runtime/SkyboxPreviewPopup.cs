@@ -75,6 +75,8 @@ namespace BlockadeLabsSDK
             {
                 if (_previewMaterial == null)
                 {
+                    // get built in skybox shader
+                    _skyboxShader ??= Shader.Find("Skybox/Panoramic");
                     _previewMaterial = new Material(_skyboxShader)
                     {
                         name = "Skybox Preview Material"
