@@ -5,6 +5,7 @@ using System.IO;
 using System.Threading.Tasks;
 using UnityEngine;
 using System.Collections;
+using System.Linq;
 
 #if UNITY_HDRP
 using System.Linq;
@@ -107,6 +108,9 @@ namespace BlockadeLabsSDK
 
         private List<SkyboxStyleFamily> _styleFamilies;
         public IReadOnlyList<SkyboxStyleFamily> StyleFamilies => _styleFamilies;
+
+        private List<SkyboxStyleFamily> _allModelStyleFamilies;
+        public IReadOnlyList<SkyboxStyleFamily> AllModelStyleFamilies => _allModelStyleFamilies;
 
         [SerializeField]
         private int _selectedStyleFamilyIndex;
@@ -287,24 +291,46 @@ namespace BlockadeLabsSDK
         {
             ClearError();
 
-            _styleFamilies = await ApiRequests.GetSkyboxStylesMenuAsync(_modelVersion);
-            if (_styleFamilies == null || _styleFamilies.Count == 0)
+            var model2Styles = await ApiRequests.GetSkyboxStylesMenuAsync(SkyboxAiModelVersion.Model2);
+            if (model2Styles == null || model2Styles.Count == 0)
             {
                 SetError("Something went wrong. Please recheck you API key.");
                 return;
             }
 
+            var model3Styles = await ApiRequests.GetSkyboxStylesMenuAsync(SkyboxAiModelVersion.Model3);
+            if (model3Styles == null || model3Styles.Count == 0)
+            {
+                SetError("Something went wrong. Please recheck you API key.");
+                return;
+            }
+
+            CleanupStyleFamilyList(model2Styles);
+            CleanupStyleFamilyList(model3Styles);
+
+            _allModelStyleFamilies = model3Styles.Concat(model2Styles).ToList();
+            _styleFamilies = _modelVersion == SkyboxAiModelVersion.Model2 ? model2Styles : model3Styles;
+
+            _selectedStyleFamilyIndex = Math.Min(_selectedStyleFamilyIndex, _styleFamilies.Count - 1);
+            _selectedStyleIndex = Math.Min(_selectedStyleIndex, _styleFamilies[_selectedStyleFamilyIndex].items.Count - 1);
+
+            OnPropertyChanged?.Invoke();
+            SetState(State.Ready);
+        }
+
+        private void CleanupStyleFamilyList(List<SkyboxStyleFamily> styleFamilies)
+        {
             // Remove anything with status: "disabled"
-            _styleFamilies.ForEach(x => x.items?.RemoveAll(y => y.status == "disabled"));
-            _styleFamilies.RemoveAll(x => x.status == "disabled" || x.items?.Count == 0);
+            styleFamilies.ForEach(x => x.items?.RemoveAll(y => y.status == "disabled"));
+            styleFamilies.RemoveAll(x => x.status == "disabled" || x.items?.Count == 0);
 
             // Ensure each style has a family to simplify logic everywhere.
-            for (int i = 0; i < _styleFamilies.Count; i++)
+            for (int i = 0; i < styleFamilies.Count; i++)
             {
-                if (_styleFamilies[i].type == "style")
+                if (styleFamilies[i].type == "style")
                 {
-                    var style = _styleFamilies[i];
-                    _styleFamilies[i] = new SkyboxStyleFamily
+                    var style = styleFamilies[i];
+                    styleFamilies[i] = new SkyboxStyleFamily
                     {
                         type = "family",
                         id = style.id,
@@ -324,12 +350,6 @@ namespace BlockadeLabsSDK
                     };
                 }
             }
-
-            _selectedStyleFamilyIndex = Math.Min(_selectedStyleFamilyIndex, _styleFamilies.Count - 1);
-            _selectedStyleIndex = Math.Min(_selectedStyleIndex, _styleFamilies[_selectedStyleFamilyIndex].items.Count - 1);
-
-            OnPropertyChanged?.Invoke();
-            SetState(State.Ready);
         }
 
         public async void GenerateSkyboxAsync()

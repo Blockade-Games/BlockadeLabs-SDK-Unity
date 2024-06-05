@@ -19,6 +19,9 @@ namespace BlockadeLabsSDK
         private SearchToolbar _searchToolbar;
 
         [SerializeField]
+        private StylePickerPanel _stylePickerPanel;
+
+        [SerializeField]
         private Transform _historyItemsContainer;
 
         [SerializeField]
@@ -43,6 +46,8 @@ namespace BlockadeLabsSDK
         {
             _scrollRect.onValueChanged.AddListener(OnScrollRectValueChanged);
             _searchToolbar.OnSearchQueryChanged += OnSearchQueryChanged;
+            _runtimeGuiManager.Generator.OnStateChanged += OnGeneratorStateChanged;
+            OnGeneratorStateChanged();
             await FetchHistoryAsync();
         }
 
@@ -50,6 +55,7 @@ namespace BlockadeLabsSDK
         {
             _scrollRect.onValueChanged.RemoveListener(OnScrollRectValueChanged);
             _searchToolbar.OnSearchQueryChanged -= OnSearchQueryChanged;
+            _runtimeGuiManager.Generator.OnStateChanged -= OnGeneratorStateChanged;
             ClearHistory();
         }
 
@@ -69,6 +75,14 @@ namespace BlockadeLabsSDK
         {
             searchParameters.Offset = 0;
             await FetchHistoryAsync(searchParameters);
+        }
+
+        private void OnGeneratorStateChanged()
+        {
+            if (_runtimeGuiManager.Generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Ready)
+            {
+                _stylePickerPanel.SetStyles(_runtimeGuiManager.Generator.AllModelStyleFamilies);
+            }
         }
 
         private async Task FetchHistoryAsync(HistorySearchQueryParameters searchParameters = null, bool clearResults = true)

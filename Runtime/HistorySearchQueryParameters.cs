@@ -54,6 +54,6 @@ namespace BlockadeLabsSDK
         /// <summary>
         /// Filter by Skybox Style Id. Defaults to any.
         /// </summary>
-        public string SkyboxStyleId { get; set; } = "any";
+        public int SkyboxStyleId { get; set; } = 0;
     }
 }
