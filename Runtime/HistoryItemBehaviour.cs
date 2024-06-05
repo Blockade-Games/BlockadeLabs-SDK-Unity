@@ -48,6 +48,8 @@ namespace BlockadeLabsSDK
         private Action<ImagineResult> _deleteCallback;
         private Action<ImagineResult> _downloadCallback;
 
+        private static readonly Dictionary<string, Tuple<Texture2D, Texture2D>> _imageCache = new Dictionary<string, Tuple<Texture2D, Texture2D>>();
+
 #if !UNITY_2022_1_OR_NEWER
         private System.Threading.CancellationTokenSource _destroyCancellationTokenSource;
         // ReSharper disable once InconsistentNaming
@@ -134,11 +136,27 @@ namespace BlockadeLabsSDK
             }
         }
 
-        private async Task RequestThumbnailAsync(RawImage dest, string url)
+        private async Task RequestThumbnailAsync(string id, RawImage dest, string url)
         {
             try
             {
-                dest.texture = await ApiRequests.DownloadTextureAsync(url, cancellationToken: destroyCancellationToken);
+                var texture = await ApiRequests.DownloadTextureAsync(url, cancellationToken: destroyCancellationToken);
+
+                _imageCache.TryGetValue(id, out var cachedImages);
+                var (thumbnail, depth) = cachedImages ?? new Tuple<Texture2D, Texture2D>(null, null);
+
+                if (dest == _thumbnailImage)
+                {
+                    thumbnail = texture;
+                }
+
+                if (dest == _depthImage)
+                {
+                    depth = texture;
+                }
+
+                dest.texture = texture;
+                _imageCache[id] = new Tuple<Texture2D, Texture2D>(thumbnail, depth);
             }
             catch (TaskCanceledException)
             {
@@ -166,17 +184,26 @@ namespace BlockadeLabsSDK
                 _modelBadge.SetActive(item.model == "Model 3");
                 _apiBadge.SetActive(item.api_key_id != 0);
 
-                var tasks = new List<Task>
+                if (!_imageCache.TryGetValue(item.obfuscated_id, out var cachedImages))
                 {
-                    RequestThumbnailAsync(_thumbnailImage, _imagineResult.thumb_url)
-                };
+                    var tasks = new List<Task>
+                    {
+                        RequestThumbnailAsync(item.obfuscated_id, _thumbnailImage, _imagineResult.thumb_url)
+                    };
 
-                if (!string.IsNullOrWhiteSpace(_imagineResult.depth_map_url))
-                {
-                    tasks.Add(RequestThumbnailAsync(_depthImage, _imagineResult.depth_map_url));
+                    if (!string.IsNullOrWhiteSpace(_imagineResult.depth_map_url))
+                    {
+                        tasks.Add(RequestThumbnailAsync(item.obfuscated_id, _depthImage, _imagineResult.depth_map_url));
+                    }
+
+                    await Task.WhenAll(tasks).ConfigureAwait(true);
                 }
-
-                await Task.WhenAll(tasks).ConfigureAwait(true);
+                else
+                {
+                    var (thumbnail, depth) = cachedImages;
+                    _thumbnailImage.texture = thumbnail;
+                    _depthImage.texture = depth;
+                }
             }
             finally
             {
