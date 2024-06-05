@@ -202,7 +202,11 @@ namespace BlockadeLabsSDK
 
         public static async Task<ImagineResult> ToggleFavorite(int imagineId)
         {
+#if UNITY_2021_1_OR_NEWER
             using var request = UnityWebRequest.PostWwwForm($"{ApiEndpoint}imagine/favorite/{imagineId}", null);
+#else
+            using var request = UnityWebRequest.Post($"{ApiEndpoint}imagine/favorite/{imagineId}", null as string);
+#endif
             request.SetRequestHeader("x-api-key", ApiKey);
             using var downloadHandler = new DownloadHandlerBuffer();
             request.downloadHandler = downloadHandler;
