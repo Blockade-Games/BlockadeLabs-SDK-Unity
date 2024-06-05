@@ -188,7 +188,7 @@ namespace BlockadeLabsSDK
                 {
                     var tasks = new List<Task>
                     {
-                        RequestThumbnailAsync(item.obfuscated_id, _thumbnailImage, _imagineResult.thumb_url)
+                        RequestThumbnailAsync(item.obfuscated_id, _thumbnailImage, _imagineResult.file_url)
                     };
 
                     if (!string.IsNullOrWhiteSpace(_imagineResult.depth_map_url))
