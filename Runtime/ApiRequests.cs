@@ -191,10 +191,10 @@ namespace BlockadeLabsSDK
                     searchQuery.Add("api_key_id", searchQueryParams.GeneratedBy.Value.ToString());
                 }
 
-                //if (!string.IsNullOrWhiteSpace(searchQueryParams.SkyboxStyleId))
-                //{
-                //    searchQuery.Add("skybox_style_id", searchQueryParams.SkyboxStyleId);
-                //}
+                if (searchQueryParams.SkyboxStyleId != 0)
+                {
+                   searchQuery.Add("skybox_style_id", searchQueryParams.SkyboxStyleId.ToString());
+                }
             }
 
             return await GetAsync<GetHistoryResult>("imagine/myRequests", searchQuery);

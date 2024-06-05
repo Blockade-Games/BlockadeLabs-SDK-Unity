@@ -34,6 +34,12 @@ namespace BlockadeLabsSDK
         private GameObject _previewPanelRoot;
 
         [SerializeField]
+        private bool _showAllStylesOption;
+
+        [SerializeField]
+        private bool _showPreview;
+
+        [SerializeField]
         private Image _previewImage;
 
         [SerializeField]
@@ -96,6 +102,17 @@ namespace BlockadeLabsSDK
             foreach (Transform child in _styleFamilyContainer)
             {
                 Destroy(child.gameObject);
+            }
+
+            if (_showAllStylesOption)
+            {
+                var allStylesFamilyItem = Instantiate(_styleItemPrefab, _styleFamilyContainer);
+                allStylesFamilyItem.SetStyleFamily(new SkyboxStyleFamily
+                {
+                    name = "All Styles",
+                    id = 0,
+                    items = new List<SkyboxStyle>()
+                });
             }
 
             foreach (var styleFamily in styleFamilies)
@@ -167,6 +184,11 @@ namespace BlockadeLabsSDK
 
         private async void ShowPreviewAsync(SkyboxStyle style)
         {
+            if (!_showPreview)
+            {
+                return;
+            }
+
             _previewPanelRoot.SetActive(false);
             _previewStyle = style;
 

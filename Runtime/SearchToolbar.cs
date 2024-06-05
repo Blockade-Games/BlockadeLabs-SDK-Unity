@@ -18,7 +18,10 @@ namespace BlockadeLabsSDK
         private TMP_Dropdown _generatedByDropdown;
 
         [SerializeField]
-        private TMP_Dropdown _styleDropdown;
+        private TMP_Text _stylePickerButtonText;
+
+        [SerializeField]
+        private StylePickerPanel _stylePickerPanel;
 
         [SerializeField]
         private TMP_Dropdown _sortDropdown;
@@ -46,8 +49,7 @@ namespace BlockadeLabsSDK
             _searchInputField.onValueChanged.AddListener(OnSearchInputValueChanged);
             _onlyLikesToggle.onValueChanged.AddListener(OnOnlyLikesToggleValueChanged);
             _generatedByDropdown.onValueChanged.AddListener(OnGeneratedByDropdownValueChanged);
-            _styleDropdown.onValueChanged.AddListener(OnStyleDropdownValueChanged);
-            _sortDropdown.onValueChanged.AddListener(OnSortDropdownValueChanged);
+            _stylePickerPanel.OnStylePicked += OnStylePicked;
         }
 
         private void OnDisable()
@@ -55,8 +57,7 @@ namespace BlockadeLabsSDK
             _searchInputField.onValueChanged.RemoveListener(OnSearchInputValueChanged);
             _onlyLikesToggle.onValueChanged.RemoveListener(OnOnlyLikesToggleValueChanged);
             _generatedByDropdown.onValueChanged.RemoveListener(OnGeneratedByDropdownValueChanged);
-            _styleDropdown.onValueChanged.RemoveListener(OnStyleDropdownValueChanged);
-            _sortDropdown.onValueChanged.RemoveListener(OnSortDropdownValueChanged);
+            _stylePickerPanel.OnStylePicked -= OnStylePicked;
         }
 
         private void OnSearchInputValueChanged(string value)
@@ -81,13 +82,10 @@ namespace BlockadeLabsSDK
             OnSearchQueryChanged?.Invoke(_searchQueryParameters);
         }
 
-        private void OnStyleDropdownValueChanged(int value)
+        private void OnStylePicked(SkyboxStyle style)
         {
-            _searchQueryParameters.SkyboxStyleId = value switch
-            {
-                -1 => "any",
-                _ => value.ToString()
-            };
+            _stylePickerButtonText.text = style.name;
+            _searchQueryParameters.SkyboxStyleId = style.id;
             OnSearchQueryChanged?.Invoke(_searchQueryParameters);
         }
 
