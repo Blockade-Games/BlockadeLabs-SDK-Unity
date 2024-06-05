@@ -202,7 +202,7 @@ namespace BlockadeLabsSDK
 
         public static async Task<ImagineResult> ToggleFavorite(int imagineId)
         {
-#if UNITY_2021_1_OR_NEWER
+#if UNITY_2022_1_OR_NEWER
             using var request = UnityWebRequest.PostWwwForm($"{ApiEndpoint}imagine/favorite/{imagineId}", null);
 #else
             using var request = UnityWebRequest.Post($"{ApiEndpoint}imagine/favorite/{imagineId}", null as string);
