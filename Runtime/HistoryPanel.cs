@@ -81,7 +81,7 @@ namespace BlockadeLabsSDK
         {
             if (_runtimeGuiManager.Generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Ready)
             {
-                _stylePickerPanel.SetStyles(_runtimeGuiManager.Generator.StyleFamilies);
+                _stylePickerPanel.SetStyles(_runtimeGuiManager.Generator.AllModelStyleFamilies);
             }
         }
 
