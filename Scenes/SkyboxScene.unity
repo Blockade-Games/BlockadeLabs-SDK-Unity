@@ -11430,7 +11430,7 @@ MonoBehaviour:
   _sphereOrbitZoomDefault: -0.8
   _meshCreatorZoomDefault: -0.5
   _zoomSpeed: 120
-  _zoomMax: 2.75
+  _zoomMax: 2
   _zoomMin: -2
   _sphereOrbitZoomMax: -0.5
   _smooth: 5
