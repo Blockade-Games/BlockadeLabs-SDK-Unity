@@ -178,8 +178,13 @@ namespace BlockadeLabsSDK
             }
             finally
             {
-                gameObject.SetActive(true);
-                _button.interactable = true;
+                // ReSharper disable once ConditionIsAlwaysTrueOrFalse
+                // it is possible that the instance is destroyed when leaving play mode
+                if (this != null)
+                {
+                    gameObject.SetActive(true);
+                    _button.interactable = true;
+                }
             }
         }
     }

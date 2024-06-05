@@ -56,18 +56,18 @@ namespace BlockadeLabsSDK
             return name.TrimStart('_').TrimEnd('_').Trim();
         }
 
-        internal static T LoadAsset<T>(string guid) where T : UnityEngine.Object
+        internal static T LoadAsset<T>(string guid) where T : Object
         {
             return AssetDatabase.LoadAssetAtPath<T>(AssetDatabase.GUIDToAssetPath(guid));
         }
 
-        internal static void PingAsset(UnityEngine.Object asset)
+        internal static void PingAsset(Object asset)
         {
             EditorApplication.ExecuteMenuItem("Window/General/Project");
             EditorGUIUtility.PingObject(asset);
         }
 
-        internal static string GetFolder(UnityEngine.Object asset)
+        internal static string GetFolder(Object asset)
         {
             var path = AssetDatabase.GetAssetPath(asset);
             return path.Substring(0, path.LastIndexOf('/'));

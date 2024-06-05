@@ -138,9 +138,13 @@ namespace BlockadeLabsSDK
                     // empty callback will close dialog
                 });
 
-        private void OnHistoryItemDownload(ImagineResult imagineResult)
+        private async void OnHistoryItemDownload(ImagineResult imagineResult)
         {
-            Debug.Log($"Download {imagineResult.obfuscated_id}");
+            await _runtimeGuiManager.Generator.DownloadResultAsync(
+                new GetImagineResult
+                {
+                    request = imagineResult
+                }, false);
         }
     }
 }
