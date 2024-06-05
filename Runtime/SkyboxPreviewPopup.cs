@@ -110,7 +110,6 @@ namespace BlockadeLabsSDK
 
         private async void OnViewButtonClicked()
         {
-            Debug.Log($"On view skybox {_imagineResult.id}");
             _runtimeGuiManager.ToggleHistoryPanel();
             await _runtimeGuiManager.Generator.DownloadResultAsync(
                 new GetImagineResult

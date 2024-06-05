@@ -66,6 +66,8 @@ namespace BlockadeLabsSDK
             _likeToggle.onValueChanged.AddListener(OnLikeToggleValueChanged);
             _removeButton.onClick.AddListener(OnRemoveButtonClicked);
             _downloadButton.onClick.AddListener(OnDownloadButtonClicked);
+            // disable downloading in runtime builds
+            _downloadButton.gameObject.SetActive(Application.isEditor);
             _optionsToggle.OnValueChanged.AddListener(OnOptionsToggleValueChanged);
         }
 

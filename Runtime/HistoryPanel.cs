@@ -140,11 +140,15 @@ namespace BlockadeLabsSDK
 
         private async void OnHistoryItemDownload(ImagineResult imagineResult)
         {
+#if UNITY_EDITOR
             await _runtimeGuiManager.Generator.DownloadResultAsync(
                 new GetImagineResult
                 {
                     request = imagineResult
                 }, false);
+#else
+            await Task.CompletedTask;
+#endif
         }
     }
 }
