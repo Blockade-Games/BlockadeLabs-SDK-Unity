@@ -3,12 +3,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using UnityEngine;
 using System.Collections;
 using System.Linq;
+using UnityEngine;
 
 #if UNITY_HDRP
-using System.Linq;
 using UnityEngine.Rendering;
 #endif
 
