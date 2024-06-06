@@ -8,7 +8,10 @@ namespace BlockadeLabsSDK
 {
     public class RuntimeGuiManager : MonoBehaviour
     {
-        [SerializeField, Header("Core Components")]
+        [Header("Core Components")]
+        #region Core Components
+
+        [SerializeField]
         private BlockadeLabsSkyboxGenerator _generator;
         public BlockadeLabsSkyboxGenerator Generator
         {
@@ -32,7 +35,20 @@ namespace BlockadeLabsSDK
             set { _demoCamera = value; }
         }
 
-        [SerializeField, Header("Skybox Generator")]
+        #endregion Core Components
+
+        [Header("Skybox Generator")]
+        #region Skybox Generator
+
+        [SerializeField]
+        private GameObject _bottomSection;
+        public GameObject BottomSection
+        {
+            get { return _bottomSection; }
+            set { _bottomSection = value; }
+        }
+
+        [SerializeField]
         private TMP_InputField _promptInput;
         public TMP_InputField PromptInput
         {
@@ -248,7 +264,12 @@ namespace BlockadeLabsSDK
             set { _spheres = value; }
         }
 
-        [SerializeField, Header("Mesh Creator")]
+        #endregion Skybox Generator
+
+        [Header("Mesh Creator")]
+        #region Mesh Creator
+
+        [SerializeField]
         private GameObject _meshCreator;
         public GameObject MeshCreator
         {
@@ -328,7 +349,12 @@ namespace BlockadeLabsSDK
             set { _promptPanel = value; }
         }
 
-        [SerializeField, Header("Popups")]
+        #endregion Mesh Creator
+
+        [Header("Popups")]
+        #region Popups
+
+        [SerializeField]
         private GameObject _helloPopup;
         public GameObject HelloPopup
         {
@@ -368,7 +394,36 @@ namespace BlockadeLabsSDK
             set { _loadingPopupText = value; }
         }
 
-        [SerializeField, Header("Titlebar")]
+        [SerializeField]
+        private DialogBox _dialogPopup;
+        public DialogBox DialogPopup
+        {
+            get { return _dialogPopup; }
+            set { _dialogPopup = value; }
+        }
+
+        [SerializeField]
+        private SkyboxPreviewPopup _previewPopup;
+        public SkyboxPreviewPopup PreviewPopup
+        {
+            get => _previewPopup;
+            set => _previewPopup = value;
+        }
+
+        #endregion Popups
+
+        [Header("Titlebar")]
+        #region Titlebar
+
+        [SerializeField]
+        private Button _historyButton;
+        public Button HistoryButton
+        {
+            get { return _historyButton; }
+            set { _historyButton = value; }
+        }
+
+        [SerializeField]
         private GameObject _viewButton;
         public GameObject ViewButton
         {
@@ -416,16 +471,34 @@ namespace BlockadeLabsSDK
             set { _model3Selected = value; }
         }
 
+        #endregion Titlebar
+
+        [Header("History")]
+        #region History
+
+        [SerializeField]
+        private HistoryPanel _historyPanel;
+        public HistoryPanel HistoryPanel
+        {
+            get { return _historyPanel; }
+            set { _historyPanel = value; }
+        }
+
+        #endregion History
+
         private float _createUnderlineOffset;
         private bool _anyStylePicked;
 
-        async void Start()
+        private void Start()
         {
             _helloPopup.SetActive(false);
             _viewButton.SetActive(true);
             _versionSelector.SetActive(true);
             _promptPanel.SetActive(true);
             _tipContainer.SetActive(false);
+            _historyPanel.gameObject.SetActive(false);
+            _historyButton.gameObject.SetActive(true);
+            _previewPopup.gameObject.SetActive(false);
 
             // Initialize values
             _skybox.BakedMesh = null;
@@ -459,10 +532,10 @@ namespace BlockadeLabsSDK
             _createButton.onClick.AddListener(OnCreateButtonClicked);
             _remixButton.onClick.AddListener(OnRemixButtonClicked);
             _createUnderlineOffset = _createRemixUnderline.localPosition.x;
-            _createButton.GetComponent<Hoverable>().OnHoverChanged.AddListener((_) => UpdateHintText());
-            _remixButton.GetComponent<Hoverable>().OnHoverChanged.AddListener((_) => UpdateHintText());
-            _editButton.GetComponent<Hoverable>().OnHoverChanged.AddListener((_) => UpdateHintText());
-            _meshCreatorButton.GetComponent<Hoverable>().OnHoverChanged.AddListener((_) => UpdateHintText());
+            _createButton.GetComponent<Hoverable>().OnHoverChanged.AddListener(_ => UpdateHintText());
+            _remixButton.GetComponent<Hoverable>().OnHoverChanged.AddListener(_ => UpdateHintText());
+            _editButton.GetComponent<Hoverable>().OnHoverChanged.AddListener(_ => UpdateHintText());
+            _meshCreatorButton.GetComponent<Hoverable>().OnHoverChanged.AddListener(_ => UpdateHintText());
             _stylePickerPanel.OnStylePicked += OnStylePicked;
             _generateButton.onClick.AddListener(OnGenerateButtonClicked);
             _meshCreatorButton.onClick.AddListener(OnMeshCreatorButtonClicked);
@@ -474,10 +547,13 @@ namespace BlockadeLabsSDK
             _mediumDensityToggle.OnTurnedOn.AddListener(() => _skybox.MeshDensity = MeshDensity.Medium);
             _highDensityToggle.OnTurnedOn.AddListener(() => _skybox.MeshDensity = MeshDensity.High);
             _epicDensityToggle.OnTurnedOn.AddListener(() => _skybox.MeshDensity = MeshDensity.Epic);
-            _depthScaleSlider.onValueChanged.AddListener((_) => _skybox.DepthScale = _depthScaleSlider.value);
+            _depthScaleSlider.onValueChanged.AddListener(_ => _skybox.DepthScale = _depthScaleSlider.value);
             _savePrefabButton.onClick.AddListener(OnSavePrefabButtonClicked);
 
-            await _generator.LoadAsync();
+            // History Panel Controls
+            _historyButton.onClick.AddListener(ToggleHistoryPanel);
+
+            _generator.Reload();
         }
 
         private void OnGeneratorPropertyChanged()
@@ -542,6 +618,8 @@ namespace BlockadeLabsSDK
             UpdateCanRemix();
             UpdateMeshCreatorButton();
             UpdateTip();
+
+            _historyButton.interactable = _generator.CurrentState != BlockadeLabsSkyboxGenerator.State.NeedApiKey;
 
             if (_generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Ready)
             {
@@ -861,7 +939,7 @@ namespace BlockadeLabsSDK
         {
             if (_generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Generating)
             {
-                var tip = await ApiRequests.GetSkyboxTipAsync(_generator.ApiKey, _generator.ModelVersion);
+                var tip = await ApiRequests.GetSkyboxTipAsync(_generator.ModelVersion);
                 _tipText.text = "<b>Tip:</b> " + tip.tip.Replace("<p>", "").Replace("</p>", "");
                 _tipContainer.SetActive(true);
             }
@@ -869,6 +947,14 @@ namespace BlockadeLabsSDK
             {
                 _tipContainer.SetActive(false);
             }
+        }
+
+        public void ToggleHistoryPanel()
+        {
+            _historyPanel.gameObject.SetActive(!_historyPanel.gameObject.activeSelf);
+            _viewButton.gameObject.SetActive(!_historyPanel.gameObject.activeSelf);
+            _versionSelector.gameObject.SetActive(!_historyPanel.gameObject.activeSelf);
+            _bottomSection.SetActive(!_historyPanel.gameObject.activeSelf);
         }
 
         private void Update()

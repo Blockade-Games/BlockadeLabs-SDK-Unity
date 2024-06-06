@@ -123,7 +123,7 @@ namespace BlockadeLabsSDK
 
             if (renderer.sharedMaterial.mainTexture.name == "default_skybox_texture")
             {
-                new GetImagineResult() { request = new GetImagineRequest() { id = 0 } };
+                return new GetImagineResult { request = new ImagineResult { id = 0 } };
             }
 
 #if UNITY_EDITOR

@@ -2,11 +2,14 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
-using UnityEngine;
-using UnityEngine.Rendering;
 using System.Collections;
+using System.Linq;
+using UnityEngine;
+
+#if UNITY_HDRP
+using UnityEngine.Rendering;
+#endif
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -14,6 +17,7 @@ using UnityEditor;
 
 #if PUSHER_PRESENT
 using PusherClient;
+using System.Linq;
 #endif
 
 namespace BlockadeLabsSDK
@@ -26,7 +30,12 @@ namespace BlockadeLabsSDK
         public string ApiKey
         {
             get => _apiKey;
-            set => _apiKey = value;
+            set
+            {
+                if (_apiKey == value) { return; }
+                _apiKey = value;
+                CheckApiKeyValid();
+            }
         }
 
         [Tooltip("The version of the generation engine to use.")]
@@ -98,6 +107,9 @@ namespace BlockadeLabsSDK
 
         private List<SkyboxStyleFamily> _styleFamilies;
         public IReadOnlyList<SkyboxStyleFamily> StyleFamilies => _styleFamilies;
+
+        private List<SkyboxStyleFamily> _allModelStyleFamilies;
+        public IReadOnlyList<SkyboxStyleFamily> AllModelStyleFamilies => _allModelStyleFamilies;
 
         [SerializeField]
         private int _selectedStyleFamilyIndex;
@@ -238,10 +250,12 @@ namespace BlockadeLabsSDK
         {
             if (string.IsNullOrWhiteSpace(_apiKey) || _apiKey.Contains("api.blockadelabs.com"))
             {
-                _state = State.NeedApiKey;
+                SetError("Something went wrong. Please recheck you API key.");
+                SetState(State.NeedApiKey);
                 return false;
             }
 
+            ApiRequests.ApiKey = _apiKey;
             return true;
         }
 
@@ -276,24 +290,46 @@ namespace BlockadeLabsSDK
         {
             ClearError();
 
-            _styleFamilies = await ApiRequests.GetSkyboxStylesMenuAsync(_apiKey, _modelVersion);
-            if (_styleFamilies == null || _styleFamilies.Count == 0)
+            var model2Styles = await ApiRequests.GetSkyboxStylesMenuAsync(SkyboxAiModelVersion.Model2);
+            if (model2Styles == null || model2Styles.Count == 0)
             {
                 SetError("Something went wrong. Please recheck you API key.");
                 return;
             }
 
+            var model3Styles = await ApiRequests.GetSkyboxStylesMenuAsync(SkyboxAiModelVersion.Model3);
+            if (model3Styles == null || model3Styles.Count == 0)
+            {
+                SetError("Something went wrong. Please recheck you API key.");
+                return;
+            }
+
+            CleanupStyleFamilyList(model2Styles);
+            CleanupStyleFamilyList(model3Styles);
+
+            _allModelStyleFamilies = model3Styles.Concat(model2Styles).ToList();
+            _styleFamilies = _modelVersion == SkyboxAiModelVersion.Model2 ? model2Styles : model3Styles;
+
+            _selectedStyleFamilyIndex = Math.Min(_selectedStyleFamilyIndex, _styleFamilies.Count - 1);
+            _selectedStyleIndex = Math.Min(_selectedStyleIndex, _styleFamilies[_selectedStyleFamilyIndex].items.Count - 1);
+
+            OnPropertyChanged?.Invoke();
+            SetState(State.Ready);
+        }
+
+        private void CleanupStyleFamilyList(List<SkyboxStyleFamily> styleFamilies)
+        {
             // Remove anything with status: "disabled"
-            _styleFamilies.ForEach(x => x.items?.RemoveAll(y => y.status == "disabled"));
-            _styleFamilies.RemoveAll(x => x.status == "disabled" || x.items?.Count == 0);
+            styleFamilies.ForEach(x => x.items?.RemoveAll(y => y.status == "disabled"));
+            styleFamilies.RemoveAll(x => x.status == "disabled" || x.items?.Count == 0);
 
             // Ensure each style has a family to simplify logic everywhere.
-            for (int i = 0; i < _styleFamilies.Count; i++)
+            for (int i = 0; i < styleFamilies.Count; i++)
             {
-                if (_styleFamilies[i].type == "style")
+                if (styleFamilies[i].type == "style")
                 {
-                    var style = _styleFamilies[i];
-                    _styleFamilies[i] = new SkyboxStyleFamily
+                    var style = styleFamilies[i];
+                    styleFamilies[i] = new SkyboxStyleFamily
                     {
                         type = "family",
                         id = style.id,
@@ -313,12 +349,6 @@ namespace BlockadeLabsSDK
                     };
                 }
             }
-
-            _selectedStyleFamilyIndex = Math.Min(_selectedStyleFamilyIndex, _styleFamilies.Count - 1);
-            _selectedStyleIndex = Math.Min(_selectedStyleIndex, _styleFamilies[_selectedStyleFamilyIndex].items.Count - 1);
-
-            OnPropertyChanged?.Invoke();
-            SetState(State.Ready);
         }
 
         public async void GenerateSkyboxAsync()
@@ -356,7 +386,7 @@ namespace BlockadeLabsSDK
 
             try
             {
-                var response = await ApiRequests.GenerateSkyboxAsync(request, _apiKey);
+                var response = await ApiRequests.GenerateSkyboxAsync(request);
                 if (_isCancelled)
                 {
                     return;
@@ -367,7 +397,7 @@ namespace BlockadeLabsSDK
                     throw new Exception("Error generating skybox.");
                 }
 
-                if (response.status == "error")
+                if (response.status == Status.Error)
                 {
                     throw new Exception(response.error_message);
                 }
@@ -381,11 +411,11 @@ namespace BlockadeLabsSDK
 
                 UpdateProgress(33);
 
-    #if PUSHER_PRESENT
+#if PUSHER_PRESENT
                 var result = await WaitForPusherResultAsync(response.pusher_channel, response.pusher_event);
-    #else
+#else
                 var result = await PollForResultAsync(response.obfuscated_id);
-    #endif
+#endif
                 if (_isCancelled || result == null)
                 {
                     return;
@@ -510,19 +540,19 @@ namespace BlockadeLabsSDK
                     break;
                 }
 
-                var result = await ApiRequests.GetRequestStatusAsync(imagineObfuscatedId, _apiKey);
+                var result = await ApiRequests.GetRequestStatusAsync(imagineObfuscatedId);
                 if (_isCancelled)
                 {
                     break;
                 }
 
-                if (result.request.status == "error")
+                if (result.request.status == Status.Error)
                 {
                     SetGenerateFailed(result.request.error_message);
                     break;
                 }
 
-                if (result.request.status == "complete")
+                if (result.request.status == Status.Complete)
                 {
                     return result;
                 }
@@ -533,13 +563,13 @@ namespace BlockadeLabsSDK
 
         private async Task WaitForSeconds(float seconds)
         {
-            #if UNITY_EDITOR
-                await Task.Delay((int)(seconds * 1000)).ConfigureAwait(true);
-            #else
-                var tcs = new TaskCompletionSource<object>();
-                StartCoroutine(WaitForSecondsEnumerator(tcs, seconds));
-                await tcs.Task;
-            #endif
+#if UNITY_EDITOR
+            await Task.Delay((int)(seconds * 1000)).ConfigureAwait(true);
+#else
+            var tcs = new TaskCompletionSource<object>();
+            StartCoroutine(WaitForSecondsEnumerator(tcs, seconds));
+            await tcs.Task;
+#endif
         }
 
         private IEnumerator WaitForSecondsEnumerator(TaskCompletionSource<object> tcs, float seconds)
@@ -549,11 +579,11 @@ namespace BlockadeLabsSDK
         }
 
 #if UNITY_EDITOR
-        private async Task DownloadResultAsync(GetImagineResult result)
+        internal async Task DownloadResultAsync(GetImagineResult result, bool setSkybox = true)
         {
             var textureUrl = result.request.file_url;
             var depthMapUrl = result.request.depth_map_url;
-            bool haveDepthMap = !string.IsNullOrWhiteSpace(depthMapUrl);
+            var hasDepthMap = !string.IsNullOrWhiteSpace(depthMapUrl);
             var prompt = result.request.prompt;
 
             if (string.IsNullOrWhiteSpace(textureUrl))
@@ -562,7 +592,8 @@ namespace BlockadeLabsSDK
                 return;
             }
 
-            var maxLength = 20;
+            const int maxLength = 20;
+
             if (prompt.Length > maxLength)
             {
                 prompt = prompt.Substring(0, maxLength);
@@ -570,46 +601,53 @@ namespace BlockadeLabsSDK
 
             var prefix = AssetUtils.CreateValidFilename(prompt);
             var folderPath = AssetUtils.CreateUniqueFolder(prefix);
-            var texturePath = folderPath + "/" + prefix + " texture.png";
-            var depthTexturePath = folderPath + "/" + prefix + " depth texture.png";
-            var resultsPath = folderPath + "/" + prefix + " data.txt";
+            var texturePath = $"{folderPath}/{prefix} texture.png";
+            var depthTexturePath = $"{folderPath}/{prefix} depth texture.png";
+            var resultsPath = $"{folderPath}/{prefix} data.txt";
 
-            var tasks = new List<Task>();
-            tasks.Add(ApiRequests.DownloadFileAsync(textureUrl, texturePath));
-            if (haveDepthMap)
+            var tasks = new List<Task>
+            {
+                ApiRequests.DownloadFileAsync(textureUrl, texturePath)
+            };
+
+            if (hasDepthMap)
             {
                 tasks.Add(ApiRequests.DownloadFileAsync(depthMapUrl, depthTexturePath));
             }
 
+#if !UNITY_2021_1_OR_NEWER
+            // ReSharper disable once MethodHasAsyncOverload
             // WriteAllTextAsync not defined in Unity 2020.3
             File.WriteAllText(resultsPath, JsonConvert.SerializeObject(result));
+#else
+            await File.WriteAllTextAsync(resultsPath, JsonConvert.SerializeObject(result)).ConfigureAwait(true);
+#endif
 
-            await Task.WhenAll(tasks);
+            await Task.WhenAll(tasks).ConfigureAwait(true);
+
             if (_isCancelled)
             {
                 Directory.Delete(folderPath, true);
                 return;
             }
 
-            if (_skyboxMesh)
+            if (setSkybox && _skyboxMesh != null)
             {
                 _skyboxMesh.SetMetadata(result);
             }
 
-            UpdateProgress(99);
-
             AssetDatabase.Refresh();
 
-            var colorImporter = TextureImporter.GetAtPath(texturePath) as TextureImporter;
+            var colorImporter = (TextureImporter)AssetImporter.GetAtPath(texturePath);
             colorImporter.maxTextureSize = 8192;
             colorImporter.textureCompression = TextureImporterCompression.Uncompressed;
             colorImporter.mipmapEnabled = false;
             colorImporter.textureShape = TextureImporterShape.TextureCube;
             colorImporter.SaveAndReimport();
 
-            if (haveDepthMap)
+            if (hasDepthMap)
             {
-                var depthImporter = TextureImporter.GetAtPath(depthTexturePath) as TextureImporter;
+                var depthImporter = (TextureImporter)AssetImporter.GetAtPath(depthTexturePath);
                 depthImporter.maxTextureSize = 2048;
                 depthImporter.textureCompression = TextureImporterCompression.Uncompressed;
                 depthImporter.mipmapEnabled = false;
@@ -619,15 +657,16 @@ namespace BlockadeLabsSDK
             }
 
             var colorTexture = AssetDatabase.LoadAssetAtPath<Cubemap>(texturePath);
-
             var depthTexture = AssetDatabase.LoadAssetAtPath<Texture>(depthTexturePath);
-            var depthMaterial = CreateDepthMaterial(colorTexture, depthTexture);
+            var depthMaterial = CreateDepthMaterial(colorTexture, depthTexture, setSkybox);
+
             if (depthMaterial != null)
             {
                 AssetDatabase.CreateAsset(depthMaterial, folderPath + "/" + prefix + " depth material.mat");
             }
 
-            var skyboxMaterial = CreateSkyboxMaterial(colorTexture);
+            var skyboxMaterial = CreateSkyboxMaterial(colorTexture, setSkybox);
+
             if (skyboxMaterial != null)
             {
                 AssetDatabase.CreateAsset(skyboxMaterial, folderPath + "/" + prefix + " skybox material.mat");
@@ -635,7 +674,8 @@ namespace BlockadeLabsSDK
             }
 
 #if UNITY_HDRP
-            var volumeProfile = CreateVolumeProfile(colorTexture);
+            var volumeProfile = CreateVolumeProfile(colorTexture, setSkybox);
+
             if (volumeProfile != null)
             {
                 AssetDatabase.CreateAsset(volumeProfile, folderPath + "/" + prefix + " HDRP volume profile.asset");
@@ -645,7 +685,7 @@ namespace BlockadeLabsSDK
 
         private string ValidateFilename(string prompt)
         {
-            foreach (char c in System.IO.Path.GetInvalidFileNameChars())
+            foreach (char c in Path.GetInvalidFileNameChars())
             {
                 prompt = prompt.Replace(c, '_');
             }
@@ -704,21 +744,23 @@ namespace BlockadeLabsSDK
         }
 #endif
 
-        private Material CreateDepthMaterial(Texture texture, Texture depthTexture)
+        private Material CreateDepthMaterial(Texture texture, Texture depthTexture, bool setTexture = true)
         {
             if (_depthMaterial == null)
             {
                 return null;
             }
 
-            var material = new Material(_depthMaterial);
-            material.mainTexture = texture;
+            var material = new Material(_depthMaterial)
+            {
+                mainTexture = texture
+            };
             if (material.HasProperty("_DepthMap"))
             {
                 material.SetTexture("_DepthMap", depthTexture);
             }
 
-            if (_skyboxMesh.TryGetComponent<Renderer>(out var renderer))
+            if (setTexture && _skyboxMesh.TryGetComponent<Renderer>(out var renderer))
             {
                 renderer.sharedMaterial = material;
             }
@@ -726,7 +768,7 @@ namespace BlockadeLabsSDK
             return material;
         }
 
-        private Material CreateSkyboxMaterial(Texture texture)
+        private Material CreateSkyboxMaterial(Texture texture, bool setTexture = true)
         {
             if (_skyboxMaterial == null)
             {
@@ -735,13 +777,18 @@ namespace BlockadeLabsSDK
 
             var material = new Material(_skyboxMaterial);
             material.SetTexture("_Tex", texture);
-            RenderSettings.skybox = material;
-            DynamicGI.UpdateEnvironment();
+
+            if (setTexture)
+            {
+                RenderSettings.skybox = material;
+                DynamicGI.UpdateEnvironment();
+            }
+
             return material;
         }
 
 #if UNITY_HDRP
-        private VolumeProfile CreateVolumeProfile(Cubemap skyTexture)
+        private VolumeProfile CreateVolumeProfile(Cubemap skyTexture, bool setVolumeProfile = true)
         {
             if (_HDRPVolume == null || _HDRPVolumeProfile == null)
             {
@@ -759,8 +806,8 @@ namespace BlockadeLabsSDK
             // This does a deep copy, while Instantiate does not.
             _HDRPVolume.sharedProfile = _HDRPVolumeProfile;
             var volumeProfile = _HDRPVolume.profile;
-
             var hdrpSkyType = hdrpAssembly.GetType("UnityEngine.Rendering.HighDefinition.HDRISky");
+
             if (volumeProfile.TryGet<VolumeComponent>(hdrpSkyType, out var sky))
             {
                 var hdriSkyField = hdrpSkyType.GetField("hdriSky");
@@ -769,7 +816,11 @@ namespace BlockadeLabsSDK
                 overrideMethod.Invoke(hdriSkyValue, new object[] { skyTexture });
             }
 
-            _HDRPVolume.sharedProfile = volumeProfile;
+            if (setVolumeProfile)
+            {
+                _HDRPVolume.sharedProfile = volumeProfile;
+            }
+
             return volumeProfile;
         }
 #endif
