@@ -193,7 +193,7 @@ namespace BlockadeLabsSDK
 
                 if (searchQueryParams.SkyboxStyleId != 0)
                 {
-                   searchQuery.Add("skybox_style_id", searchQueryParams.SkyboxStyleId.ToString());
+                    searchQuery.Add("skybox_style_id", searchQueryParams.SkyboxStyleId.ToString());
                 }
             }
 

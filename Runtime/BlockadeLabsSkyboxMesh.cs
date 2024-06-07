@@ -111,7 +111,7 @@ namespace BlockadeLabsSDK
 
         public int? GetRemixId()
         {
-            return GetMetadata()?.request.id;
+            return GetMetadata()?.request?.id;
         }
 
         internal GetImagineResult GetMetadata()
@@ -123,7 +123,7 @@ namespace BlockadeLabsSDK
 
             if (renderer.sharedMaterial.mainTexture.name == "default_skybox_texture")
             {
-                return new GetImagineResult { request = new ImagineResult { id = 0 } };
+                return null;
             }
 
 #if UNITY_EDITOR
