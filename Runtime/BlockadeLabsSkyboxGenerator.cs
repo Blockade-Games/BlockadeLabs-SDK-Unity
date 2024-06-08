@@ -842,7 +842,7 @@ namespace BlockadeLabsSDK
 #if UNITY_HDRP
             SetVolumeProfile(CreateVolumeProfile(cubemap));
 #endif
-            }
+        }
 #endif
 
         private Material CreateDepthMaterial(Texture texture, Texture depthTexture)
