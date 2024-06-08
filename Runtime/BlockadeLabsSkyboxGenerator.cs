@@ -611,8 +611,6 @@ namespace BlockadeLabsSDK
 
             if (!AssetUtils.TryCreateFolder(prefix, out var folderPath))
             {
-                SkyboxAI existingSkybox = null;
-
                 // check if there is a .txt file. If it exists then convert it to a skyboxAI asset and delete it
                 // check all directories that start with the prefix, but contain the *data.txt
                 var dataFiles = Directory.GetFiles(Application.dataPath, $"*{prefix} data.txt", SearchOption.AllDirectories).ToList();
@@ -623,6 +621,8 @@ namespace BlockadeLabsSDK
                 {
                     var currentDirectoryPath = Directory.GetParent(Path.GetFullPath(dataFile))!.FullName;
                     var currentDirectorySkyboxAIPath = $"{currentDirectoryPath}/{prefix}.asset";
+
+                    SkyboxAI existingSkybox;
 
                     if (File.Exists(currentDirectorySkyboxAIPath))
                     {
@@ -655,22 +655,10 @@ namespace BlockadeLabsSDK
                     }
                 }
 
-                if (existingSkybox == null)
+                if (skyboxAI == null)
                 {
-                    if (File.Exists($"{folderPath}/{prefix}.asset"))
-                    {
-                        existingSkybox = AssetDatabase.LoadAssetAtPath<SkyboxAI>($"{folderPath}/{prefix}.asset");
-                    }
-
-                    if (existingSkybox != null && existingSkybox.Id == result.request.id)
-                    {
-                        skyboxAI = existingSkybox;
-                    }
-                    else
-                    {
-                        // we didn't find a skyboxAI asset, so we need to create a new folder
-                        folderPath = AssetUtils.CreateUniqueFolder(prefix);
-                    }
+                    // we didn't find a skyboxAI asset, so we need to create a new folder
+                    folderPath = AssetUtils.CreateUniqueFolder(prefix);
                 }
             }
 
