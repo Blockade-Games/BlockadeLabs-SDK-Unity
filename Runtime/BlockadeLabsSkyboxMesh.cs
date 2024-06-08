@@ -181,7 +181,7 @@ namespace BlockadeLabsSDK
         {
 #if UNITY_EDITOR
             // Look for a mesh in the project
-            var folder = AssetUtils.GetOrCreateFolder("Meshes");
+            AssetUtils.TryCreateFolder("Meshes", out var folder);
             var meshPath = $"{folder}/Tetrahedron_{subdivisions}.asset";
             var mesh = AssetDatabase.LoadAssetAtPath<Mesh>(meshPath);
             if (mesh != null)

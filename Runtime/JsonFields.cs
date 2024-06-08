@@ -59,7 +59,7 @@ namespace BlockadeLabsSDK
     }
 
     [Preserve]
-    internal enum Status
+    public enum Status
     {
         All,
         Pending,
