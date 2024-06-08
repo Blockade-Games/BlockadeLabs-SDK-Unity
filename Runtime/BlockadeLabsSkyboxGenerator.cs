@@ -615,7 +615,9 @@ namespace BlockadeLabsSDK
 
                 // check if there is a .txt file. If it exists then convert it to a skyboxAI asset and delete it
                 // check all directories that start with the prefix, but contain the *data.txt
-                var dataFiles = Directory.GetFiles(Application.dataPath, $"*{prefix} data.txt", SearchOption.AllDirectories);
+                var dataFiles = Directory.GetFiles(Application.dataPath, $"*{prefix} data.txt", SearchOption.AllDirectories).ToList();
+                // check if there are any existing skyboxAI assets with the same id
+                dataFiles.AddRange(Directory.GetFiles(Application.dataPath, $"{prefix}.asset", SearchOption.AllDirectories));
 
                 foreach (var dataFile in dataFiles)
                 {
