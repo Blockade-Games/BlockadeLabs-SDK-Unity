@@ -643,11 +643,10 @@ namespace BlockadeLabsSDK
                         AssetDatabase.CreateAsset(existingSkybox, currentDirectorySkyboxAIPath.ToProjectPath());
                         AssetDatabase.Refresh();
                         existingSkybox = AssetDatabase.LoadAssetAtPath<SkyboxAI>(currentDirectorySkyboxAIPath.ToProjectPath());
+                        File.Delete(dataFile);
+                        File.Delete($"{dataFile}.meta");
+                        AssetDatabase.Refresh();
                     }
-
-                    File.Delete(dataFile);
-                    File.Delete($"{dataFile}.meta");
-                    AssetDatabase.Refresh();
 
                     if (existingSkybox.Id == result.request.id)
                     {
