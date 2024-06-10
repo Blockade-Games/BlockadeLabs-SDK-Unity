@@ -12,8 +12,6 @@ using UnityEngine.Rendering;
 #endif
 
 #if UNITY_EDITOR
-using Newtonsoft.Json.Linq;
-using NUnit.Framework;
 using UnityEditor;
 #endif
 
