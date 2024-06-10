@@ -763,7 +763,6 @@ namespace BlockadeLabsSDK
             if (skyboxAI.VolumeProfile == null)
             {
                 var volumeProfilePath = $"{folderPath}/{prefix} HDRP volume profile.asset";
-                Debug.Log(volumeProfilePath);
                 var volumeProfile = AssetDatabase.LoadAssetAtPath<VolumeProfile>(volumeProfilePath.ToProjectPath());
 
                 if (volumeProfile == null)
