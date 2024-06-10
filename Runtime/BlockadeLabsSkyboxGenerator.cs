@@ -645,7 +645,7 @@ namespace BlockadeLabsSDK
                     if (existingSkybox.Id == result.request.id)
                     {
                         skyboxAI = existingSkybox;
-                        folderPath = currentDirectoryPath;
+                        folderPath = currentDirectoryPath.ToProjectPath();
                     }
                 }
 
@@ -698,7 +698,7 @@ namespace BlockadeLabsSDK
                 colorImporter.textureShape = TextureImporterShape.TextureCube;
                 colorImporter.SaveAndReimport();
 
-                var skyboxTexture = AssetDatabase.LoadAssetAtPath<Cubemap>(texturePath.ToProjectPath());
+                var skyboxTexture = AssetDatabase.LoadAssetAtPath<Cubemap>(texturePath);
                 skyboxAI.SkyboxTexture = skyboxTexture;
             }
 
@@ -712,21 +712,22 @@ namespace BlockadeLabsSDK
                 depthImporter.wrapModeV = TextureWrapMode.Clamp;
                 depthImporter.SaveAndReimport();
 
-                var depthTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(depthTexturePath.ToProjectPath());
+                var depthTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(depthTexturePath);
                 skyboxAI.DepthTexture = depthTexture;
             }
 
             if (skyboxAI.DepthMaterial == null)
             {
                 var depthMaterialPath = $"{folderPath}/{prefix} depth material.mat";
-                var depthMaterial = AssetDatabase.LoadAssetAtPath<Material>(depthMaterialPath.ToProjectPath());
+                var depthMaterial = AssetDatabase.LoadAssetAtPath<Material>(depthMaterialPath);
 
                 if (depthMaterial == null)
                 {
                     depthMaterial = CreateDepthMaterial(skyboxAI.SkyboxTexture, skyboxAI.DepthTexture);
                     AssetDatabase.CreateAsset(depthMaterial, depthMaterialPath);
-                    skyboxAI.DepthMaterial = depthMaterial;
                 }
+
+                skyboxAI.DepthMaterial = depthMaterial;
             }
 
             if (setSkybox)
@@ -737,7 +738,7 @@ namespace BlockadeLabsSDK
             if (skyboxAI.SkyboxMaterial == null)
             {
                 var skyboxMaterialPath = $"{folderPath}/{prefix} skybox material.mat";
-                var skyboxMaterial = AssetDatabase.LoadAssetAtPath<Material>(skyboxMaterialPath.ToProjectPath());
+                var skyboxMaterial = AssetDatabase.LoadAssetAtPath<Material>(skyboxMaterialPath);
 
                 if (skyboxMaterial == null)
                 {
@@ -757,7 +758,7 @@ namespace BlockadeLabsSDK
             if (skyboxAI.VolumeProfile == null)
             {
                 var volumeProfilePath = $"{folderPath}/{prefix} HDRP volume profile.asset";
-                var volumeProfile = AssetDatabase.LoadAssetAtPath<VolumeProfile>(volumeProfilePath.ToProjectPath());
+                var volumeProfile = AssetDatabase.LoadAssetAtPath<VolumeProfile>(volumeProfilePath);
 
                 if (volumeProfile == null)
                 {
