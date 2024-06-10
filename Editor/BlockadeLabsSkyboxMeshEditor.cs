@@ -6,13 +6,15 @@ namespace BlockadeLabsSDK.Editor
     [CustomEditor(typeof(BlockadeLabsSkyboxMesh))]
     public class BlockadeLabsSkyboxMeshEditor : UnityEditor.Editor
     {
+        private SerializedProperty _skyboxMetadata;
         private SerializedProperty _meshDensity;
         private SerializedProperty _depthScale;
 
         private void OnEnable()
         {
-            _meshDensity = serializedObject.FindProperty("_meshDensity");
-            _depthScale = serializedObject.FindProperty("_depthScale");
+            _skyboxMetadata = serializedObject.FindProperty(nameof(_skyboxMetadata));
+            _meshDensity = serializedObject.FindProperty(nameof(_meshDensity));
+            _depthScale = serializedObject.FindProperty(nameof(_depthScale));
         }
 
         public override void OnInspectorGUI()
@@ -30,6 +32,7 @@ namespace BlockadeLabsSDK.Editor
 
             BlockadeGUI.DisableGroup(skybox.BakedMesh, () =>
             {
+                EditorGUILayout.PropertyField(_skyboxMetadata);
                 EditorGUILayout.PropertyField(_meshDensity);
                 EditorGUILayout.PropertyField(_depthScale);
             });

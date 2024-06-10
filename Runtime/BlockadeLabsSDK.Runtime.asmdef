@@ -1,9 +1,10 @@
 {
     "name": "BlockadeLabsSDK.Runtime",
-    "rootNamespace": "",
+    "rootNamespace": "BlockadeLabsSDK.Runtime",
     "references": [
         "Unity.TextMeshPro",
-        "Unity.RenderPipelines.Core.Runtime"
+        "Unity.RenderPipelines.Core.Runtime",
+        "Unity.RenderPipelines.HighDefinition.Runtime"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

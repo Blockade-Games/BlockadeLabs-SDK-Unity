@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -112,29 +113,24 @@ namespace BlockadeLabsSDK
 
         public static async Task DownloadFileAsync(string url, string path)
         {
-            LogVerbose("Start download: " + url + " to " + path);
+            if (File.Exists(path)) { return; }
+
+            LogVerbose($"Start download: {url} to {path}");
             using var request = UnityWebRequest.Get(url);
             request.downloadHandler = new DownloadHandlerFile(path);
             await request.SendWebRequest();
 
             if (request.result != UnityWebRequest.Result.Success)
             {
-                Debug.LogError("Download error: " + request.downloadHandler.error);
+                Debug.LogError($"Download error: {request.downloadHandler.error}");
             }
 
-            LogVerbose("Complete download: " + url);
+            LogVerbose($"Complete download: {url}");
         }
 
-        public static async Task<SkyboxTip> GetSkyboxTipAsync(SkyboxAiModelVersion modelVersion)
+        public static async Task<SkyboxTip> GetSkyboxTipAsync()
         {
-            if (modelVersion == SkyboxAiModelVersion.Model3)
-            {
-                return await GetAsync<SkyboxTip>("skybox/get-one-tip-m3");
-            }
-            else
-            {
-                return await GetAsync<SkyboxTip>("skybox/get-one-tip");
-            }
+            return await GetAsync<SkyboxTip>("skybox/get-one-tip-unity");
         }
 
         public static async Task<GetHistoryResult> GetSkyboxHistoryAsync(HistorySearchQueryParameters searchQueryParams = null)
