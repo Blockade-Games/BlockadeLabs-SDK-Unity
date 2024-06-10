@@ -663,13 +663,7 @@ namespace BlockadeLabsSDK
                 AssetDatabase.CreateAsset(skyboxAI, $"{folderPath}/{prefix}.asset");
             }
 
-            if (_skyboxMesh != null)
-            {
-                _skyboxMesh.SkyboxAsset = skyboxAI;
-            }
-
             var tasks = new List<Task>();
-
             var texturePath = $"{folderPath}/{prefix} texture.png";
             var depthTexturePath = $"{folderPath}/{prefix} depth texture.png";
 
@@ -779,6 +773,12 @@ namespace BlockadeLabsSDK
                 SetVolumeProfile(skyboxAI.VolumeProfile);
             }
 #endif
+
+            if (_skyboxMesh != null)
+            {
+                _skyboxMesh.SkyboxAsset = skyboxAI;
+            }
+
             AssetUtils.PingAsset(skyboxAI);
         }
 
