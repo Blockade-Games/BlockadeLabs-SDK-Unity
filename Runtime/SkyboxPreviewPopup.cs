@@ -210,13 +210,19 @@ namespace BlockadeLabsSDK
                 _depthPreviewImage.texture = depth;
                 _depthPreviewImage.enabled = true;
             }
-            catch (TaskCanceledException)
-            {
-                // ignored
-            }
+
             catch (Exception e)
             {
-                Debug.LogException(e);
+                switch (e)
+                {
+                    case TaskCanceledException:
+                    case OperationCanceledException:
+                        // ignored
+                        break;
+                    default:
+                        Debug.LogException(e);
+                        break;
+                }
             }
         }
     }
