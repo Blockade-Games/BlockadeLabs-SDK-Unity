@@ -25429,6 +25429,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 86b6b12deafaac649a9cb00122bc91dc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _skyboxMetadata: {fileID: 0}
   _meshDensity: 1
   _depthScale: 3
   _bakedMesh: {fileID: 0}

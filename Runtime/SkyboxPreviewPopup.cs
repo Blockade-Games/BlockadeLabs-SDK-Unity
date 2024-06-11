@@ -19,9 +19,6 @@ namespace BlockadeLabsSDK
         private Shader _skyboxShader;
 
         [SerializeField]
-        private Material _defaultSkyboxMaterial;
-
-        [SerializeField]
         private RuntimeGuiManager _runtimeGuiManager;
 
         [SerializeField]
