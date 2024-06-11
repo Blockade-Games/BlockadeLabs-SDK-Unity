@@ -99,13 +99,21 @@ namespace BlockadeLabsSDK
 
         private void OnEnable()
         {
+            _viewButton.interactable = _runtimeGuiManager.Generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Ready;
+            _runtimeGuiManager.Generator.OnStateChanged += Generator_OnStateChanged;
             _viewButton.onClick.AddListener(OnViewButtonClicked);
             _closeButton.onClick.AddListener(OnCloseButtonClicked);
             _likeToggle.onValueChanged.AddListener(OnLikeToggleValueChanged);
         }
 
+        private void Generator_OnStateChanged(BlockadeLabsSkyboxGenerator.State state)
+        {
+            _viewButton.interactable = state == BlockadeLabsSkyboxGenerator.State.Ready;
+        }
+
         private void OnDisable()
         {
+            _runtimeGuiManager.Generator.OnStateChanged -= Generator_OnStateChanged;
             _viewButton.onClick.RemoveListener(OnViewButtonClicked);
             _closeButton.onClick.RemoveListener(OnCloseButtonClicked);
             _likeToggle.onValueChanged.RemoveListener(OnLikeToggleValueChanged);
@@ -171,6 +179,8 @@ namespace BlockadeLabsSDK
         {
             try
             {
+                _depthPreviewImage.enabled = false;
+                _depthPreviewImage.texture = null;
                 PreviewMaterial.mainTexture = null;
                 _imageCache.TryGetValue(result.obfuscated_id, out var cachedImages);
                 var downloadTasks = new List<Task>();

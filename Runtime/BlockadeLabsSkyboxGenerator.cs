@@ -227,7 +227,7 @@ namespace BlockadeLabsSDK
 
         private State _state = State.NeedApiKey;
         public State CurrentState => _state;
-        public event Action OnStateChanged;
+        public event Action<State> OnStateChanged;
 
         private string _lastError;
         public string LastError => _lastError;
@@ -262,7 +262,7 @@ namespace BlockadeLabsSDK
         private void SetState(State state)
         {
             _state = state;
-            OnStateChanged?.Invoke();
+            OnStateChanged?.Invoke(_state);
         }
 
         private void SetError(string error)

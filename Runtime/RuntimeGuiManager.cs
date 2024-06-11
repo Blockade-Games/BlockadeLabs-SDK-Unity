@@ -515,7 +515,7 @@ namespace BlockadeLabsSDK
             _skybox.OnLoadingChanged += OnSkyboxLoadingChanged;
 
             _generator.OnStateChanged += OnStateChanged;
-            OnStateChanged();
+            OnStateChanged(_generator.CurrentState);
 
             _generator.OnErrorChanged += OnErrorChanged;
             OnErrorChanged();
@@ -595,9 +595,9 @@ namespace BlockadeLabsSDK
             _loadingPopupText.text = _skybox.LoadingText;
         }
 
-        private void OnStateChanged()
+        private void OnStateChanged(BlockadeLabsSkyboxGenerator.State state)
         {
-            if (_generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Ready)
+            if (state == BlockadeLabsSkyboxGenerator.State.Ready)
             {
                 _stylePickerPanel.SetStyles(_generator.StyleFamilies);
             }

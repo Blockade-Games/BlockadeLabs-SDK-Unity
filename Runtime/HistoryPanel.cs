@@ -47,7 +47,7 @@ namespace BlockadeLabsSDK
             _scrollRect.onValueChanged.AddListener(OnScrollRectValueChanged);
             _searchToolbar.OnSearchQueryChanged += OnSearchQueryChanged;
             _runtimeGuiManager.Generator.OnStateChanged += OnGeneratorStateChanged;
-            OnGeneratorStateChanged();
+            OnGeneratorStateChanged(_runtimeGuiManager.Generator.CurrentState);
             await FetchHistoryAsync();
         }
 
@@ -77,9 +77,9 @@ namespace BlockadeLabsSDK
             await FetchHistoryAsync(searchParameters);
         }
 
-        private void OnGeneratorStateChanged()
+        private void OnGeneratorStateChanged(BlockadeLabsSkyboxGenerator.State state)
         {
-            if (_runtimeGuiManager.Generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Ready)
+            if (state == BlockadeLabsSkyboxGenerator.State.Ready)
             {
                 _stylePickerPanel.SetStyles(_runtimeGuiManager.Generator.AllModelStyleFamilies);
             }
@@ -103,6 +103,8 @@ namespace BlockadeLabsSDK
 
                 foreach (var item in _lastHistoryResult.data)
                 {
+                    if (item.status != Status.Complete) { continue; }
+
                     var historyItemBehaviour = Instantiate(_historyItemPrefab, _historyItemsContainer);
                     historyItemBehaviour.gameObject.SetActive(false);
                     historyItemBehaviour.SetItemData(item, OnHistoryItemClick, OnHistoryItemDelete, OnHistoryItemDownload);
