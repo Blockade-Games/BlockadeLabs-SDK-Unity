@@ -780,21 +780,6 @@ namespace BlockadeLabsSDK
             // we didn't find a skyboxAI asset or json file, so we need to create a new folder
             return AssetUtils.CreateUniqueFolder(prefix);
         }
-
-        private string ValidateFilename(string prompt)
-        {
-            foreach (char c in Path.GetInvalidFileNameChars())
-            {
-                prompt = prompt.Replace(c, '_');
-            }
-
-            while (prompt.Contains("__"))
-            {
-                prompt = prompt.Replace("__", "_");
-            }
-
-            return prompt.TrimStart('_').TrimEnd('_');
-        }
 #else
         internal async Task DownloadResultAsync(GetImagineResult result)
         {
