@@ -164,7 +164,7 @@ namespace BlockadeLabsSDK
                     case TaskCanceledException:
                     case OperationCanceledException:
                         // ignored
-                        break;
+                        return;
                     default:
                         Debug.LogException(e);
                         break;

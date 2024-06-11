@@ -216,13 +216,18 @@ namespace BlockadeLabsSDK
             {
                 texture = await ApiRequests.DownloadTextureAsync(style.image_jpg, cancellationToken: destroyCancellationToken);
             }
-            catch (TaskCanceledException)
-            {
-                // ignored
-            }
             catch (Exception e)
             {
-                Debug.LogException(e);
+                switch (e)
+                {
+                    case TaskCanceledException:
+                    case OperationCanceledException:
+                        // ignored
+                        return;
+                    default:
+                        Debug.LogException(e);
+                        break;
+                }
             }
 
             if (texture == null)

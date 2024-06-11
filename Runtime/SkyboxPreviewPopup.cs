@@ -97,6 +97,13 @@ namespace BlockadeLabsSDK
             }
         }
 
+#if !UNITY_2022_1_OR_NEWER
+        private System.Threading.CancellationTokenSource _destroyCancellationTokenSource;
+        // ReSharper disable once InconsistentNaming
+        // this is the same name as the unity property introduced in 2022+
+        private System.Threading.CancellationToken destroyCancellationToken => _destroyCancellationTokenSource.Token;
+#endif
+
         private void OnEnable()
         {
             _viewButton.interactable = _runtimeGuiManager.Generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Ready;
@@ -125,6 +132,11 @@ namespace BlockadeLabsSDK
             {
                 Destroy(_previewMaterial);
             }
+
+#if !UNITY_2022_1_OR_NEWER
+            _destroyCancellationTokenSource.Cancel();
+            _destroyCancellationTokenSource.Dispose();
+#endif
         }
 
         private async void OnViewButtonClicked()
@@ -182,35 +194,58 @@ namespace BlockadeLabsSDK
                 _depthPreviewImage.enabled = false;
                 _depthPreviewImage.texture = null;
                 PreviewMaterial.mainTexture = null;
-                _imageCache.TryGetValue(result.obfuscated_id, out var cachedImages);
-                var downloadTasks = new List<Task>();
-                var (skybox, depth) = cachedImages ?? new Tuple<Texture2D, Texture2D>(null, null);
 
-                if (skybox == null)
+                if (_imageCache.TryGetValue(result.obfuscated_id, out var cachedImages))
                 {
-                    downloadTasks.Add(ApiRequests.DownloadTextureAsync(result.file_url).ContinueWith(task =>
-                    {
-                        skybox = task.Result;
-                    }));
-                }
+                    var (skybox, depth) = cachedImages;
 
-                if (depth == null)
+                    if (skybox != null)
+                    {
+                        PreviewMaterial.mainTexture = skybox;
+                        _previewSkyboxRenderer.sharedMaterial = PreviewMaterial;
+                    }
+
+                    if (depth != null)
+                    {
+                        _depthPreviewImage.texture = depth;
+                        _depthPreviewImage.enabled = true;
+                    }
+                }
+                else
                 {
-                    downloadTasks.Add(ApiRequests.DownloadTextureAsync(result.depth_map_url).ContinueWith(task =>
+                    var (skybox, depth) = cachedImages = new Tuple<Texture2D, Texture2D>(null, null);
+                    _imageCache[result.obfuscated_id] = cachedImages;
+                    var downloadTasks = new List<Task>();
+
+                    if (skybox == null)
                     {
-                        depth = task.Result;
-                    }));
+                        downloadTasks.Add(ApiRequests.DownloadTextureAsync(result.file_url, cancellationToken: destroyCancellationToken).ContinueWith(task =>
+                        {
+                            skybox = task.Result;
+                        }));
+                    }
+
+                    if (depth == null)
+                    {
+                        downloadTasks.Add(ApiRequests.DownloadTextureAsync(result.depth_map_url, cancellationToken: destroyCancellationToken).ContinueWith(task =>
+                        {
+                            depth = task.Result;
+                        }));
+                    }
+
+                    await Task.WhenAll(downloadTasks).ConfigureAwait(true);
+
+                    _imageCache[result.obfuscated_id] = new Tuple<Texture2D, Texture2D>(skybox, depth);
+
+                    if (_imagineResult.obfuscated_id == result.obfuscated_id)
+                    {
+                        PreviewMaterial.mainTexture = skybox;
+                        _previewSkyboxRenderer.sharedMaterial = PreviewMaterial;
+                        _depthPreviewImage.texture = depth;
+                        _depthPreviewImage.enabled = true;
+                    }
                 }
-
-                await Task.WhenAll(downloadTasks).ConfigureAwait(true);
-
-                _imageCache[result.obfuscated_id] = new Tuple<Texture2D, Texture2D>(skybox, depth);
-                PreviewMaterial.mainTexture = skybox;
-                _previewSkyboxRenderer.sharedMaterial = PreviewMaterial;
-                _depthPreviewImage.texture = depth;
-                _depthPreviewImage.enabled = true;
             }
-
             catch (Exception e)
             {
                 switch (e)
@@ -218,7 +253,7 @@ namespace BlockadeLabsSDK
                     case TaskCanceledException:
                     case OperationCanceledException:
                         // ignored
-                        break;
+                        return;
                     default:
                         Debug.LogException(e);
                         break;
