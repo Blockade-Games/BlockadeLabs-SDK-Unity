@@ -128,9 +128,14 @@ namespace BlockadeLabsSDK
             LogVerbose($"Complete download: {url}");
         }
 
-        public static async Task<SkyboxTip> GetSkyboxTipAsync()
+        public static async Task<SkyboxTip> GetSkyboxTipAsync(SkyboxAiModelVersion model)
         {
-            return await GetAsync<SkyboxTip>("skybox/get-one-tip-unity");
+            if (model == SkyboxAiModelVersion.Model3)
+            {
+                return await GetAsync<SkyboxTip>("skybox/get-one-tip-m3");
+            }
+
+            return await GetAsync<SkyboxTip>("skybox/get-one-tip");
         }
 
         public static async Task<GetHistoryResult> GetSkyboxHistoryAsync(HistorySearchQueryParameters searchQueryParams = null)

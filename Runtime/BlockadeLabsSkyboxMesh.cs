@@ -110,21 +110,6 @@ namespace BlockadeLabsSDK
             }
         }
 
-        public int? GetRemixId()
-        {
-            if (!TryGetComponent<Renderer>(out var renderer) || renderer.sharedMaterial == null || renderer.sharedMaterial.mainTexture == null)
-            {
-                return null;
-            }
-
-            if (renderer.sharedMaterial.mainTexture.name == "default_skybox_texture")
-            {
-                return null;
-            }
-
-            return _skyboxMetadata != null ? _skyboxMetadata?.Id : null;
-        }
-
         private void UpdateMesh()
         {
             if (BakedMesh != null)

@@ -155,13 +155,8 @@ namespace BlockadeLabsSDK
             _styleText.text = $"Style: <color=\"white\">{imagineResult.skybox_style_name.ToTitleCase()}</color>";
             _typeText.text = $"Type: <color=\"white\">{imagineResult.type.ToTitleCase()}</color>";
             _dateCompletedText.text = $"Date Completed: <color=\"white\">{imagineResult.completed_at:d}</color>";
-
-            if (imagineResult.remix_imagine_id.HasValue)
-            {
-                _remixDetails.text = $"Remixed From: <color=\"white\">World #{imagineResult.remix_imagine_id.Value:d}</color>";
-            }
-
-            _remixDetails.gameObject.SetActive(imagineResult.remix_imagine_id.HasValue);
+            _remixDetails.text = imagineResult.remix_imagine_id.HasValue
+                ? $"Remixed From: <color=\"white\">World #{imagineResult.remix_imagine_id.Value:d}</color>" : string.Empty;
             gameObject.SetActive(true);
         }
     }

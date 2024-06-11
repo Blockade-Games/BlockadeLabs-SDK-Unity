@@ -629,8 +629,7 @@ namespace BlockadeLabsSDK
 
         private void UpdateCanRemix()
         {
-            bool canRemix = _generator.CanRemix;
-            _remixButton.interactable = _generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Ready && canRemix;
+            _remixButton.interactable = _generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Ready && _generator.CanRemix;
             foreach (var disabledColor in _remixButton.GetComponentsInChildren<DisabledColor>())
             {
                 disabledColor.Disabled = !_remixButton.interactable;
@@ -882,12 +881,6 @@ namespace BlockadeLabsSDK
             else if (_remixButton.GetComponent<Hoverable>().IsHovered)
             {
                 _hintText.text = _remixHint;
-
-                if (_generator.ModelVersion == SkyboxAiModelVersion.Model3)
-                {
-                    tooltipText.text = "Coming soon to SkyboxAI Model 3";
-                    _modeTooltip.transform.SetParent(_remixButton.transform, false);
-                }
             }
             else if (_editButton.GetComponent<Hoverable>().IsHovered)
             {
@@ -907,12 +900,6 @@ namespace BlockadeLabsSDK
             else if (_meshCreatorButton.GetComponent<Hoverable>().IsHovered)
             {
                 _hintText.text = _meshCreatorHint;
-
-                if (!_skybox.HasDepthTexture && _generator.ModelVersion == SkyboxAiModelVersion.Model3)
-                {
-                    tooltipText.text = "Coming soon to SkyboxAI Model 3";
-                    _modeTooltip.transform.SetParent(_meshCreatorButton.transform, false);
-                }
             }
             else
             {
@@ -939,7 +926,7 @@ namespace BlockadeLabsSDK
         {
             if (_generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Generating)
             {
-                var tip = await ApiRequests.GetSkyboxTipAsync();
+                var tip = await ApiRequests.GetSkyboxTipAsync(_generator.ModelVersion);
                 _tipText.text = "<b>Tip:</b> " + tip.tip.Replace("<p>", "").Replace("</p>", "");
                 _tipContainer.SetActive(true);
             }

@@ -240,7 +240,7 @@ namespace BlockadeLabsSDK
 
         private bool _isCancelled;
 
-        public bool CanRemix => _skyboxMesh?.GetRemixId().HasValue ?? false;
+        public bool CanRemix => _skyboxMesh != null && _skyboxMesh.SkyboxAsset != null;
 
 #if UNITY_EDITOR
         private int _progressId = 0;
@@ -374,7 +374,7 @@ namespace BlockadeLabsSDK
                 skybox_style_id = SelectedStyle.id,
             };
 
-            if (CanRemix && _remix && !TrySetRemixId(request))
+            if (_remix && !TrySetRemixId(request))
             {
                 return;
             }
@@ -449,14 +449,13 @@ namespace BlockadeLabsSDK
 
         private bool TrySetRemixId(CreateSkyboxRequest request)
         {
-            var remixId = _skyboxMesh?.GetRemixId();
-            if (!remixId.HasValue)
+            if (!CanRemix)
             {
                 SetError("Missing skybox ID. Please use a previously generated skybox or disable remix.");
                 return false;
             }
 
-            request.remix_imagine_id = remixId.Value;
+            request.remix_imagine_id = _skyboxMesh.SkyboxAsset.Id;
             return true;
         }
 
