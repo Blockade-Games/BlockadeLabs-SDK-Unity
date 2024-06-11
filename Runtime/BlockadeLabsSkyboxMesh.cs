@@ -1,6 +1,4 @@
 using UnityEngine;
-using System.IO;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Collections;
@@ -22,6 +20,15 @@ namespace BlockadeLabsSDK
     [ExecuteAlways, RequireComponent(typeof(MeshRenderer)), RequireComponent(typeof(MeshFilter))]
     public class BlockadeLabsSkyboxMesh : MonoBehaviour
     {
+        [SerializeField]
+        private SkyboxAI _skyboxMetadata;
+
+        public SkyboxAI SkyboxAsset
+        {
+            get => _skyboxMetadata;
+            internal set => _skyboxMetadata = value;
+        }
+
         [SerializeField]
         private MeshDensity _meshDensity = MeshDensity.Medium;
         public MeshDensity MeshDensity
@@ -82,17 +89,11 @@ namespace BlockadeLabsSDK
         private MeshFilter _meshFilter;
         private MeshFilter MeshFilter => _meshFilter ? _meshFilter : _meshFilter = GetComponent<MeshFilter>();
 
-        private GetImagineResult _metadata;
         private MaterialPropertyBlock _materialPropertyBlock;
         private Dictionary<int, Mesh> _meshes = new Dictionary<int, Mesh>();
 
         private string _loadingText;
         public string LoadingText => _loadingText;
-
-        internal void SetMetadata(GetImagineResult metadata)
-        {
-            _metadata = metadata;
-        }
 
         private void OnEnable()
         {
@@ -107,36 +108,6 @@ namespace BlockadeLabsSDK
                 MeshRenderer.SetPropertyBlock(null);
                 _materialPropertyBlock = null;
             }
-        }
-
-        public int? GetRemixId()
-        {
-            return GetMetadata()?.request?.id;
-        }
-
-        internal GetImagineResult GetMetadata()
-        {
-            if (!TryGetComponent<Renderer>(out var renderer) || renderer.sharedMaterial == null || renderer.sharedMaterial.mainTexture == null)
-            {
-                return null;
-            }
-
-            if (renderer.sharedMaterial.mainTexture.name == "default_skybox_texture")
-            {
-                return null;
-            }
-
-#if UNITY_EDITOR
-            // In editor, read the remix ID from the data file saved next to the texture.
-            var texturePath = AssetDatabase.GetAssetPath(renderer.sharedMaterial.mainTexture);
-            var folder = texturePath.Substring(0, texturePath.LastIndexOf('/'));
-            var dataFiles = Directory.GetFiles(folder, "*data.txt", SearchOption.TopDirectoryOnly);
-            if (dataFiles.Length > 0)
-            {
-                return JsonConvert.DeserializeObject<GetImagineResult>(File.ReadAllText(dataFiles[0]));
-            }
-#endif
-            return _metadata;
         }
 
         private void UpdateMesh()
@@ -181,7 +152,7 @@ namespace BlockadeLabsSDK
         {
 #if UNITY_EDITOR
             // Look for a mesh in the project
-            var folder = AssetUtils.GetOrCreateFolder("Meshes");
+            AssetUtils.TryCreateFolder("Meshes", out var folder);
             var meshPath = $"{folder}/Tetrahedron_{subdivisions}.asset";
             var mesh = AssetDatabase.LoadAssetAtPath<Mesh>(meshPath);
             if (mesh != null)

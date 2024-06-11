@@ -56,10 +56,13 @@ namespace BlockadeLabsSDK
         public bool isMyFavorite;
         public string model;
         public string type;
+        public int? remix_imagine_id;
+        public string remix_imagine_obfuscated_id;
+        public int? remix_starter_id;
     }
 
     [Preserve]
-    internal enum Status
+    public enum Status
     {
         All,
         Pending,

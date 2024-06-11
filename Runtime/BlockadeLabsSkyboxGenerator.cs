@@ -9,6 +9,7 @@ using UnityEngine;
 
 #if UNITY_HDRP
 using UnityEngine.Rendering;
+using UnityEngine.Rendering.HighDefinition;
 #endif
 
 #if UNITY_EDITOR
@@ -239,7 +240,7 @@ namespace BlockadeLabsSDK
 
         private bool _isCancelled;
 
-        public bool CanRemix => _skyboxMesh?.GetRemixId().HasValue ?? false;
+        public bool CanRemix => _skyboxMesh != null && _skyboxMesh.SkyboxAsset != null;
 
 #if UNITY_EDITOR
         private int _progressId = 0;
@@ -373,7 +374,7 @@ namespace BlockadeLabsSDK
                 skybox_style_id = SelectedStyle.id,
             };
 
-            if (CanRemix && _remix && !TrySetRemixId(request))
+            if (_remix && !TrySetRemixId(request))
             {
                 return;
             }
@@ -448,14 +449,13 @@ namespace BlockadeLabsSDK
 
         private bool TrySetRemixId(CreateSkyboxRequest request)
         {
-            var remixId = _skyboxMesh?.GetRemixId();
-            if (!remixId.HasValue)
+            if (!CanRemix)
             {
                 SetError("Missing skybox ID. Please use a previously generated skybox or disable remix.");
                 return false;
             }
 
-            request.remix_imagine_id = remixId.Value;
+            request.remix_imagine_id = _skyboxMesh.SkyboxAsset.Id;
             return true;
         }
 
@@ -598,53 +598,59 @@ namespace BlockadeLabsSDK
                 prompt = prompt.Substring(0, maxLength);
             }
 
+            AssetUtils.CreateGenerateBlockadeLabsFolder();
             var prefix = AssetUtils.CreateValidFilename(prompt);
-            var folderPath = AssetUtils.CreateUniqueFolder(prefix);
+            var folderPath = GetOrCreateSkyboxFolder(prefix, result.request.id);
+            var skyboxAIPath = $"{folderPath}/{prefix}.asset";
+            var skyboxAI = AssetDatabase.LoadAssetAtPath<SkyboxAI>(skyboxAIPath);
+
+            if (skyboxAI == null)
+            {
+                skyboxAI = ScriptableObject.CreateInstance<SkyboxAI>();
+                skyboxAI.SetMetadata(result.request);
+                AssetDatabase.CreateAsset(skyboxAI, skyboxAIPath);
+            }
+
+            var tasks = new List<Task>();
             var texturePath = $"{folderPath}/{prefix} texture.png";
             var depthTexturePath = $"{folderPath}/{prefix} depth texture.png";
-            var resultsPath = $"{folderPath}/{prefix} data.txt";
 
-            var tasks = new List<Task>
+            if (skyboxAI.SkyboxTexture == null)
             {
-                ApiRequests.DownloadFileAsync(textureUrl, texturePath)
-            };
+                tasks.Add(ApiRequests.DownloadFileAsync(textureUrl, texturePath));
+            }
 
-            if (hasDepthMap)
+            if (hasDepthMap && skyboxAI.DepthTexture == null)
             {
                 tasks.Add(ApiRequests.DownloadFileAsync(depthMapUrl, depthTexturePath));
             }
-
-#if !UNITY_2021_1_OR_NEWER
-            // ReSharper disable once MethodHasAsyncOverload
-            // WriteAllTextAsync not defined in Unity 2020.3
-            File.WriteAllText(resultsPath, JsonConvert.SerializeObject(result));
-#else
-            await File.WriteAllTextAsync(resultsPath, JsonConvert.SerializeObject(result)).ConfigureAwait(true);
-#endif
 
             await Task.WhenAll(tasks).ConfigureAwait(true);
 
             if (_isCancelled)
             {
                 Directory.Delete(folderPath, true);
+                File.Delete($"{folderPath}.meta");
+                AssetDatabase.Refresh();
                 return;
-            }
-
-            if (setSkybox && _skyboxMesh != null)
-            {
-                _skyboxMesh.SetMetadata(result);
             }
 
             AssetDatabase.Refresh();
 
-            var colorImporter = (TextureImporter)AssetImporter.GetAtPath(texturePath);
-            colorImporter.maxTextureSize = 8192;
-            colorImporter.textureCompression = TextureImporterCompression.Uncompressed;
-            colorImporter.mipmapEnabled = false;
-            colorImporter.textureShape = TextureImporterShape.TextureCube;
-            colorImporter.SaveAndReimport();
+            if (skyboxAI.SkyboxTexture == null)
+            {
+                var colorImporter = (TextureImporter)AssetImporter.GetAtPath(texturePath);
+                colorImporter.maxTextureSize = 8192;
+                colorImporter.textureCompression = TextureImporterCompression.Uncompressed;
+                colorImporter.mipmapEnabled = false;
+                colorImporter.textureShape = TextureImporterShape.TextureCube;
+                colorImporter.SaveAndReimport();
 
-            if (hasDepthMap)
+                var skyboxTexture = AssetDatabase.LoadAssetAtPath<Cubemap>(texturePath);
+                skyboxAI.SkyboxTexture = skyboxTexture;
+            }
+
+            if (hasDepthMap && skyboxAI.DepthTexture == null)
             {
                 var depthImporter = (TextureImporter)AssetImporter.GetAtPath(depthTexturePath);
                 depthImporter.maxTextureSize = 2048;
@@ -653,51 +659,128 @@ namespace BlockadeLabsSDK
                 depthImporter.wrapModeU = TextureWrapMode.Repeat;
                 depthImporter.wrapModeV = TextureWrapMode.Clamp;
                 depthImporter.SaveAndReimport();
+
+                var depthTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(depthTexturePath);
+                skyboxAI.DepthTexture = depthTexture;
             }
 
-            var colorTexture = AssetDatabase.LoadAssetAtPath<Cubemap>(texturePath);
-            var depthTexture = AssetDatabase.LoadAssetAtPath<Texture>(depthTexturePath);
-            var depthMaterial = CreateDepthMaterial(colorTexture, depthTexture, setSkybox);
-
-            if (depthMaterial != null)
+            if (skyboxAI.DepthMaterial == null)
             {
-                AssetDatabase.CreateAsset(depthMaterial, folderPath + "/" + prefix + " depth material.mat");
+                var depthMaterialPath = $"{folderPath}/{prefix} depth material.mat";
+                var depthMaterial = AssetDatabase.LoadAssetAtPath<Material>(depthMaterialPath);
+
+                if (depthMaterial == null)
+                {
+                    depthMaterial = CreateDepthMaterial(skyboxAI.SkyboxTexture, skyboxAI.DepthTexture);
+                    AssetDatabase.CreateAsset(depthMaterial, depthMaterialPath);
+                }
+
+                skyboxAI.DepthMaterial = depthMaterial;
             }
 
-            var skyboxMaterial = CreateSkyboxMaterial(colorTexture, setSkybox);
-
-            if (skyboxMaterial != null)
+            if (setSkybox)
             {
-                AssetDatabase.CreateAsset(skyboxMaterial, folderPath + "/" + prefix + " skybox material.mat");
-                AssetUtils.PingAsset(skyboxMaterial);
+                SetDepthMaterial(skyboxAI.DepthMaterial);
+            }
+
+            if (skyboxAI.SkyboxMaterial == null)
+            {
+                var skyboxMaterialPath = $"{folderPath}/{prefix} skybox material.mat";
+                var skyboxMaterial = AssetDatabase.LoadAssetAtPath<Material>(skyboxMaterialPath);
+
+                if (skyboxMaterial == null)
+                {
+                    skyboxMaterial = CreateSkyboxMaterial(skyboxAI.SkyboxTexture);
+                    AssetDatabase.CreateAsset(skyboxMaterial, skyboxMaterialPath);
+                }
+
+                skyboxAI.SkyboxMaterial = skyboxMaterial;
+            }
+
+            if (setSkybox)
+            {
+                SetSkyboxMaterial(skyboxAI.SkyboxMaterial);
             }
 
 #if UNITY_HDRP
-            var volumeProfile = CreateVolumeProfile(colorTexture, setSkybox);
-
-            if (volumeProfile != null)
+            if (skyboxAI.VolumeProfile == null)
             {
-                AssetDatabase.CreateAsset(volumeProfile, folderPath + "/" + prefix + " HDRP volume profile.asset");
+                var volumeProfilePath = $"{folderPath}/{prefix} HDRP volume profile.asset";
+                var volumeProfile = AssetDatabase.LoadAssetAtPath<VolumeProfile>(volumeProfilePath);
+
+                if (volumeProfile == null)
+                {
+                    volumeProfile = CreateVolumeProfile(skyboxAI.SkyboxTexture);
+                    AssetDatabase.CreateAsset(volumeProfile, volumeProfilePath);
+                }
+
+                skyboxAI.VolumeProfile = volumeProfile;
+            }
+
+            if (setSkybox)
+            {
+                SetVolumeProfile(skyboxAI.VolumeProfile);
             }
 #endif
+
+            if (_skyboxMesh != null)
+            {
+                _skyboxMesh.SkyboxAsset = skyboxAI;
+            }
+
+            AssetUtils.PingAsset(skyboxAI);
         }
 
-        private string ValidateFilename(string prompt)
+        private string GetOrCreateSkyboxFolder(string prefix, int skyboxId)
         {
-            foreach (char c in Path.GetInvalidFileNameChars())
+            if (AssetUtils.TryCreateFolder(prefix, out var folderPath))
             {
-                prompt = prompt.Replace(c, '_');
+                return folderPath;
             }
 
-            while (prompt.Contains("__"))
+            // check if there is a .txt file. If it exists then convert it to a skyboxAI asset and delete it
+            // check all directories that start with the prefix, but contain the *data.txt
+            var dataFiles = Directory.GetFiles(Application.dataPath, $"*{prefix} data.txt", SearchOption.AllDirectories).ToList();
+            // check if there are any existing skyboxAI assets with the same id
+            dataFiles.AddRange(Directory.GetFiles(Application.dataPath, $"{prefix}.asset", SearchOption.AllDirectories));
+
+            foreach (var dataFile in dataFiles)
             {
-                prompt = prompt.Replace("__", "_");
+                var currentDirectoryPath = Directory.GetParent(Path.GetFullPath(dataFile))!.FullName;
+                var currentDirectorySkyboxAIPath = $"{currentDirectoryPath}/{prefix}.asset";
+
+                if (File.Exists(currentDirectorySkyboxAIPath))
+                {
+                    var existingSkybox = AssetDatabase.LoadAssetAtPath<SkyboxAI>(currentDirectorySkyboxAIPath.ToProjectPath());
+
+                    if (existingSkybox.Id == skyboxId)
+                    {
+                        return currentDirectoryPath.ToProjectPath();
+                    }
+                }
+                else
+                {
+#if !UNITY_2021_1_OR_NEWERs
+                    // ReSharper disable once MethodHasAsyncOverload
+                    // WriteAllTextAsync not defined in Unity 2020.3
+                    var skyboxData = File.ReadAllText(dataFile);
+#else
+                    var skyboxData = await File.ReadAllTextAsync(dataFile).ConfigureAwait(true);
+#endif
+                    var imagineResult = JsonConvert.DeserializeObject<GetImagineResult>(skyboxData).request;
+
+                    if (imagineResult.id == skyboxId)
+                    {
+                        return currentDirectoryPath.ToProjectPath();
+                    }
+                }
             }
 
-            return prompt.TrimStart('_').TrimEnd('_');
+            // we didn't find a skyboxAI asset or json file, so we need to create a new folder
+            return AssetUtils.CreateUniqueFolder(prefix);
         }
 #else
-        private async Task DownloadResultAsync(GetImagineResult result)
+        internal async Task DownloadResultAsync(GetImagineResult result)
         {
             bool useComputeShader = SystemInfo.supportsComputeShaders && _cubemapComputeShader != null;
 
@@ -734,16 +817,16 @@ namespace BlockadeLabsSDK
                 _skyboxMesh.SetMetadata(result);
             }
 
-            CreateDepthMaterial(cubemap, textures.Length > 1 ? textures[1] : null);
+            SetDepthMaterial(CreateDepthMaterial(cubemap, textures.Length > 1 ? textures[1] : null));
 
-            CreateSkyboxMaterial(cubemap);
+            SetSkyboxMaterial(CreateSkyboxMaterial(cubemap));
 #if UNITY_HDRP
-            CreateVolumeProfile(cubemap);
+            SetVolumeProfile(CreateVolumeProfile(cubemap));
 #endif
         }
 #endif
 
-        private Material CreateDepthMaterial(Texture texture, Texture depthTexture, bool setTexture = true)
+        private Material CreateDepthMaterial(Texture texture, Texture depthTexture)
         {
             if (_depthMaterial == null)
             {
@@ -754,20 +837,24 @@ namespace BlockadeLabsSDK
             {
                 mainTexture = texture
             };
+
             if (material.HasProperty("_DepthMap"))
             {
                 material.SetTexture("_DepthMap", depthTexture);
             }
 
-            if (setTexture && _skyboxMesh.TryGetComponent<Renderer>(out var renderer))
-            {
-                renderer.sharedMaterial = material;
-            }
-
             return material;
         }
 
-        private Material CreateSkyboxMaterial(Texture texture, bool setTexture = true)
+        private void SetDepthMaterial(Material depthMaterial)
+        {
+            if (_skyboxMesh.TryGetComponent<Renderer>(out var skyboxRenderer))
+            {
+                skyboxRenderer.sharedMaterial = depthMaterial;
+            }
+        }
+
+        private Material CreateSkyboxMaterial(Texture texture)
         {
             if (_skyboxMaterial == null)
             {
@@ -777,50 +864,47 @@ namespace BlockadeLabsSDK
             var material = new Material(_skyboxMaterial);
             material.SetTexture("_Tex", texture);
 
-            if (setTexture)
-            {
-                RenderSettings.skybox = material;
-                DynamicGI.UpdateEnvironment();
-            }
-
             return material;
         }
 
-#if UNITY_HDRP
-        private VolumeProfile CreateVolumeProfile(Cubemap skyTexture, bool setVolumeProfile = true)
+        private void SetSkyboxMaterial(Material skyboxMaterial)
         {
-            if (_HDRPVolume == null || _HDRPVolumeProfile == null)
+            RenderSettings.skybox = skyboxMaterial;
+            DynamicGI.UpdateEnvironment();
+        }
+
+#if UNITY_HDRP
+        private VolumeProfile CreateVolumeProfile(Cubemap skyTexture)
+        {
+            if (_HDRPVolumeProfile == null)
             {
                 return null;
             }
 
-            var hdrpAssembly = AppDomain.CurrentDomain.GetAssemblies()
-                .FirstOrDefault(assembly => assembly.GetName().Name == "Unity.RenderPipelines.HighDefinition.Runtime");
+            var volumeProfile = ScriptableObject.CreateInstance<VolumeProfile>();
+            volumeProfile.name = _HDRPVolumeProfile.name;
 
-            if (hdrpAssembly == null)
+            foreach (var item in _HDRPVolumeProfile.components)
             {
-                return null;
-            }
+                var volumeComponent = Instantiate(item);
 
-            // This does a deep copy, while Instantiate does not.
-            _HDRPVolume.sharedProfile = _HDRPVolumeProfile;
-            var volumeProfile = _HDRPVolume.profile;
-            var hdrpSkyType = hdrpAssembly.GetType("UnityEngine.Rendering.HighDefinition.HDRISky");
+                if (volumeComponent is HDRISky hdriSky)
+                {
+                    hdriSky.hdriSky.Override(skyTexture);
+                }
 
-            if (volumeProfile.TryGet<VolumeComponent>(hdrpSkyType, out var sky))
-            {
-                var hdriSkyField = hdrpSkyType.GetField("hdriSky");
-                var overrideMethod = hdriSkyField.FieldType.GetMethod("Override", new[] { typeof(Cubemap) });
-                var hdriSkyValue = hdriSkyField.GetValue(sky);
-                overrideMethod.Invoke(hdriSkyValue, new object[] { skyTexture });
-            }
-
-            if (setVolumeProfile)
-            {
-                _HDRPVolume.sharedProfile = volumeProfile;
+                volumeProfile.components.Add(volumeComponent);
             }
 
             return volumeProfile;
+        }
+
+        private void SetVolumeProfile(VolumeProfile volumeProfile)
+        {
+            if (_HDRPVolume != null)
+            {
+                _HDRPVolume.sharedProfile = volumeProfile;
+            }
         }
 #endif
 

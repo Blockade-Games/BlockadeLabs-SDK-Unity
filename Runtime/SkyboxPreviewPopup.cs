@@ -61,6 +61,9 @@ namespace BlockadeLabsSDK
         private TextMeshProUGUI _dateCompletedText;
 
         [SerializeField]
+        private TextMeshProUGUI _remixDetails;
+
+        [SerializeField]
         private Button _viewButton;
 
         [SerializeField]
@@ -152,6 +155,8 @@ namespace BlockadeLabsSDK
             _styleText.text = $"Style: <color=\"white\">{imagineResult.skybox_style_name.ToTitleCase()}</color>";
             _typeText.text = $"Type: <color=\"white\">{imagineResult.type.ToTitleCase()}</color>";
             _dateCompletedText.text = $"Date Completed: <color=\"white\">{imagineResult.completed_at:d}</color>";
+            _remixDetails.text = imagineResult.remix_imagine_id.HasValue
+                ? $"Remixed From: <color=\"white\">World #{imagineResult.remix_imagine_id.Value:d}</color>" : string.Empty;
             gameObject.SetActive(true);
         }
     }
