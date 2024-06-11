@@ -218,16 +218,14 @@ namespace BlockadeLabsSDK
             }
             catch (Exception e)
             {
-                switch (e)
+                if (e is TaskCanceledException ||
+                    e is OperationCanceledException)
                 {
-                    case TaskCanceledException:
-                    case OperationCanceledException:
-                        // ignored
-                        return;
-                    default:
-                        Debug.LogException(e);
-                        break;
+                    // ignored
+                    return;
                 }
+
+                Debug.LogException(e);
             }
 
             if (texture == null)
