@@ -1,4 +1,7 @@
-﻿using TMPro;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -14,6 +17,9 @@ namespace BlockadeLabsSDK
 
         [SerializeField]
         private Shader _skyboxShader;
+
+        [SerializeField]
+        private Material _defaultSkyboxMaterial;
 
         [SerializeField]
         private RuntimeGuiManager _runtimeGuiManager;
@@ -136,20 +142,19 @@ namespace BlockadeLabsSDK
             _likeToggle.SetIsOnWithoutNotify(result.isMyFavorite);
         }
 
-        internal void ShowPreviewPopup(ImagineResult imagineResult, Texture2D preview, Texture2D depth = null)
+        internal void ShowPreviewPopup(ImagineResult imagineResult)
         {
             _imagineResult = imagineResult;
+            GetSkyboxTextures(_imagineResult);
             _titleText.text = $"World #{imagineResult.id}";
-            PreviewMaterial.mainTexture = preview;
-            _depthPreviewImage.texture = depth;
-            _depthPreviewImage.enabled = depth != null;
             _likeToggle.SetIsOnWithoutNotify(imagineResult.isMyFavorite);
             _statusText.text = $"Status: <color=\"white\">{imagineResult.status}</color>";
             _promptText.text = imagineResult.prompt;
             _negativeTextTitle.gameObject.SetActive(!string.IsNullOrWhiteSpace(imagineResult.negative_text));
             _negativePromptScrollRect.gameObject.SetActive(!string.IsNullOrWhiteSpace(imagineResult.negative_text));
             _negativePromptText.text = imagineResult.negative_text;
-            _depthMapText.text = $"Depth Map: <color=\"white\">{(depth == null ? "Off" : "On")}</color>";
+            var hasDepth = !string.IsNullOrWhiteSpace(imagineResult.depth_map_url);
+            _depthMapText.text = $"Depth Map: <color=\"white\">{(hasDepth ? "On" : "Off")}</color>";
             _depthMapStatusText.text = _depthMapText.text;
             _seedText.text = $"Seed: <color=\"white\">{imagineResult.seed}</color>";
             _styleText.text = $"Style: <color=\"white\">{imagineResult.skybox_style_name.ToTitleCase()}</color>";
@@ -158,6 +163,51 @@ namespace BlockadeLabsSDK
             _remixDetails.text = imagineResult.remix_imagine_id.HasValue
                 ? $"Remixed From: <color=\"white\">World #{imagineResult.remix_imagine_id.Value:d}</color>" : string.Empty;
             gameObject.SetActive(true);
+        }
+
+        private static readonly Dictionary<string, Tuple<Texture2D, Texture2D>> _imageCache = new Dictionary<string, Tuple<Texture2D, Texture2D>>();
+
+        private async void GetSkyboxTextures(ImagineResult result)
+        {
+            try
+            {
+                PreviewMaterial.mainTexture = null;
+                _imageCache.TryGetValue(result.obfuscated_id, out var cachedImages);
+                var downloadTasks = new List<Task>();
+                var (skybox, depth) = cachedImages ?? new Tuple<Texture2D, Texture2D>(null, null);
+
+                if (skybox == null)
+                {
+                    downloadTasks.Add(ApiRequests.DownloadTextureAsync(result.file_url).ContinueWith(task =>
+                    {
+                        skybox = task.Result;
+                    }));
+                }
+
+                if (depth == null)
+                {
+                    downloadTasks.Add(ApiRequests.DownloadTextureAsync(result.depth_map_url).ContinueWith(task =>
+                    {
+                        depth = task.Result;
+                    }));
+                }
+
+                await Task.WhenAll(downloadTasks).ConfigureAwait(true);
+
+                _imageCache[result.obfuscated_id] = new Tuple<Texture2D, Texture2D>(skybox, depth);
+                PreviewMaterial.mainTexture = skybox;
+                _previewSkyboxRenderer.sharedMaterial = PreviewMaterial;
+                _depthPreviewImage.texture = depth;
+                _depthPreviewImage.enabled = true;
+            }
+            catch (TaskCanceledException)
+            {
+                // ignored
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
         }
     }
 }

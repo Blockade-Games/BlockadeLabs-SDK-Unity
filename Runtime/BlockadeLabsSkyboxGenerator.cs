@@ -291,6 +291,7 @@ namespace BlockadeLabsSDK
             ClearError();
 
             var model2Styles = await ApiRequests.GetSkyboxStylesMenuAsync(SkyboxAiModelVersion.Model2);
+
             if (model2Styles == null || model2Styles.Count == 0)
             {
                 SetError("Something went wrong. Please recheck you API key.");
@@ -298,6 +299,7 @@ namespace BlockadeLabsSDK
             }
 
             var model3Styles = await ApiRequests.GetSkyboxStylesMenuAsync(SkyboxAiModelVersion.Model3);
+
             if (model3Styles == null || model3Styles.Count == 0)
             {
                 SetError("Something went wrong. Please recheck you API key.");

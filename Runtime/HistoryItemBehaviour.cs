@@ -17,9 +17,6 @@ namespace BlockadeLabsSDK
         private RawImage _thumbnailImage;
 
         [SerializeField]
-        private RawImage _depthImage;
-
-        [SerializeField]
         private TMP_Text _descriptionText;
 
         [SerializeField]
@@ -44,11 +41,11 @@ namespace BlockadeLabsSDK
         private GameObject _apiBadge;
 
         private ImagineResult _imagineResult;
-        private Action<ImagineResult, Texture2D, Texture2D> _clickCallback;
+        private Action<ImagineResult> _clickCallback;
         private Action<ImagineResult> _deleteCallback;
         private Action<ImagineResult> _downloadCallback;
 
-        private static readonly Dictionary<string, Tuple<Texture2D, Texture2D>> _imageCache = new Dictionary<string, Tuple<Texture2D, Texture2D>>();
+        private static readonly Dictionary<string, Texture2D> _imageCache = new Dictionary<string, Texture2D>();
 
 #if !UNITY_2022_1_OR_NEWER
         private System.Threading.CancellationTokenSource _destroyCancellationTokenSource;
@@ -98,7 +95,7 @@ namespace BlockadeLabsSDK
         }
 
         private void OnClick()
-            => _clickCallback?.Invoke(_imagineResult, _thumbnailImage.texture as Texture2D, _depthImage.texture as Texture2D);
+            => _clickCallback?.Invoke(_imagineResult);
 
         private void OnRemoveButtonClicked()
             => _deleteCallback?.Invoke(_imagineResult);
@@ -136,39 +133,7 @@ namespace BlockadeLabsSDK
             }
         }
 
-        private async Task RequestThumbnailAsync(string id, RawImage dest, string url)
-        {
-            try
-            {
-                var texture = await ApiRequests.DownloadTextureAsync(url, cancellationToken: destroyCancellationToken);
-
-                _imageCache.TryGetValue(id, out var cachedImages);
-                var (thumbnail, depth) = cachedImages ?? new Tuple<Texture2D, Texture2D>(null, null);
-
-                if (dest == _thumbnailImage)
-                {
-                    thumbnail = texture;
-                }
-
-                if (dest == _depthImage)
-                {
-                    depth = texture;
-                }
-
-                dest.texture = texture;
-                _imageCache[id] = new Tuple<Texture2D, Texture2D>(thumbnail, depth);
-            }
-            catch (TaskCanceledException)
-            {
-                // ignored
-            }
-            catch (Exception e)
-            {
-                Debug.LogException(e);
-            }
-        }
-
-        internal async void SetItemData(ImagineResult item, Action<ImagineResult, Texture2D, Texture2D> clickCallback, Action<ImagineResult> deleteCallback, Action<ImagineResult> downloadCallback)
+        internal async void SetItemData(ImagineResult item, Action<ImagineResult> clickCallback, Action<ImagineResult> deleteCallback, Action<ImagineResult> downloadCallback)
         {
             _button.interactable = false;
 
@@ -184,25 +149,25 @@ namespace BlockadeLabsSDK
                 _modelBadge.SetActive(item.model == "Model 3");
                 _apiBadge.SetActive(item.api_key_id != 0);
 
-                if (!_imageCache.TryGetValue(item.obfuscated_id, out var cachedImages))
+                if (!_imageCache.TryGetValue(item.obfuscated_id, out var cachedThumbnail))
                 {
-                    var tasks = new List<Task>
-                    {
-                        RequestThumbnailAsync(item.obfuscated_id, _thumbnailImage, _imagineResult.thumb_url)
-                    };
-
-                    if (!string.IsNullOrWhiteSpace(_imagineResult.depth_map_url))
-                    {
-                        tasks.Add(RequestThumbnailAsync(item.obfuscated_id, _depthImage, _imagineResult.depth_map_url));
-                    }
-
-                    await Task.WhenAll(tasks).ConfigureAwait(true);
+                    cachedThumbnail = await ApiRequests.DownloadTextureAsync(item.thumb_url, cancellationToken: destroyCancellationToken);
+                    _imageCache[item.obfuscated_id] = cachedThumbnail;
                 }
-                else
+
+                _thumbnailImage.texture = cachedThumbnail;
+            }
+            catch (Exception e)
+            {
+                switch (e)
                 {
-                    var (thumbnail, depth) = cachedImages;
-                    _thumbnailImage.texture = thumbnail;
-                    _depthImage.texture = depth;
+                    case TaskCanceledException:
+                    case OperationCanceledException:
+                        // ignored
+                        break;
+                    default:
+                        Debug.LogException(e);
+                        break;
                 }
             }
             finally
