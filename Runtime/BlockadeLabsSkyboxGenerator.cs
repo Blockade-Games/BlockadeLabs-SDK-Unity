@@ -599,68 +599,17 @@ namespace BlockadeLabsSDK
                 prompt = prompt.Substring(0, maxLength);
             }
 
-            SkyboxAI skyboxAI = null;
             AssetUtils.CreateGenerateBlockadeLabsFolder();
             var prefix = AssetUtils.CreateValidFilename(prompt);
-
-            if (!AssetUtils.TryCreateFolder(prefix, out var folderPath))
-            {
-                // check if there is a .txt file. If it exists then convert it to a skyboxAI asset and delete it
-                // check all directories that start with the prefix, but contain the *data.txt
-                var dataFiles = Directory.GetFiles(Application.dataPath, $"*{prefix} data.txt", SearchOption.AllDirectories).ToList();
-                // check if there are any existing skyboxAI assets with the same id
-                dataFiles.AddRange(Directory.GetFiles(Application.dataPath, $"{prefix}.asset", SearchOption.AllDirectories));
-
-                foreach (var dataFile in dataFiles)
-                {
-                    var currentDirectoryPath = Directory.GetParent(Path.GetFullPath(dataFile))!.FullName;
-                    var currentDirectorySkyboxAIPath = $"{currentDirectoryPath}/{prefix}.asset";
-
-                    SkyboxAI existingSkybox;
-
-                    if (File.Exists(currentDirectorySkyboxAIPath))
-                    {
-                        existingSkybox = AssetDatabase.LoadAssetAtPath<SkyboxAI>(currentDirectorySkyboxAIPath.ToProjectPath());
-                    }
-                    else
-                    {
-#if !UNITY_2021_1_OR_NEWERs
-                        // ReSharper disable once MethodHasAsyncOverload
-                        // WriteAllTextAsync not defined in Unity 2020.3
-                        var skyboxData = File.ReadAllText(dataFile);
-#else
-                        var skyboxData = await File.ReadAllTextAsync(dataFile).ConfigureAwait(true);
-#endif
-                        var imagineResult = JsonConvert.DeserializeObject<GetImagineResult>(skyboxData).request;
-                        existingSkybox = ScriptableObject.CreateInstance<SkyboxAI>();
-                        existingSkybox.SetMetadata(imagineResult);
-                        AssetDatabase.CreateAsset(existingSkybox, currentDirectorySkyboxAIPath.ToProjectPath());
-                        AssetDatabase.Refresh();
-                        existingSkybox = AssetDatabase.LoadAssetAtPath<SkyboxAI>(currentDirectorySkyboxAIPath.ToProjectPath());
-                        //File.Delete(dataFile);
-                        //File.Delete($"{dataFile}.meta");
-                        AssetDatabase.Refresh();
-                    }
-
-                    if (existingSkybox.Id == result.request.id)
-                    {
-                        skyboxAI = existingSkybox;
-                        folderPath = currentDirectoryPath.ToProjectPath();
-                    }
-                }
-
-                if (skyboxAI == null)
-                {
-                    // we didn't find a skyboxAI asset, so we need to create a new folder
-                    folderPath = AssetUtils.CreateUniqueFolder(prefix);
-                }
-            }
+            var folderPath = GetOrCreateSkyboxFolder(prefix, result.request.id);
+            var skyboxAIPath = $"{folderPath}/{prefix}.asset";
+            var skyboxAI = AssetDatabase.LoadAssetAtPath<SkyboxAI>(skyboxAIPath);
 
             if (skyboxAI == null)
             {
                 skyboxAI = ScriptableObject.CreateInstance<SkyboxAI>();
                 skyboxAI.SetMetadata(result.request);
-                AssetDatabase.CreateAsset(skyboxAI, $"{folderPath}/{prefix}.asset");
+                AssetDatabase.CreateAsset(skyboxAI, skyboxAIPath);
             }
 
             var tasks = new List<Task>();
@@ -781,6 +730,55 @@ namespace BlockadeLabsSDK
             }
 
             AssetUtils.PingAsset(skyboxAI);
+        }
+
+        private string GetOrCreateSkyboxFolder(string prefix, int skyboxId)
+        {
+            if (AssetUtils.TryCreateFolder(prefix, out var folderPath))
+            {
+                return folderPath;
+            }
+
+            // check if there is a .txt file. If it exists then convert it to a skyboxAI asset and delete it
+            // check all directories that start with the prefix, but contain the *data.txt
+            var dataFiles = Directory.GetFiles(Application.dataPath, $"*{prefix} data.txt", SearchOption.AllDirectories).ToList();
+            // check if there are any existing skyboxAI assets with the same id
+            dataFiles.AddRange(Directory.GetFiles(Application.dataPath, $"{prefix}.asset", SearchOption.AllDirectories));
+
+            foreach (var dataFile in dataFiles)
+            {
+                var currentDirectoryPath = Directory.GetParent(Path.GetFullPath(dataFile))!.FullName;
+                var currentDirectorySkyboxAIPath = $"{currentDirectoryPath}/{prefix}.asset";
+
+                if (File.Exists(currentDirectorySkyboxAIPath))
+                {
+                    var existingSkybox = AssetDatabase.LoadAssetAtPath<SkyboxAI>(currentDirectorySkyboxAIPath.ToProjectPath());
+
+                    if (existingSkybox.Id == skyboxId)
+                    {
+                        return currentDirectoryPath.ToProjectPath();
+                    }
+                }
+                else
+                {
+#if !UNITY_2021_1_OR_NEWERs
+                    // ReSharper disable once MethodHasAsyncOverload
+                    // WriteAllTextAsync not defined in Unity 2020.3
+                    var skyboxData = File.ReadAllText(dataFile);
+#else
+                    var skyboxData = await File.ReadAllTextAsync(dataFile).ConfigureAwait(true);
+#endif
+                    var imagineResult = JsonConvert.DeserializeObject<GetImagineResult>(skyboxData).request;
+
+                    if (imagineResult.id == skyboxId)
+                    {
+                        return currentDirectoryPath.ToProjectPath();
+                    }
+                }
+            }
+
+            // we didn't find a skyboxAI asset or json file, so we need to create a new folder
+            return AssetUtils.CreateUniqueFolder(prefix);
         }
 
         private string ValidateFilename(string prompt)
