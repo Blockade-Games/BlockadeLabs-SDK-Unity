@@ -20242,7 +20242,7 @@ MonoBehaviour:
     m_Right: 24
     m_Top: 0
     m_Bottom: 24
-  m_ChildAlignment: 0
+  m_ChildAlignment: 1
   m_Spacing: 0
   m_ChildForceExpandWidth: 0
   m_ChildForceExpandHeight: 0
@@ -26327,8 +26327,8 @@ MonoBehaviour:
   _skyboxMaterial: {fileID: 2100000, guid: 8bbc7111fd83de745beb42d92e974968, type: 2}
   _depthMaterial: {fileID: 2100000, guid: 503161aa846cabf4e90e8b5fdd5df395, type: 2}
   _cubemapComputeShader: {fileID: 7200000, guid: 88116db5d6db25542b83a839d6332779, type: 3}
-  _selectedStyleFamilyIndex: 3
-  _selectedStyleIndex: 0
+  _selectedStyleFamilyIndex: -1
+  _selectedStyleIndex: -1
   _prompt: 
   _negativeText: 
   _seed: 0
@@ -30912,6 +30912,7 @@ GameObject:
   - component: {fileID: 4553510405452800488}
   - component: {fileID: 3937651551024165001}
   - component: {fileID: 2549647396360348949}
+  - component: {fileID: 7175227055480838853}
   m_Layer: 0
   m_Name: RemixPanel
   m_TagString: Untagged
@@ -30919,6 +30920,21 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 0
+--- !u!114 &7175227055480838853
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7175227055480838852}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b7d1e83df5f89774bbfbdb462d0421dc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _runtimeGuiManager: {fileID: 1700559437}
+  _closeButton: {fileID: 9152585185082073832}
+  _viewControlImageToggle: {fileID: 1939528482}
 --- !u!114 &7357374055486689258
 MonoBehaviour:
   m_ObjectHideFlags: 0

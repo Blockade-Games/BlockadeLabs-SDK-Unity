@@ -526,7 +526,6 @@ namespace BlockadeLabsSDK
         #endregion History
 
         private float _createUnderlineOffset;
-        private bool _anyStylePicked;
 
         private void Start()
         {
@@ -612,11 +611,8 @@ namespace BlockadeLabsSDK
             _promptCharacterWarning.SetActive(false);
             _negativeTextCharacterWarning.SetActive(false);
 
-            if (_anyStylePicked)
-            {
-                _selectedStyleText.text = _generator.SelectedStyle?.name ?? "Select a Style";
-                _stylePickerPanel.SetSelectedStyle(_generator.SelectedStyleFamily, _generator.SelectedStyle);
-            }
+            _selectedStyleText.text = _generator.SelectedStyle?.name ?? "Select a Style";
+            _stylePickerPanel.SetSelectedStyle(_generator.SelectedStyleFamily, _generator.SelectedStyle);
         }
 
         private void OnSkyboxPropertyChanged()
@@ -859,6 +855,12 @@ namespace BlockadeLabsSDK
                 return;
             }
 
+            if (_generator.SelectedStyle == null)
+            {
+                _stylePickerPanel.gameObject.SetActive(true);
+                return;
+            }
+
             if (_generator.Prompt.Length > _generator.SelectedStyle.maxChar)
             {
                 _promptCharacterWarning.SetActive(true);
@@ -870,12 +872,6 @@ namespace BlockadeLabsSDK
             {
                 _negativeTextCharacterWarning.SetActive(true);
                 _negativeTextCharacterWarning.GetComponentInChildren<TMP_Text>().text = $"Negative text should be {_generator.SelectedStyle.negativeTextMaxChar} characters or less";
-                return;
-            }
-
-            if (!_anyStylePicked)
-            {
-                _stylePickerPanel.gameObject.SetActive(true);
                 return;
             }
 
@@ -968,7 +964,6 @@ namespace BlockadeLabsSDK
 
         private void OnStylePicked(SkyboxStyle style)
         {
-            _anyStylePicked = true;
             _generator.SelectedStyle = style;
         }
 

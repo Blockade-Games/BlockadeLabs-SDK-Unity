@@ -130,16 +130,20 @@ namespace BlockadeLabsSDK.Editor
                 EditorGUILayout.LabelField("Style", GUILayout.Width(EditorGUIUtility.labelWidth));
                 var familyOptions = generator.StyleFamilies.Select(f => f.name).ToArray();
                 var selectedFamilyIndex = EditorGUILayout.Popup(_selectedStyleFamilyIndex.intValue, familyOptions);
+
                 if (selectedFamilyIndex != _selectedStyleFamilyIndex.intValue)
                 {
                     generator.SelectedStyleFamily = generator.StyleFamilies[selectedFamilyIndex];
                 }
 
-                var styleOptions = generator.SelectedStyleFamily.items.Select(s => s.name).ToArray();
-                var selectedStyleIndex = EditorGUILayout.Popup(_selectedStyleIndex.intValue, styleOptions);
-                if (selectedStyleIndex != _selectedStyleIndex.intValue)
+                if (generator.SelectedStyleFamily != null)
                 {
-                    generator.SelectedStyle = generator.SelectedStyleFamily.items[selectedStyleIndex];
+                    var styleOptions = generator.SelectedStyleFamily.items.Select(s => s.name).ToArray();
+                    var selectedStyleIndex = EditorGUILayout.Popup(_selectedStyleIndex.intValue, styleOptions);
+                    if (selectedStyleIndex != _selectedStyleIndex.intValue)
+                    {
+                        generator.SelectedStyle = generator.SelectedStyleFamily.items[selectedStyleIndex];
+                    }
                 }
             });
 

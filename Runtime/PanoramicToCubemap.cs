@@ -20,9 +20,9 @@ namespace BlockadeLabsSDK
             computeShader.Dispatch(kernelHandle, size / 8, size / 8, 6);
 
             var cubemap = new Cubemap(size, TextureFormat.ARGB32, false);
+
             for (int faceIndex = 0; faceIndex < 6; faceIndex++)
             {
-                var face = (CubemapFace)faceIndex;
                 Graphics.CopyTexture(renderTexture, faceIndex, 0, cubemap, faceIndex, 0);
             }
 
@@ -37,13 +37,14 @@ namespace BlockadeLabsSDK
             for (int faceIndex = 0; faceIndex < 6; faceIndex++)
             {
                 var face = (CubemapFace)faceIndex;
+
                 for (int y = 0; y < size; y++)
                 {
                     for (int x = 0; x < size; x++)
                     {
-                        Vector3 direction = GetDirectionForCubemapFace(x, y, size, face);
-                        Vector2 uv = ConvertDirectionToUV(direction);
-                        Color color = panoramicTexture.GetPixelBilinear(uv.x, uv.y);
+                        var direction = GetDirectionForCubemapFace(x, y, size, face);
+                        var uv = ConvertDirectionToUV(direction);
+                        var color = panoramicTexture.GetPixelBilinear(uv.x, uv.y);
 
                         if (QualitySettings.activeColorSpace == ColorSpace.Linear)
                         {

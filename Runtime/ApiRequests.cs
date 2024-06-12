@@ -11,7 +11,7 @@ namespace BlockadeLabsSDK
 {
     internal static class ApiRequests
     {
-        private static readonly string ApiEndpoint = "https://backend.blockadelabs.com/api/v1/";
+        private static readonly string ApiEndpoint = "https://backend-staging.blockadelabs.com/api/v1/";
 
         public static string ApiKey { get; set; }
 

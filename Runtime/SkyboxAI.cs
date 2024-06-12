@@ -133,8 +133,8 @@ namespace BlockadeLabsSDK
         }
 
         [SerializeField]
-        private string _model;
-        public string Model
+        private SkyboxAiModelVersion _model;
+        public SkyboxAiModelVersion Model
         {
             get => _model;
             internal set => _model = value;
@@ -150,7 +150,7 @@ namespace BlockadeLabsSDK
             _type = result.type;
             _prompt = result.prompt;
             _negativeText = result.negative_text;
-            _model = result.model;
+            _model = result.model == "Model 3" ? SkyboxAiModelVersion.Model3 : SkyboxAiModelVersion.Model2;
         }
 
         internal ImagineResult GetMetadata()
@@ -165,7 +165,7 @@ namespace BlockadeLabsSDK
                 type = _type,
                 prompt = _prompt,
                 negative_text = _negativeText,
-                model = _model
+                model = _model == SkyboxAiModelVersion.Model3 ? "Model 3" : "Model 2"
             };
         }
     }
