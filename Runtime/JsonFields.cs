@@ -15,6 +15,8 @@ namespace BlockadeLabsSDK
         public int skybox_style_id;
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public int? remix_imagine_id;
+        public string control_model;
+        public byte[] control_image;
     }
 
     [Preserve, Serializable]

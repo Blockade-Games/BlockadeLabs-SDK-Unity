@@ -5,6 +5,11 @@ using UnityEngine.Rendering;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
+
 namespace BlockadeLabsSDK
 {
     public class RuntimeGuiManager : MonoBehaviour
@@ -41,6 +46,22 @@ namespace BlockadeLabsSDK
 
         [Header("Skybox Generator")]
         #region Skybox Generator
+
+        [SerializeField]
+        private GameObject _remixImagePanel;
+        public GameObject RemixImagePanel
+        {
+            get { return _remixImagePanel; }
+            set { _remixImagePanel = value; }
+        }
+
+        [SerializeField]
+        private Image _remixImage;
+        public Image RemixImage
+        {
+            get { return _remixImage; }
+            set { _remixImage = value; }
+        }
 
         [SerializeField]
         private GameObject _bottomSection;
@@ -550,6 +571,7 @@ namespace BlockadeLabsSDK
             _createButton.onClick.AddListener(OnCreateButtonClicked);
             _remixButton.onClick.AddListener(OnRemixButtonClicked);
             _likeToggle.onValueChanged.AddListener(OnLikeToggle);
+            _uploadButton.onClick.AddListener(OnRemixUpload);
             _createUnderlineOffset = _createRemixUnderline.localPosition.x;
             _createButton.GetComponent<Hoverable>().OnHoverChanged.AddListener(_ => UpdateHintText());
             _remixButton.GetComponent<Hoverable>().OnHoverChanged.AddListener(_ => UpdateHintText());
@@ -749,19 +771,75 @@ namespace BlockadeLabsSDK
         private void OnCreateButtonClicked()
         {
             _generator.Remix = false;
+
+            if (!Application.isEditor) { return; }
+
             _uploadButton.gameObject.SetActive(false);
+
+            if (_generator.RemixImage != null)
+            {
+                _remixImagePanel.SetActive(false);
+            }
         }
 
         private void OnRemixButtonClicked()
         {
             _generator.Remix = true;
-            _uploadButton.gameObject.SetActive(Application.isEditor);
+
+            if (!Application.isEditor) { return; }
+
+            _uploadButton.gameObject.SetActive(true);
+
+            if (_generator.RemixImage != null)
+            {
+                _remixImagePanel.SetActive(true);
+            }
         }
 
         private async void OnLikeToggle(bool newValue)
         {
             var result = await ApiRequests.ToggleFavorite(_skyboxMesh.SkyboxAsset.Id);
             _likeToggle.SetIsOnWithoutNotify(result.isMyFavorite);
+        }
+
+        private async void OnRemixUpload()
+        {
+#if UNITY_EDITOR
+            _remixImagePanel.SetActive(false);
+            _bottomSection.GetComponent<ContentSizeFitter>().enabled = false;
+            var remixFilePath = EditorUtility.OpenFilePanel("Select Remix Image", string.Empty, "png,jpg");
+            Texture2D texture;
+
+            if (!string.IsNullOrWhiteSpace(remixFilePath))
+            {
+                texture = await ApiRequests.DownloadTextureAsync($"file://{remixFilePath}", true);
+                _generator.RemixImage = texture;
+            }
+            else
+            {
+                texture = _generator.RemixImage;
+            }
+
+            if (texture != null)
+            {
+                if (_remixImage.sprite != null)
+                {
+                    Destroy(_remixImage.sprite);
+                }
+
+                _remixImage.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector2.zero);
+                var aspectRatioFitter = _remixImage.GetComponent<AspectRatioFitter>();
+                aspectRatioFitter.aspectRatio = (float)texture.width / texture.height;
+
+                // todo if aspect ratio isn't 2:1 show popup warning
+            }
+
+            _remixImagePanel.SetActive(texture != null);
+            var btmTransform = (RectTransform)_bottomSection.transform;
+            btmTransform.ForceUpdateRectTransforms();
+            LayoutRebuilder.MarkLayoutForRebuild(btmTransform);
+            LayoutRebuilder.ForceRebuildLayoutImmediate(btmTransform);
+#endif
         }
 
         private void OnGenerateButtonClicked()

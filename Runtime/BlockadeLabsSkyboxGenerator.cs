@@ -218,6 +218,21 @@ namespace BlockadeLabsSDK
             }
         }
 
+        private Texture2D _remixImage;
+
+        public Texture2D RemixImage
+        {
+            get => _remixImage;
+            set
+            {
+                if (_remixImage != value)
+                {
+                    _remixImage = value;
+                    OnPropertyChanged?.Invoke();
+                }
+            }
+        }
+
         public enum State
         {
             NeedApiKey,
@@ -376,9 +391,18 @@ namespace BlockadeLabsSDK
                 skybox_style_id = SelectedStyle.id,
             };
 
-            if (_remix && !TrySetRemixId(request))
+            if (_remix)
             {
-                return;
+                if (!TrySetRemixId(request))
+                {
+                    return;
+                }
+
+                if (_remixImage != null)
+                {
+                    request.control_model = _modelVersion == SkyboxAiModelVersion.Model3 ? "remix" : "sketch";
+                    request.control_image = _remixImage.EncodeToPNG();
+                }
             }
 
             ClearError();
