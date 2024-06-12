@@ -393,15 +393,14 @@ namespace BlockadeLabsSDK
 
             if (_remix)
             {
-                if (!TrySetRemixId(request))
-                {
-                    return;
-                }
-
                 if (_remixImage != null)
                 {
                     request.control_model = _modelVersion == SkyboxAiModelVersion.Model3 ? "remix" : "sketch";
                     request.control_image = _remixImage.EncodeToPNG();
+                }
+                else if (!TrySetRemixId(request))
+                {
+                    return;
                 }
             }
 

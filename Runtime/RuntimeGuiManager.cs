@@ -720,6 +720,8 @@ namespace BlockadeLabsSDK
         {
             _generator.ModelVersion = version;
             _generator.Remix = false;
+            _remixImagePanel.SetActive(false);
+            _uploadButton.gameObject.SetActive(false);
         }
 
         private void OnPromptInputChanged(string newValue)

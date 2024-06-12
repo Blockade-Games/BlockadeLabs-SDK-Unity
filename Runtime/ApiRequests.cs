@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -56,30 +55,70 @@ namespace BlockadeLabsSDK
             return await GetAsync<List<SkyboxStyle>>("skybox/styles");
         }
 
-        public static async Task<CreateSkyboxResult> GenerateSkyboxAsync(CreateSkyboxRequest requestData)
+        public static async Task<CreateSkyboxResult> GenerateSkyboxAsync(CreateSkyboxRequest skyboxRequest)
         {
-            string requestJson = JsonConvert.SerializeObject(requestData);
-            using var request = new UnityWebRequest();
-            request.url = ApiEndpoint + "skybox";
-            request.method = "POST";
+            var formData = new WWWForm();
+            formData.AddField("prompt", skyboxRequest.prompt);
+
+            if (!string.IsNullOrWhiteSpace(skyboxRequest.negative_text))
+            {
+                formData.AddField("negative_text", skyboxRequest.negative_text);
+            }
+
+            if (skyboxRequest.enhance_prompt.HasValue)
+            {
+                formData.AddField("enhance_prompt", skyboxRequest.enhance_prompt.ToString());
+            }
+
+            if (skyboxRequest.seed.HasValue)
+            {
+                formData.AddField("seed", skyboxRequest.seed.Value);
+            }
+
+            if (skyboxRequest.skybox_style_id.HasValue)
+            {
+                formData.AddField("skybox_style_id", skyboxRequest.skybox_style_id.Value);
+            }
+
+            if (skyboxRequest.remix_imagine_id.HasValue)
+            {
+                formData.AddField("remix_imagine_id", skyboxRequest.remix_imagine_id.Value);
+            }
+
+            if (skyboxRequest.control_image != null)
+            {
+                if (!string.IsNullOrWhiteSpace(skyboxRequest.control_model))
+                {
+                    formData.AddField("control_model", skyboxRequest.control_model);
+                }
+
+                formData.AddBinaryData("control_image", skyboxRequest.control_image);
+            }
+
+            using var request = UnityWebRequest.Post($"{ApiEndpoint}skybox", formData);
             request.downloadHandler = new DownloadHandlerBuffer();
-            request.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(requestJson));
             request.timeout = 60;
             request.SetRequestHeader("x-api-key", UnityWebRequest.EscapeURL(ApiKey));
             request.SetRequestHeader("Accept", "application/json");
-            request.SetRequestHeader("Content-Type", "application/json; charset=UTF-8");
+            var contentType = request.GetRequestHeader("Content-Type");
 
-            LogVerbose("Generate Skybox Request: " + request.url + "\n" + requestJson);
+            if (!string.IsNullOrWhiteSpace(contentType))
+            {
+                contentType = contentType.Replace("\"", string.Empty);
+                request.SetRequestHeader("Content-Type", contentType);
+            }
+
+            LogVerbose($"Generate Skybox Request: {request.url}\n{JsonConvert.SerializeObject(skyboxRequest, Formatting.Indented)}");
 
             await request.SendWebRequest();
 
             if (request.result != UnityWebRequest.Result.Success)
             {
-                Debug.LogError("Create Skybox Error: " + request.error);
+                Debug.LogError($"Create Skybox Error: {request.downloadHandler.text}\n{request.error}");
                 return null;
             }
 
-            LogVerbose("Generate Skybox Response: " + request.downloadHandler.text);
+            LogVerbose($"Generate Skybox Response: {request.downloadHandler.text}");
             return JsonConvert.DeserializeObject<CreateSkyboxResult>(request.downloadHandler.text);
         }
 
