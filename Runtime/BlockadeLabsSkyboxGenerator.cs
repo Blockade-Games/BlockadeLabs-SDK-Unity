@@ -805,7 +805,7 @@ namespace BlockadeLabsSDK
             return AssetUtils.CreateUniqueFolder(prefix);
         }
 #else
-        internal async Task DownloadResultAsync(GetImagineResult result)
+        internal async Task DownloadResultAsync(ImagineResult result)
         {
             bool useComputeShader = SystemInfo.supportsComputeShaders && _cubemapComputeShader != null;
 
