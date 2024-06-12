@@ -139,12 +139,8 @@ namespace BlockadeLabsSDK
         private async void OnViewButtonClicked()
         {
             _runtimeGuiManager.ToggleHistoryPanel();
-            await _runtimeGuiManager.Generator.DownloadResultAsync(
-                new GetImagineResult
-                {
-                    request = _imagineResult
-                });
             gameObject.SetActive(false);
+            await _runtimeGuiManager.Generator.DownloadResultAsync(_imagineResult);
         }
 
         private void OnCloseButtonClicked()

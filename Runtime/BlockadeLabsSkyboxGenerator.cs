@@ -240,7 +240,7 @@ namespace BlockadeLabsSDK
 
         private bool _isCancelled;
 
-        public bool CanRemix => _skyboxMesh != null && _skyboxMesh.SkyboxAsset != null;
+        public bool HasSkyboxMetadata => _skyboxMesh != null && _skyboxMesh.SkyboxAsset != null;
 
 #if UNITY_EDITOR
         private int _progressId = 0;
@@ -451,7 +451,7 @@ namespace BlockadeLabsSDK
 
         private bool TrySetRemixId(CreateSkyboxRequest request)
         {
-            if (!CanRemix)
+            if (!HasSkyboxMetadata)
             {
                 SetError("Missing skybox ID. Please use a previously generated skybox or disable remix.");
                 return false;
@@ -462,7 +462,7 @@ namespace BlockadeLabsSDK
         }
 
 #if PUSHER_PRESENT
-        private async Task<GetImagineResult> WaitForPusherResultAsync(string pusherChannel, string pusherEvent)
+        private async Task<ImagineResult> WaitForPusherResultAsync(string pusherChannel, string pusherEvent)
         {
             const string key = "a6a7b7662238ce4494d5";
             const string cluster = "mt1";
@@ -517,7 +517,7 @@ namespace BlockadeLabsSDK
                 return null;
             }
 
-            return new GetImagineResult { request = request };
+            return request;
         }
 
         private struct PusherEvent
@@ -526,7 +526,7 @@ namespace BlockadeLabsSDK
         }
 #endif
 
-        private async Task<GetImagineResult> PollForResultAsync(string imagineObfuscatedId)
+        private async Task<ImagineResult> PollForResultAsync(string imagineObfuscatedId)
         {
             while (!_isCancelled)
             {
@@ -547,13 +547,13 @@ namespace BlockadeLabsSDK
                     break;
                 }
 
-                if (result.request.status == Status.Error)
+                if (result.status == Status.Error)
                 {
-                    SetGenerateFailed(result.request.error_message);
+                    SetGenerateFailed(result.error_message);
                     break;
                 }
 
-                if (result.request.status == Status.Complete)
+                if (result.status == Status.Complete)
                 {
                     return result;
                 }
@@ -580,12 +580,12 @@ namespace BlockadeLabsSDK
         }
 
 #if UNITY_EDITOR
-        internal async Task DownloadResultAsync(GetImagineResult result, bool setSkybox = true)
+        internal async Task DownloadResultAsync(ImagineResult result, bool setSkybox = true)
         {
-            var textureUrl = result.request.file_url;
-            var depthMapUrl = result.request.depth_map_url;
+            var textureUrl = result.file_url;
+            var depthMapUrl = result.depth_map_url;
             var hasDepthMap = !string.IsNullOrWhiteSpace(depthMapUrl);
-            var prompt = result.request.prompt;
+            var prompt = result.prompt;
 
             if (string.IsNullOrWhiteSpace(textureUrl))
             {
@@ -602,16 +602,22 @@ namespace BlockadeLabsSDK
 
             AssetUtils.CreateGenerateBlockadeLabsFolder();
             var prefix = AssetUtils.CreateValidFilename(prompt);
-            var folderPath = GetOrCreateSkyboxFolder(prefix, result.request.id);
+            var folderPath = GetOrCreateSkyboxFolder(prefix, result.id);
             var skyboxAIPath = $"{folderPath}/{prefix}.asset";
             var skyboxAI = AssetDatabase.LoadAssetAtPath<SkyboxAI>(skyboxAIPath);
 
             if (skyboxAI == null)
             {
                 skyboxAI = ScriptableObject.CreateInstance<SkyboxAI>();
-                skyboxAI.SetMetadata(result.request);
+                skyboxAI.SetMetadata(result);
                 AssetDatabase.CreateAsset(skyboxAI, skyboxAIPath);
             }
+            else
+            {
+                skyboxAI.SetMetadata(result);
+                EditorUtility.SetDirty(skyboxAI);
+            }
+
 
             var tasks = new List<Task>();
             var texturePath = $"{folderPath}/{prefix} texture.png";
@@ -637,7 +643,10 @@ namespace BlockadeLabsSDK
                 return;
             }
 
-            AssetDatabase.Refresh();
+            if (tasks.Count > 0)
+            {
+                AssetDatabase.Refresh();
+            }
 
             if (skyboxAI.SkyboxTexture == null)
             {
@@ -650,6 +659,7 @@ namespace BlockadeLabsSDK
 
                 var skyboxTexture = AssetDatabase.LoadAssetAtPath<Cubemap>(texturePath);
                 skyboxAI.SkyboxTexture = skyboxTexture;
+
             }
 
             if (hasDepthMap && skyboxAI.DepthTexture == null)
@@ -664,6 +674,7 @@ namespace BlockadeLabsSDK
 
                 var depthTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(depthTexturePath);
                 skyboxAI.DepthTexture = depthTexture;
+                EditorUtility.SetDirty(skyboxAI);
             }
 
             if (skyboxAI.DepthMaterial == null)
@@ -678,6 +689,7 @@ namespace BlockadeLabsSDK
                 }
 
                 skyboxAI.DepthMaterial = depthMaterial;
+                EditorUtility.SetDirty(skyboxAI);
             }
 
             if (setSkybox)
@@ -697,6 +709,7 @@ namespace BlockadeLabsSDK
                 }
 
                 skyboxAI.SkyboxMaterial = skyboxMaterial;
+                EditorUtility.SetDirty(skyboxAI);
             }
 
             if (setSkybox)
@@ -717,6 +730,7 @@ namespace BlockadeLabsSDK
                 }
 
                 skyboxAI.VolumeProfile = volumeProfile;
+                EditorUtility.SetDirty(skyboxAI);
             }
 
             if (setSkybox)
@@ -725,9 +739,18 @@ namespace BlockadeLabsSDK
             }
 #endif
 
-            if (_skyboxMesh != null)
+            if (setSkybox)
             {
-                _skyboxMesh.SkyboxAsset = skyboxAI;
+                Prompt = skyboxAI.Prompt;
+                NegativeText = skyboxAI.NegativeText;
+
+                if (_skyboxMesh != null)
+                {
+                    _skyboxMesh.SkyboxAsset = skyboxAI;
+                }
+
+                SetState(State.Ready);
+                AssetDatabase.SaveAssetIfDirty(skyboxAI);
             }
 
             AssetUtils.PingAsset(skyboxAI);

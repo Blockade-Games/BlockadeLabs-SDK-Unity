@@ -2,6 +2,7 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace BlockadeLabsSDK
@@ -20,11 +21,12 @@ namespace BlockadeLabsSDK
         }
 
         [SerializeField]
-        private BlockadeLabsSkyboxMesh _skybox;
-        public BlockadeLabsSkyboxMesh Skybox
+        [FormerlySerializedAs("_skybox")]
+        private BlockadeLabsSkyboxMesh _skyboxMesh;
+        public BlockadeLabsSkyboxMesh SkyboxMesh
         {
-            get { return _skybox; }
-            set { _skybox = value; }
+            get { return _skyboxMesh; }
+            set { _skyboxMesh = value; }
         }
 
         [SerializeField]
@@ -134,6 +136,22 @@ namespace BlockadeLabsSDK
         {
             get { return _meshCreatorHint; }
             set { _meshCreatorHint = value; }
+        }
+
+        [SerializeField]
+        private Toggle _likeToggle;
+        public Toggle LikeToggle
+        {
+            get { return _likeToggle; }
+            set { _likeToggle = value; }
+        }
+
+        [SerializeField]
+        private Button _uploadButton;
+        public Button UploadButton
+        {
+            get { return _uploadButton; }
+            set { _uploadButton = value; }
         }
 
         [SerializeField]
@@ -501,18 +519,18 @@ namespace BlockadeLabsSDK
             _previewPopup.gameObject.SetActive(false);
 
             // Initialize values
-            _skybox.BakedMesh = null;
-            _skybox.MeshDensity = MeshDensity.Medium;
-            _skybox.DepthScale = _depthScaleSlider.minValue;
+            _skyboxMesh.BakedMesh = null;
+            _skyboxMesh.MeshDensity = MeshDensity.Medium;
+            _skyboxMesh.DepthScale = _depthScaleSlider.minValue;
 
             // Bind to property changes that will update the UI
             _generator.OnPropertyChanged += OnGeneratorPropertyChanged;
             OnGeneratorPropertyChanged();
 
-            _skybox.OnPropertyChanged += OnSkyboxPropertyChanged;
+            _skyboxMesh.OnPropertyChanged += OnSkyboxPropertyChanged;
             OnSkyboxPropertyChanged();
 
-            _skybox.OnLoadingChanged += OnSkyboxLoadingChanged;
+            _skyboxMesh.OnLoadingChanged += OnSkyboxLoadingChanged;
 
             _generator.OnStateChanged += OnStateChanged;
             OnStateChanged(_generator.CurrentState);
@@ -531,6 +549,7 @@ namespace BlockadeLabsSDK
             _enhancePromptToggle.OnValueChanged.AddListener(OnEnhancePromptToggleChanged);
             _createButton.onClick.AddListener(OnCreateButtonClicked);
             _remixButton.onClick.AddListener(OnRemixButtonClicked);
+            _likeToggle.onValueChanged.AddListener(OnLikeToggle);
             _createUnderlineOffset = _createRemixUnderline.localPosition.x;
             _createButton.GetComponent<Hoverable>().OnHoverChanged.AddListener(_ => UpdateHintText());
             _remixButton.GetComponent<Hoverable>().OnHoverChanged.AddListener(_ => UpdateHintText());
@@ -543,11 +562,11 @@ namespace BlockadeLabsSDK
 
             // Mesh Creator Controls
             _meshCreatorBackButton.onClick.AddListener(OnMeshCreatorBackButtonClicked);
-            _lowDensityToggle.OnTurnedOn.AddListener(() => _skybox.MeshDensity = MeshDensity.Low);
-            _mediumDensityToggle.OnTurnedOn.AddListener(() => _skybox.MeshDensity = MeshDensity.Medium);
-            _highDensityToggle.OnTurnedOn.AddListener(() => _skybox.MeshDensity = MeshDensity.High);
-            _epicDensityToggle.OnTurnedOn.AddListener(() => _skybox.MeshDensity = MeshDensity.Epic);
-            _depthScaleSlider.onValueChanged.AddListener(_ => _skybox.DepthScale = _depthScaleSlider.value);
+            _lowDensityToggle.OnTurnedOn.AddListener(() => _skyboxMesh.MeshDensity = MeshDensity.Low);
+            _mediumDensityToggle.OnTurnedOn.AddListener(() => _skyboxMesh.MeshDensity = MeshDensity.Medium);
+            _highDensityToggle.OnTurnedOn.AddListener(() => _skyboxMesh.MeshDensity = MeshDensity.High);
+            _epicDensityToggle.OnTurnedOn.AddListener(() => _skyboxMesh.MeshDensity = MeshDensity.Epic);
+            _depthScaleSlider.onValueChanged.AddListener(_ => _skyboxMesh.DepthScale = _depthScaleSlider.value);
             _savePrefabButton.onClick.AddListener(OnSavePrefabButtonClicked);
 
             // History Panel Controls
@@ -567,6 +586,7 @@ namespace BlockadeLabsSDK
             UpdatePromptCharacterLimit();
             UpdateNegativeTextCharacterLimit();
             UpdateCanRemix();
+            UpdateLikeToggle();
             _promptCharacterWarning.SetActive(false);
             _negativeTextCharacterWarning.SetActive(false);
 
@@ -579,11 +599,11 @@ namespace BlockadeLabsSDK
 
         private void OnSkyboxPropertyChanged()
         {
-            _lowDensityToggle.IsOn = _skybox.MeshDensity == MeshDensity.Low;
-            _mediumDensityToggle.IsOn = _skybox.MeshDensity == MeshDensity.Medium;
-            _highDensityToggle.IsOn = _skybox.MeshDensity == MeshDensity.High;
-            _epicDensityToggle.IsOn = _skybox.MeshDensity == MeshDensity.Epic;
-            _depthScaleSlider.value = _skybox.DepthScale;
+            _lowDensityToggle.IsOn = _skyboxMesh.MeshDensity == MeshDensity.Low;
+            _mediumDensityToggle.IsOn = _skyboxMesh.MeshDensity == MeshDensity.Medium;
+            _highDensityToggle.IsOn = _skyboxMesh.MeshDensity == MeshDensity.High;
+            _epicDensityToggle.IsOn = _skyboxMesh.MeshDensity == MeshDensity.Epic;
+            _depthScaleSlider.value = _skyboxMesh.DepthScale;
 #if !UNITY_EDITOR
             _savePrefabButton.gameObject.SetActive(false);
 #endif
@@ -592,7 +612,7 @@ namespace BlockadeLabsSDK
         private void OnSkyboxLoadingChanged(bool isLoading)
         {
             _loadingPopup.SetActive(isLoading);
-            _loadingPopupText.text = _skybox.LoadingText;
+            _loadingPopupText.text = _skyboxMesh.LoadingText;
         }
 
         private void OnStateChanged(BlockadeLabsSkyboxGenerator.State state)
@@ -617,6 +637,7 @@ namespace BlockadeLabsSDK
             UpdateGenerateButton();
             UpdateCanRemix();
             UpdateMeshCreatorButton();
+            UpdateLikeToggle();
             UpdateTip();
 
             _historyButton.interactable = _generator.CurrentState != BlockadeLabsSkyboxGenerator.State.NeedApiKey;
@@ -629,7 +650,8 @@ namespace BlockadeLabsSDK
 
         private void UpdateCanRemix()
         {
-            _remixButton.interactable = _generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Ready && _generator.CanRemix;
+            _remixButton.interactable = _generator.HasSkyboxMetadata && _generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Ready;
+
             foreach (var disabledColor in _remixButton.GetComponentsInChildren<DisabledColor>())
             {
                 disabledColor.Disabled = !_remixButton.interactable;
@@ -638,11 +660,24 @@ namespace BlockadeLabsSDK
 
         private void UpdateMeshCreatorButton()
         {
-            _meshCreatorButton.interactable = _skybox.HasDepthTexture && _generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Ready;
-            var disabledColors = _meshCreatorButton.GetComponentsInChildren<DisabledColor>();
-            foreach (var disabledColor in disabledColors)
+            _meshCreatorButton.interactable = _skyboxMesh.HasDepthTexture && _generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Ready;
+
+            foreach (var disabledColor in _meshCreatorButton.GetComponentsInChildren<DisabledColor>())
             {
                 disabledColor.Disabled = !_meshCreatorButton.interactable;
+            }
+        }
+
+        private async void UpdateLikeToggle()
+        {
+            _likeToggle.interactable = _generator.HasSkyboxMetadata && _generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Ready;
+            _likeToggle.isOn = false;
+
+            // get the latest favorite status
+            if (_generator.HasSkyboxMetadata)
+            {
+                var imagine = await ApiRequests.GetRequestStatusAsync(_generator.SkyboxMesh.SkyboxAsset.ObfuscatedId);
+                _likeToggle.SetIsOnWithoutNotify(imagine.isMyFavorite);
             }
         }
 
@@ -714,11 +749,19 @@ namespace BlockadeLabsSDK
         private void OnCreateButtonClicked()
         {
             _generator.Remix = false;
+            _uploadButton.gameObject.SetActive(false);
         }
 
         private void OnRemixButtonClicked()
         {
             _generator.Remix = true;
+            _uploadButton.gameObject.SetActive(true);
+        }
+
+        private async void OnLikeToggle(bool newValue)
+        {
+            var result = await ApiRequests.ToggleFavorite(_skyboxMesh.SkyboxAsset.Id);
+            _likeToggle.SetIsOnWithoutNotify(result.isMyFavorite);
         }
 
         private void OnGenerateButtonClicked()
@@ -761,18 +804,18 @@ namespace BlockadeLabsSDK
 
         private IEnumerator CoAnimateDepthScale(float target)
         {
-            var start = _skybox.DepthScale;
+            var start = _skyboxMesh.DepthScale;
             var time = 0.0f;
             var duration = 0.1f;
 
             while (time < duration)
             {
                 time += Time.deltaTime;
-                _skybox.DepthScale = Mathf.Lerp(start, target, time / duration);
+                _skyboxMesh.DepthScale = Mathf.Lerp(start, target, time / duration);
                 yield return null;
             }
 
-            _skybox.DepthScale = target;
+            _skyboxMesh.DepthScale = target;
         }
 
         private void OnMeshCreatorButtonClicked()
@@ -801,13 +844,13 @@ namespace BlockadeLabsSDK
 
         private void OnSavePrefabButtonClicked()
         {
-            if (_skybox.HasDepthTexture)
+            if (_skyboxMesh.HasDepthTexture)
             {
-                _skybox.BakeMesh();
+                _skyboxMesh.BakeMesh();
             }
 
-            _skybox.SavePrefab();
-            _skybox.BakedMesh = null;
+            _skyboxMesh.SavePrefab();
+            _skyboxMesh.BakedMesh = null;
         }
 
         private void UpdateCamera()
@@ -903,7 +946,7 @@ namespace BlockadeLabsSDK
             }
             else
             {
-                _hintText.text = (_generator.CanRemix && _generator.Remix) ? _remixHint : _createHint;
+                _hintText.text = (_generator.HasSkyboxMetadata && _generator.Remix) ? _remixHint : _createHint;
             }
 
             _modeTooltip.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(
