@@ -755,7 +755,7 @@ namespace BlockadeLabsSDK
         private void OnRemixButtonClicked()
         {
             _generator.Remix = true;
-            _uploadButton.gameObject.SetActive(true);
+            _uploadButton.gameObject.SetActive(Application.isEditor);
         }
 
         private async void OnLikeToggle(bool newValue)
