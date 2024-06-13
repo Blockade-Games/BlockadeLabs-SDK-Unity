@@ -6,14 +6,22 @@ namespace BlockadeLabsSDK
     {
         public static Cubemap Convert(Texture2D panoramicTexture, ComputeShader computeShader, int size)
         {
-            RenderTexture renderTexture = new RenderTexture(size, size, 0, RenderTextureFormat.ARGB32);
-            renderTexture.dimension = UnityEngine.Rendering.TextureDimension.Tex2DArray;
-            renderTexture.volumeDepth = 6;
-            renderTexture.enableRandomWrite = true;
-            renderTexture.useMipMap = false;
+            if (!SystemInfo.supportsComputeShaders || computeShader == null)
+            {
+                return Convert(panoramicTexture, size);
+            }
+
+            var renderTexture = new RenderTexture(size, size, 0, RenderTextureFormat.ARGB32)
+            {
+                dimension = UnityEngine.Rendering.TextureDimension.Tex2DArray,
+                volumeDepth = 6,
+                enableRandomWrite = true,
+                useMipMap = false
+            };
+
             renderTexture.Create();
 
-            int kernelHandle = computeShader.FindKernel("CSMain");
+            var kernelHandle = computeShader.FindKernel("CSMain");
             computeShader.SetTexture(kernelHandle, "_PanoramicTexture", panoramicTexture);
             computeShader.SetTexture(kernelHandle, "_CubemapTexture", renderTexture);
             computeShader.SetInt("_Size", size);

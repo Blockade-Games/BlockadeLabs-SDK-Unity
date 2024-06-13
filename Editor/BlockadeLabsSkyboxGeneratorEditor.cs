@@ -23,6 +23,7 @@ namespace BlockadeLabsSDK.Editor
         private SerializedProperty _prompt;
         private SerializedProperty _negativeText;
         private SerializedProperty _remix;
+        private SerializedProperty _remixImage;
         private SerializedProperty _seed;
         private SerializedProperty _enhancePrompt;
 
@@ -43,6 +44,7 @@ namespace BlockadeLabsSDK.Editor
             _prompt = serializedObject.FindProperty("_prompt");
             _negativeText = serializedObject.FindProperty("_negativeText");
             _remix = serializedObject.FindProperty("_remix");
+            _remixImage = serializedObject.FindProperty(nameof(_remixImage));
             _seed = serializedObject.FindProperty("_seed");
             _enhancePrompt = serializedObject.FindProperty("_enhancePrompt");
 
@@ -65,6 +67,7 @@ namespace BlockadeLabsSDK.Editor
 
                 EditorGUI.BeginChangeCheck();
                 EditorGUILayout.PropertyField(_modelVersion);
+
                 if (EditorGUI.EndChangeCheck() && generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Ready)
                 {
                     generator.ModelVersion = (SkyboxAiModelVersion)_modelVersion.intValue;
@@ -91,6 +94,7 @@ namespace BlockadeLabsSDK.Editor
                 }
 
                 DrawSkyboxFields(generator);
+                EditorGUILayout.Space(12);
 
                 if (generating)
                 {
@@ -152,11 +156,13 @@ namespace BlockadeLabsSDK.Editor
             EditorGUILayout.PropertyField(_prompt, GUILayout.Height(EditorGUIUtility.singleLineHeight * 3));
             EditorStyles.textField.wordWrap = false;
             EditorGUILayout.PropertyField(_negativeText);
+            EditorGUILayout.PropertyField(_remix);
 
-            if (generator.ModelVersion == SkyboxAiModelVersion.Model2)
+            BlockadeGUI.DisableGroup(!_remix.boolValue, () =>
             {
-                EditorGUILayout.PropertyField(_remix);
-            }
+                _remixImage.objectReferenceValue = EditorGUILayout.ObjectField(new GUIContent(_remixImage.displayName, _remixImage.tooltip), _remixImage.objectReferenceValue, typeof(Texture2D), false);
+                EditorGUILayout.Space();
+            });
 
             EditorGUILayout.PropertyField(_seed);
             EditorGUILayout.PropertyField(_enhancePrompt);

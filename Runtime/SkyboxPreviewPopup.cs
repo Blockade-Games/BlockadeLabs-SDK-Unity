@@ -31,6 +31,9 @@ namespace BlockadeLabsSDK
         private Toggle _likeToggle;
 
         [SerializeField]
+        private Image _model3Tag;
+
+        [SerializeField]
         private TextMeshProUGUI _statusText;
 
         [SerializeField]
@@ -161,6 +164,7 @@ namespace BlockadeLabsSDK
             GetSkyboxTextures(_imagineResult);
             _titleText.text = $"World #{imagineResult.id}";
             _likeToggle.SetIsOnWithoutNotify(imagineResult.isMyFavorite);
+            _model3Tag.gameObject.SetActive(_imagineResult.model == "Model 3");
             _statusText.text = $"Status: <color=\"white\">{imagineResult.status}</color>";
             _promptText.text = imagineResult.prompt;
             _negativeTextTitle.gameObject.SetActive(!string.IsNullOrWhiteSpace(imagineResult.negative_text));

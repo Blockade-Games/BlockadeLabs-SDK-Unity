@@ -56,8 +56,8 @@ namespace BlockadeLabsSDK
         }
 
         [SerializeField]
-        private Image _remixImage;
-        public Image RemixImage
+        private RawImage _remixImage;
+        public RawImage RemixImage
         {
             get { return _remixImage; }
             set { _remixImage = value; }
@@ -602,12 +602,15 @@ namespace BlockadeLabsSDK
             _promptInput.text = _generator.Prompt;
             _enhancePromptToggle.IsOn = _generator.EnhancePrompt;
             _negativeTextInput.text = _generator.NegativeText;
+            _stylePickerPanel.SetStyles(_generator.StyleFamilies);
             UpdateHintText();
             UpdateGenerateButton();
             UpdatePromptCharacterLimit();
             UpdateNegativeTextCharacterLimit();
             UpdateCanRemix();
             UpdateLikeToggle();
+            UpdateRemixPanel();
+
             _promptCharacterWarning.SetActive(false);
             _negativeTextCharacterWarning.SetActive(false);
 
@@ -635,11 +638,6 @@ namespace BlockadeLabsSDK
 
         private void OnStateChanged(BlockadeLabsSkyboxGenerator.State state)
         {
-            if (state == BlockadeLabsSkyboxGenerator.State.Ready)
-            {
-                _stylePickerPanel.SetStyles(_generator.StyleFamilies);
-            }
-
             var selectables = _promptPanel.GetComponentsInChildren<Selectable>();
             foreach (var selectable in selectables)
             {
@@ -662,6 +660,7 @@ namespace BlockadeLabsSDK
 
             if (_generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Ready)
             {
+                _demoCamera.ResetView();
                 UpdateSpheres();
             }
         }
@@ -699,6 +698,19 @@ namespace BlockadeLabsSDK
             }
         }
 
+        private void UpdateRemixPanel()
+        {
+            _uploadButton.gameObject.SetActive(_generator.Remix && Application.isEditor);
+            _remixImagePanel.SetActive(_generator.Remix && _generator.RemixImage != null);
+            _remixImage.texture = _generator.RemixImage;
+
+            if (_generator.RemixImage != null)
+            {
+                var aspectRatioFitter = _remixImage.GetComponent<AspectLayoutElement>();
+                aspectRatioFitter.heightToWidth = _generator.RemixImage.height / (float)_generator.RemixImage.width;
+            }
+        }
+
         private void OnErrorChanged()
         {
             if (!string.IsNullOrEmpty(_generator.LastError))
@@ -716,8 +728,6 @@ namespace BlockadeLabsSDK
         {
             _generator.ModelVersion = version;
             _generator.Remix = false;
-            _remixImagePanel.SetActive(false);
-            _uploadButton.gameObject.SetActive(false);
         }
 
         private void OnPromptInputChanged(string newValue)
@@ -769,29 +779,11 @@ namespace BlockadeLabsSDK
         private void OnCreateButtonClicked()
         {
             _generator.Remix = false;
-
-            if (!Application.isEditor) { return; }
-
-            _uploadButton.gameObject.SetActive(false);
-
-            if (_generator.RemixImage != null)
-            {
-                _remixImagePanel.SetActive(false);
-            }
         }
 
         private void OnRemixButtonClicked()
         {
             _generator.Remix = true;
-
-            if (!Application.isEditor) { return; }
-
-            _uploadButton.gameObject.SetActive(true);
-
-            if (_generator.RemixImage != null)
-            {
-                _remixImagePanel.SetActive(true);
-            }
         }
 
         private async void OnLikeToggle(bool newValue)
@@ -804,39 +796,16 @@ namespace BlockadeLabsSDK
         {
 #if UNITY_EDITOR
             _remixImagePanel.SetActive(false);
-            _bottomSection.GetComponent<ContentSizeFitter>().enabled = false;
             var remixFilePath = EditorUtility.OpenFilePanel("Select Remix Image", string.Empty, "png,jpg,jpeg");
-            Texture2D texture;
 
             if (!string.IsNullOrWhiteSpace(remixFilePath))
             {
-                texture = await ApiRequests.DownloadTextureAsync($"file://{remixFilePath}", true);
+                var texture = await ApiRequests.DownloadTextureAsync($"file://{remixFilePath}", true);
                 _generator.RemixImage = texture;
-            }
-            else
-            {
-                texture = _generator.RemixImage;
-            }
-
-            if (texture != null)
-            {
-                if (_remixImage.sprite != null)
-                {
-                    Destroy(_remixImage.sprite);
-                }
-
-                _remixImage.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector2.zero);
-                var aspectRatioFitter = _remixImage.GetComponent<AspectRatioFitter>();
-                aspectRatioFitter.aspectRatio = (float)texture.width / texture.height;
+                _demoCamera.ResetView();
 
                 // todo if aspect ratio isn't 2:1 show popup warning
             }
-
-            _remixImagePanel.SetActive(texture != null);
-            var btmTransform = (RectTransform)_bottomSection.transform;
-            btmTransform.ForceUpdateRectTransforms();
-            LayoutRebuilder.MarkLayoutForRebuild(btmTransform);
-            LayoutRebuilder.ForceRebuildLayoutImmediate(btmTransform);
 #endif
         }
 

@@ -51,7 +51,7 @@ namespace BlockadeLabsSDK
                 {
                     _modelVersion = value;
                     OnPropertyChanged?.Invoke();
-                    Reload();
+                    UpdateActiveStyleList();
                 }
             }
         }
@@ -221,6 +221,7 @@ namespace BlockadeLabsSDK
             }
         }
 
+        [SerializeField]
         private Texture2D _remixImage;
 
         public Texture2D RemixImage
@@ -230,28 +231,31 @@ namespace BlockadeLabsSDK
             {
                 if (_remixImage != value)
                 {
+                    _remixImage.Destroy();
+                    _remixCubemap.Destroy();
+
                     if (value != null)
                     {
                         _remixImage = value;
 
-                        var remixCubeMap = PanoramicToCubemap.Convert(_remixImage, _remixImage.width);
+                        _remixCubemap = PanoramicToCubemap.Convert(_remixImage, _cubemapComputeShader, _remixImage.width);
 
                         if (_remixDepthMaterial == null)
                         {
-                            _remixDepthMaterial = CreateDepthMaterial(remixCubeMap, null);
+                            _remixDepthMaterial = CreateDepthMaterial(_remixCubemap, null);
                         }
                         else
                         {
-                            _remixDepthMaterial.mainTexture = remixCubeMap;
+                            _remixDepthMaterial.mainTexture = _remixCubemap;
                         }
 
                         if (_remixSkyboxMaterial == null)
                         {
-                            _remixSkyboxMaterial = CreateSkyboxMaterial(remixCubeMap);
+                            _remixSkyboxMaterial = CreateSkyboxMaterial(_remixCubemap);
                         }
                         else
                         {
-                            _remixSkyboxMaterial.SetTexture("_Tex", remixCubeMap);
+                            _remixSkyboxMaterial.SetTexture("_Tex", _remixCubemap);
                         }
 
                         ViewRemixImage = true;
@@ -259,9 +263,8 @@ namespace BlockadeLabsSDK
                     else
                     {
                         ViewRemixImage = false;
-                        Destroy(_remixImage);
-                        Destroy(_remixDepthMaterial);
-                        Destroy(_remixSkyboxMaterial);
+                        _remixDepthMaterial.Destroy();
+                        _remixSkyboxMaterial.Destroy();
                     }
 
                     OnPropertyChanged?.Invoke();
@@ -269,8 +272,8 @@ namespace BlockadeLabsSDK
             }
         }
 
+        private Cubemap _remixCubemap;
         private Material _remixDepthMaterial;
-
         private Material _remixSkyboxMaterial;
 
         private bool _viewRemixImage;
@@ -339,8 +342,9 @@ namespace BlockadeLabsSDK
 
         private void OnDestroy()
         {
-            Destroy(_remixDepthMaterial);
-            Destroy(_remixSkyboxMaterial);
+            _remixCubemap.Destroy();
+            _remixDepthMaterial.Destroy();
+            _remixSkyboxMaterial.Destroy();
         }
 
         public bool CheckApiKeyValid()
@@ -405,15 +409,19 @@ namespace BlockadeLabsSDK
 
             CleanupStyleFamilyList(_model2Styles);
             CleanupStyleFamilyList(_model3Styles);
-
             _allModelStyleFamilies = _model3Styles.Concat(_model2Styles).ToList();
+            UpdateActiveStyleList();
+            SetState(State.Ready);
+        }
+
+        private void UpdateActiveStyleList()
+        {
             _styleFamilies = _modelVersion == SkyboxAiModelVersion.Model2 ? _model2Styles : _model3Styles;
 
             _selectedStyleFamilyIndex = -1;
             _selectedStyleIndex = -1;
 
             OnPropertyChanged?.Invoke();
-            SetState(State.Ready);
         }
 
         private void CleanupStyleFamilyList(List<SkyboxStyleFamily> styleFamilies)
@@ -840,33 +848,37 @@ namespace BlockadeLabsSDK
 
             if (setSkybox)
             {
-                Prompt = skyboxAI.Prompt;
-                NegativeText = skyboxAI.NegativeText;
-                ModelVersion = skyboxAI.Model;
-                _styleFamilies = _modelVersion == SkyboxAiModelVersion.Model2 ? _model2Styles : _model3Styles;
-
-                foreach (var family in _allModelStyleFamilies)
-                {
-                    foreach (var style in family.items)
-                    {
-                        if (style.id == skyboxAI.SkyboxStyleId)
-                        {
-                            SelectedStyleFamily = family;
-                            SelectedStyle = style;
-                        }
-                    }
-                }
-
-                if (_skyboxMesh != null)
-                {
-                    _skyboxMesh.SkyboxAsset = skyboxAI;
-                }
-
-                SetState(State.Ready);
                 AssetDatabase.SaveAssetIfDirty(skyboxAI);
+                SetSkyboxMetadata(skyboxAI);
+                SetState(State.Ready);
             }
 
             AssetUtils.PingAsset(skyboxAI);
+        }
+
+        private void SetSkyboxMetadata(SkyboxAI skybox)
+        {
+            Prompt = skybox.Prompt;
+            NegativeText = skybox.NegativeText;
+            ModelVersion = skybox.Model;
+            _styleFamilies = _modelVersion == SkyboxAiModelVersion.Model2 ? _model2Styles : _model3Styles;
+
+            foreach (var family in _allModelStyleFamilies)
+            {
+                foreach (var style in family.items)
+                {
+                    if (style.id == skybox.SkyboxStyleId)
+                    {
+                        SelectedStyleFamily = family;
+                        SelectedStyle = style;
+                    }
+                }
+            }
+
+            if (_skyboxMesh != null)
+            {
+                _skyboxMesh.SkyboxAsset = skybox;
+            }
         }
 
         private string GetOrCreateSkyboxFolder(string prefix, int skyboxId)

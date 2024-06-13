@@ -28,7 +28,7 @@ namespace BlockadeLabsSDK
 
         private void OnCloseButtonClicked()
         {
-            Destroy(_runtimeGuiManager.Generator.RemixImage);
+            _runtimeGuiManager.Generator.RemixImage = null;
             gameObject.SetActive(false);
         }
 

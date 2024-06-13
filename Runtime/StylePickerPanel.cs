@@ -49,6 +49,7 @@ namespace BlockadeLabsSDK
 
         private SkyboxStyle _selectedStyle;
         private SkyboxStyle _previewStyle;
+        private IReadOnlyList<SkyboxStyleFamily> _currentStyleFamily;
 
         private Dictionary<string, Sprite> _previewCache = new Dictionary<string, Sprite>();
 
@@ -96,6 +97,10 @@ namespace BlockadeLabsSDK
 
         public void SetStyles(IReadOnlyList<SkyboxStyleFamily> styleFamilies)
         {
+            if (styleFamilies == _currentStyleFamily) { return; }
+
+            _currentStyleFamily = styleFamilies;
+
             foreach (Transform child in _styleFamilyContainer)
             {
                 Destroy(child.gameObject);
@@ -111,6 +116,8 @@ namespace BlockadeLabsSDK
                     items = new List<SkyboxStyle>()
                 });
             }
+
+            if (_currentStyleFamily == null) { return; }
 
             foreach (var styleFamily in styleFamilies)
             {
