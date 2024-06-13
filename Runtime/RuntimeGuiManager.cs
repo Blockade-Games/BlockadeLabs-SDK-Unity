@@ -893,9 +893,19 @@ namespace BlockadeLabsSDK
 
         private void OnSavePrefabButtonClicked()
         {
+            StartCoroutine(CoSavePrefab());
+        }
+
+        private IEnumerator CoSavePrefab()
+        {
             if (_skyboxMesh.HasDepthTexture)
             {
                 _skyboxMesh.BakeMesh();
+
+                while (_skyboxMesh.BakedMesh == null)
+                {
+                    yield return null;
+                }
             }
 
             _skyboxMesh.SavePrefab();
@@ -1018,8 +1028,11 @@ namespace BlockadeLabsSDK
             if (_generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Generating)
             {
                 var tip = await ApiRequests.GetSkyboxTipAsync(_generator.ModelVersion);
-                _tipText.text = "<b>Tip:</b> " + tip.tip.Replace("<p>", "").Replace("</p>", "");
-                _tipContainer.SetActive(true);
+                if (!string.IsNullOrWhiteSpace(tip?.tip))
+                {
+                    _tipText.text = "<b>Tip:</b> " + tip.tip.Replace("<p>", "").Replace("</p>", "");
+                    _tipContainer.SetActive(true);
+                }
             }
             else
             {
