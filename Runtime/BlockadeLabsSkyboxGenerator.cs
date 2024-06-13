@@ -924,7 +924,6 @@ namespace BlockadeLabsSDK
             if (_remixImage != null && _viewRemixImage)
             {
                 EnsureRemixImageCubemap();
-                Debug.Log("Set depth material");
                 SetDepthMaterial(_remixDepthMaterial);
                 SetSkyboxMaterial(_remixSkyboxMaterial);
             }
