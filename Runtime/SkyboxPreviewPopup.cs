@@ -95,7 +95,7 @@ namespace BlockadeLabsSDK
         }
 
 #if !UNITY_2022_1_OR_NEWER
-        private System.Threading.CancellationTokenSource _destroyCancellationTokenSource;
+        private System.Threading.CancellationTokenSource _destroyCancellationTokenSource = new System.Threading.CancellationTokenSource();
         // ReSharper disable once InconsistentNaming
         // this is the same name as the unity property introduced in 2022+
         private System.Threading.CancellationToken destroyCancellationToken => _destroyCancellationTokenSource.Token;
@@ -131,8 +131,8 @@ namespace BlockadeLabsSDK
             }
 
 #if !UNITY_2022_1_OR_NEWER
-            _destroyCancellationTokenSource.Cancel();
-            _destroyCancellationTokenSource.Dispose();
+            _destroyCancellationTokenSource?.Cancel();
+            _destroyCancellationTokenSource?.Dispose();
 #endif
         }
 

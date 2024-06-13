@@ -48,15 +48,10 @@ namespace BlockadeLabsSDK
         private static readonly Dictionary<string, Texture2D> _imageCache = new Dictionary<string, Texture2D>();
 
 #if !UNITY_2022_1_OR_NEWER
-        private System.Threading.CancellationTokenSource _destroyCancellationTokenSource;
+        private System.Threading.CancellationTokenSource _destroyCancellationTokenSource = new System.Threading.CancellationTokenSource();
         // ReSharper disable once InconsistentNaming
         // this is the same name as the unity property introduced in 2022+
         private System.Threading.CancellationToken destroyCancellationToken => _destroyCancellationTokenSource.Token;
-
-        private void Awake()
-        {
-            _destroyCancellationTokenSource = new System.Threading.CancellationTokenSource();
-        }
 #endif
 
         private void OnEnable()
@@ -83,8 +78,8 @@ namespace BlockadeLabsSDK
         {
             StopAllCoroutines();
 #if !UNITY_2022_1_OR_NEWER
-            _destroyCancellationTokenSource.Cancel();
-            _destroyCancellationTokenSource.Dispose();
+            _destroyCancellationTokenSource?.Cancel();
+            _destroyCancellationTokenSource?.Dispose();
 #endif
         }
 
