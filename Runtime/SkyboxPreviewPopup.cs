@@ -188,7 +188,8 @@ namespace BlockadeLabsSDK
         {
             try
             {
-                _depthPreviewImage.enabled = false;
+                _depthMapText.gameObject.SetActive(false);
+                _depthPreviewImage.gameObject.SetActive(false);
                 _depthPreviewImage.texture = null;
                 PreviewMaterial.mainTexture = null;
 
@@ -205,7 +206,8 @@ namespace BlockadeLabsSDK
                     if (depth != null)
                     {
                         _depthPreviewImage.texture = depth;
-                        _depthPreviewImage.enabled = true;
+                        _depthMapText.gameObject.SetActive(true);
+                        _depthPreviewImage.gameObject.SetActive(true);
                     }
                 }
                 else
@@ -222,7 +224,7 @@ namespace BlockadeLabsSDK
                         }));
                     }
 
-                    if (depth == null)
+                    if (depth == null && !string.IsNullOrWhiteSpace(result.depth_map_url))
                     {
                         downloadTasks.Add(ApiRequests.DownloadTextureAsync(result.depth_map_url, cancellationToken: destroyCancellationToken).ContinueWith(task =>
                         {
@@ -239,7 +241,8 @@ namespace BlockadeLabsSDK
                         PreviewMaterial.mainTexture = skybox;
                         _previewSkyboxRenderer.sharedMaterial = PreviewMaterial;
                         _depthPreviewImage.texture = depth;
-                        _depthPreviewImage.enabled = true;
+                        _depthMapText.gameObject.SetActive(depth != null);
+                        _depthPreviewImage.gameObject.SetActive(depth != null);
                     }
                 }
             }
