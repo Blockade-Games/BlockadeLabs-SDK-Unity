@@ -924,6 +924,7 @@ namespace BlockadeLabsSDK
             if (_remixImage != null && _viewRemixImage)
             {
                 EnsureRemixImageCubemap();
+                Debug.Log("Set depth material");
                 SetDepthMaterial(_remixDepthMaterial);
                 SetSkyboxMaterial(_remixSkyboxMaterial);
             }
@@ -977,21 +978,25 @@ namespace BlockadeLabsSDK
             if (_remixImage != null)
             {
                 _remixImage.Destroy();
+                _remixImage = null;
             }
 
             if (_remixCubemap != null)
             {
                 _remixCubemap.Destroy();
+                _remixCubemap = null;
             }
 
             if (_remixDepthMaterial != null)
             {
                 _remixDepthMaterial.Destroy();
+                _remixDepthMaterial = null;
             }
 
             if (_remixSkyboxMaterial != null)
             {
                 _remixSkyboxMaterial.Destroy();
+                _remixSkyboxMaterial = null;
             }
         }
 
