@@ -11,13 +11,19 @@ namespace BlockadeLabsSDK
                 return Convert(panoramicTexture, size);
             }
 
-            var renderTexture = new RenderTexture(size, size, 0, RenderTextureFormat.ARGB32)
+            Texture inputTexture = panoramicTexture;
+            if (panoramicTexture.graphicsFormat != UnityEngine.Experimental.Rendering.GraphicsFormat.R8G8B8A8_SRGB)
             {
-                dimension = UnityEngine.Rendering.TextureDimension.Tex2DArray,
-                volumeDepth = 6,
-                enableRandomWrite = true,
-                useMipMap = false
-            };
+                var temporaryTexture = new Texture2D(panoramicTexture.width, panoramicTexture.height, TextureFormat.RGBA32, false);
+                Graphics.ConvertTexture(panoramicTexture, temporaryTexture);
+                inputTexture = temporaryTexture;
+            }
+
+            var renderTexture = RenderTexture.GetTemporary(size, size, 0);
+            renderTexture.dimension = UnityEngine.Rendering.TextureDimension.Tex2DArray;
+            renderTexture.volumeDepth = 6;
+            renderTexture.enableRandomWrite = true;
+            renderTexture.useMipMap = false;
 
             renderTexture.Create();
 
@@ -27,7 +33,7 @@ namespace BlockadeLabsSDK
             computeShader.SetInt("_Size", size);
             computeShader.Dispatch(kernelHandle, size / 8, size / 8, 6);
 
-            var cubemap = new Cubemap(size, TextureFormat.ARGB32, false);
+            var cubemap = new Cubemap(size, TextureFormat.RGBA32, false);
 
             for (int faceIndex = 0; faceIndex < 6; faceIndex++)
             {
@@ -35,6 +41,12 @@ namespace BlockadeLabsSDK
             }
 
             renderTexture.Release();
+
+            if (inputTexture != panoramicTexture)
+            {
+                inputTexture.Destroy();
+            }
+
             return cubemap;
         }
 
