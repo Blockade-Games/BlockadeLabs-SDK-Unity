@@ -170,12 +170,7 @@ namespace BlockadeLabsSDK
 
         public static async Task<SkyboxTip> GetSkyboxTipAsync(SkyboxAiModelVersion model)
         {
-            if (model == SkyboxAiModelVersion.Model3)
-            {
-                return await GetAsync<SkyboxTip>("skybox/get-one-tip-m3");
-            }
-
-            return await GetAsync<SkyboxTip>("skybox/get-one-tip");
+            return await GetAsync<SkyboxTip>("skybox/get-one-tip-unity");
         }
 
         public static async Task<GetHistoryResult> GetSkyboxHistoryAsync(HistorySearchQueryParameters searchQueryParams = null)
