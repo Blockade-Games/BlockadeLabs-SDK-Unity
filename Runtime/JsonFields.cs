@@ -10,11 +10,13 @@ namespace BlockadeLabsSDK
     {
         public string prompt;
         public string negative_text;
-        public bool enhance_prompt;
-        public int seed;
-        public int skybox_style_id;
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public bool? enhance_prompt;
+        public int? seed;
+        public int? skybox_style_id;
         public int? remix_imagine_id;
+        public string control_model;
+        [JsonIgnore]
+        public byte[] control_image;
     }
 
     [Preserve, Serializable]

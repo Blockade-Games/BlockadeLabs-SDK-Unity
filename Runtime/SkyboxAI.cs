@@ -116,6 +116,30 @@ namespace BlockadeLabsSDK
         }
 #endif // UNITY_HDRP
 
+        [SerializeField]
+        private string _prompt;
+        public string Prompt
+        {
+            get => _prompt;
+            internal set => _prompt = value;
+        }
+
+        [SerializeField]
+        private string _negativeText;
+        public string NegativeText
+        {
+            get => _negativeText;
+            internal set => _negativeText = value;
+        }
+
+        [SerializeField]
+        private SkyboxAiModelVersion _model;
+        public SkyboxAiModelVersion Model
+        {
+            get => _model;
+            internal set => _model = value;
+        }
+
         internal void SetMetadata(ImagineResult result)
         {
             _id = result.id;
@@ -124,6 +148,9 @@ namespace BlockadeLabsSDK
             _skyboxStyleName = result.skybox_style_name;
             _status = result.status;
             _type = result.type;
+            _prompt = result.prompt;
+            _negativeText = result.negative_text;
+            _model = result.model == "Model 3" ? SkyboxAiModelVersion.Model3 : SkyboxAiModelVersion.Model2;
         }
 
         internal ImagineResult GetMetadata()
@@ -135,7 +162,10 @@ namespace BlockadeLabsSDK
                 skybox_style_id = _skyboxStyleId,
                 skybox_style_name = _skyboxStyleName,
                 status = _status,
-                type = _type
+                type = _type,
+                prompt = _prompt,
+                negative_text = _negativeText,
+                model = _model == SkyboxAiModelVersion.Model3 ? "Model 3" : "Model 2"
             };
         }
     }

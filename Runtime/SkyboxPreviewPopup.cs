@@ -31,6 +31,9 @@ namespace BlockadeLabsSDK
         private Toggle _likeToggle;
 
         [SerializeField]
+        private Image _model3Tag;
+
+        [SerializeField]
         private TextMeshProUGUI _statusText;
 
         [SerializeField]
@@ -95,7 +98,7 @@ namespace BlockadeLabsSDK
         }
 
 #if !UNITY_2022_1_OR_NEWER
-        private System.Threading.CancellationTokenSource _destroyCancellationTokenSource;
+        private System.Threading.CancellationTokenSource _destroyCancellationTokenSource = new System.Threading.CancellationTokenSource();
         // ReSharper disable once InconsistentNaming
         // this is the same name as the unity property introduced in 2022+
         private System.Threading.CancellationToken destroyCancellationToken => _destroyCancellationTokenSource.Token;
@@ -131,20 +134,16 @@ namespace BlockadeLabsSDK
             }
 
 #if !UNITY_2022_1_OR_NEWER
-            _destroyCancellationTokenSource.Cancel();
-            _destroyCancellationTokenSource.Dispose();
+            _destroyCancellationTokenSource?.Cancel();
+            _destroyCancellationTokenSource?.Dispose();
 #endif
         }
 
         private async void OnViewButtonClicked()
         {
             _runtimeGuiManager.ToggleHistoryPanel();
-            await _runtimeGuiManager.Generator.DownloadResultAsync(
-                new GetImagineResult
-                {
-                    request = _imagineResult
-                });
             gameObject.SetActive(false);
+            await _runtimeGuiManager.Generator.DownloadResultAsync(_imagineResult);
         }
 
         private void OnCloseButtonClicked()
@@ -165,6 +164,7 @@ namespace BlockadeLabsSDK
             GetSkyboxTextures(_imagineResult);
             _titleText.text = $"World #{imagineResult.id}";
             _likeToggle.SetIsOnWithoutNotify(imagineResult.isMyFavorite);
+            _model3Tag.gameObject.SetActive(_imagineResult.model == "Model 3");
             _statusText.text = $"Status: <color=\"white\">{imagineResult.status}</color>";
             _promptText.text = imagineResult.prompt;
             _negativeTextTitle.gameObject.SetActive(!string.IsNullOrWhiteSpace(imagineResult.negative_text));

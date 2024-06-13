@@ -19,7 +19,11 @@ namespace BlockadeLabsSDK
 
         [SerializeField]
         private float _heightToWidth = 1;
-        public float heightToWidth => _heightToWidth;
+        public float heightToWidth
+        {
+            get => _heightToWidth;
+            set => _heightToWidth = value;
+        }
 
         [SerializeField]
         private int _layoutPriority = 1;
@@ -29,7 +33,7 @@ namespace BlockadeLabsSDK
         public float preferredHeight => GetComponent<RectTransform>().rect.width * _heightToWidth;
         public float flexibleHeight => 0;
 
-        public void CalculateLayoutInputHorizontal() {}
-        public void CalculateLayoutInputVertical() {}
+        public void CalculateLayoutInputHorizontal() { }
+        public void CalculateLayoutInputVertical() { }
     }
 }

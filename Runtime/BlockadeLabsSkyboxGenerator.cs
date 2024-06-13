@@ -51,7 +51,7 @@ namespace BlockadeLabsSDK
                 {
                     _modelVersion = value;
                     OnPropertyChanged?.Invoke();
-                    Reload();
+                    UpdateActiveStyleList();
                 }
             }
         }
@@ -112,11 +112,14 @@ namespace BlockadeLabsSDK
         private List<SkyboxStyleFamily> _allModelStyleFamilies;
         public IReadOnlyList<SkyboxStyleFamily> AllModelStyleFamilies => _allModelStyleFamilies;
 
+        private List<SkyboxStyleFamily> _model2Styles;
+        private List<SkyboxStyleFamily> _model3Styles;
+
         [SerializeField]
         private int _selectedStyleFamilyIndex;
         public SkyboxStyleFamily SelectedStyleFamily
         {
-            get => _styleFamilies?[_selectedStyleFamilyIndex];
+            get => _selectedStyleFamilyIndex >= 0 ? _styleFamilies?[_selectedStyleFamilyIndex] : null;
             set
             {
                 _selectedStyleFamilyIndex = _styleFamilies.IndexOf(value);
@@ -129,7 +132,7 @@ namespace BlockadeLabsSDK
         private int _selectedStyleIndex;
         public SkyboxStyle SelectedStyle
         {
-            get => SelectedStyleFamily?.items?[_selectedStyleIndex];
+            get => _selectedStyleIndex >= 0 ? SelectedStyleFamily?.items?[_selectedStyleIndex] : null;
             set
             {
                 _selectedStyleFamilyIndex = _styleFamilies.IndexOf(_styleFamilies.Find(x => x.items.Contains(value)));
@@ -169,6 +172,8 @@ namespace BlockadeLabsSDK
                 }
             }
         }
+
+        public bool SendNegativeText { get; set; } = true;
 
         [Tooltip("The seed is a specific value that guides the randomness in the image creation process. While usually assigned randomly, fixing the seed can help achieve consistent results with minor variations, despite other sources of entropy. This allows for controlled iterations of a prompt, with the seed ensuring a degree of predictability in the otherwise random generation process.")]
         [SerializeField]
@@ -218,6 +223,117 @@ namespace BlockadeLabsSDK
             }
         }
 
+        [SerializeField]
+        private Texture2D _remixImage;
+
+        public Texture2D RemixImage
+        {
+            get => _remixImage;
+            set
+            {
+                if (_remixImage != value)
+                {
+                    DestroyRemixImage();
+                    _remixImage = value;
+                    _viewRemixImage = _remixImage != null;
+                    UpdateSkyboxAndDepthMesh();
+                    OnPropertyChanged?.Invoke();
+                }
+            }
+        }
+
+        private Cubemap _remixCubemap;
+        private Material _remixDepthMaterial;
+        private Material _remixSkyboxMaterial;
+
+        private bool _viewRemixImage;
+        public bool ViewRemixImage
+        {
+            get => _viewRemixImage;
+            set
+            {
+                _viewRemixImage = value;
+                UpdateSkyboxAndDepthMesh();
+                OnPropertyChanged?.Invoke();
+            }
+        }
+
+        private void EnsureRemixImageCubemap()
+        {
+            if (_remixCubemap == null)
+            {
+                _remixCubemap = PanoramicToCubemap.Convert(_remixImage, _cubemapComputeShader, _remixImage.width);
+            }
+
+            if (_remixDepthMaterial == null)
+            {
+                _remixDepthMaterial = CreateDepthMaterial(_remixCubemap, null);
+            }
+            else
+            {
+                _remixDepthMaterial.mainTexture = _remixCubemap;
+            }
+
+            if (_remixSkyboxMaterial == null)
+            {
+                _remixSkyboxMaterial = CreateSkyboxMaterial(_remixCubemap);
+            }
+            else
+            {
+                _remixSkyboxMaterial.SetTexture("_Tex", _remixCubemap);
+            }
+        }
+
+        private void UpdateSkyboxAndDepthMesh()
+        {
+            if (_remixImage != null && _viewRemixImage)
+            {
+                EnsureRemixImageCubemap();
+                SetDepthMaterial(_remixDepthMaterial);
+                SetSkyboxMaterial(_remixSkyboxMaterial);
+            }
+            else if (_skyboxMesh.SkyboxAsset != null)
+            {
+                if (_skyboxMesh.SkyboxAsset.DepthMaterial != null)
+                {
+                    SetDepthMaterial(_skyboxMesh.SkyboxAsset.DepthMaterial);
+                }
+
+                if (_skyboxMesh.SkyboxAsset.SkyboxMaterial != null)
+                {
+                    SetSkyboxMaterial(_skyboxMesh.SkyboxAsset.SkyboxMaterial);
+                }
+            }
+            else
+            {
+                SetDepthMaterial(_depthMaterial);
+                SetSkyboxMaterial(_skyboxMaterial);
+            }
+        }
+
+        private void DestroyRemixImage()
+        {
+            if (_remixImage != null)
+            {
+                _remixImage.Destroy();
+            }
+
+            if (_remixCubemap != null)
+            {
+                _remixCubemap.Destroy();
+            }
+
+            if (_remixDepthMaterial != null)
+            {
+                _remixDepthMaterial.Destroy();
+            }
+
+            if (_remixSkyboxMaterial != null)
+            {
+                _remixSkyboxMaterial.Destroy();
+            }
+        }
+
         public enum State
         {
             NeedApiKey,
@@ -240,11 +356,18 @@ namespace BlockadeLabsSDK
 
         private bool _isCancelled;
 
-        public bool CanRemix => _skyboxMesh != null && _skyboxMesh.SkyboxAsset != null;
+        public bool HasSkyboxMetadata => _skyboxMesh != null && _skyboxMesh.SkyboxAsset != null;
+
+        public bool CanRemix => HasSkyboxMetadata || _remixImage != null;
 
 #if UNITY_EDITOR
         private int _progressId = 0;
 #endif
+
+        private void OnDestroy()
+        {
+            DestroyRemixImage();
+        }
 
         public bool CheckApiKeyValid()
         {
@@ -290,33 +413,37 @@ namespace BlockadeLabsSDK
         {
             ClearError();
 
-            var model2Styles = await ApiRequests.GetSkyboxStylesMenuAsync(SkyboxAiModelVersion.Model2);
+            _model2Styles = await ApiRequests.GetSkyboxStylesMenuAsync(SkyboxAiModelVersion.Model2);
 
-            if (model2Styles == null || model2Styles.Count == 0)
+            if (_model2Styles == null || _model2Styles.Count == 0)
             {
                 SetError("Something went wrong. Please recheck you API key.");
                 return;
             }
 
-            var model3Styles = await ApiRequests.GetSkyboxStylesMenuAsync(SkyboxAiModelVersion.Model3);
+            _model3Styles = await ApiRequests.GetSkyboxStylesMenuAsync(SkyboxAiModelVersion.Model3);
 
-            if (model3Styles == null || model3Styles.Count == 0)
+            if (_model3Styles == null || _model3Styles.Count == 0)
             {
                 SetError("Something went wrong. Please recheck you API key.");
                 return;
             }
 
-            CleanupStyleFamilyList(model2Styles);
-            CleanupStyleFamilyList(model3Styles);
+            CleanupStyleFamilyList(_model2Styles);
+            CleanupStyleFamilyList(_model3Styles);
+            _allModelStyleFamilies = _model3Styles.Concat(_model2Styles).ToList();
+            UpdateActiveStyleList();
+            SetState(State.Ready);
+        }
 
-            _allModelStyleFamilies = model3Styles.Concat(model2Styles).ToList();
-            _styleFamilies = _modelVersion == SkyboxAiModelVersion.Model2 ? model2Styles : model3Styles;
+        private void UpdateActiveStyleList()
+        {
+            _styleFamilies = _modelVersion == SkyboxAiModelVersion.Model2 ? _model2Styles : _model3Styles;
 
-            _selectedStyleFamilyIndex = Math.Min(_selectedStyleFamilyIndex, _styleFamilies.Count - 1);
-            _selectedStyleIndex = Math.Min(_selectedStyleIndex, _styleFamilies[_selectedStyleFamilyIndex].items.Count - 1);
+            _selectedStyleFamilyIndex = -1;
+            _selectedStyleIndex = -1;
 
             OnPropertyChanged?.Invoke();
-            SetState(State.Ready);
         }
 
         private void CleanupStyleFamilyList(List<SkyboxStyleFamily> styleFamilies)
@@ -370,15 +497,29 @@ namespace BlockadeLabsSDK
             var request = new CreateSkyboxRequest
             {
                 prompt = _prompt,
-                negative_text = _negativeText,
+                negative_text = SendNegativeText ? _negativeText : string.Empty,
                 seed = _seed,
                 enhance_prompt = _enhancePrompt,
                 skybox_style_id = SelectedStyle.id,
             };
 
-            if (_remix && !TrySetRemixId(request))
+            if (_remix)
             {
-                return;
+                if (_remixImage != null)
+                {
+                    request.control_model = _modelVersion == SkyboxAiModelVersion.Model3 ? "remix" : "sketch";
+                    request.control_image = _remixImage.EncodeToPNG();
+                }
+                else
+                {
+                    if (!HasSkyboxMetadata)
+                    {
+                        SetError("Missing skybox ID. Please use a previously generated skybox or disable remix.");
+                        return;
+                    }
+
+                    request.remix_imagine_id = _skyboxMesh.SkyboxAsset.Id;
+                }
             }
 
             ClearError();
@@ -449,20 +590,9 @@ namespace BlockadeLabsSDK
             SetState(State.Ready);
         }
 
-        private bool TrySetRemixId(CreateSkyboxRequest request)
-        {
-            if (!CanRemix)
-            {
-                SetError("Missing skybox ID. Please use a previously generated skybox or disable remix.");
-                return false;
-            }
-
-            request.remix_imagine_id = _skyboxMesh.SkyboxAsset.Id;
-            return true;
-        }
 
 #if PUSHER_PRESENT
-        private async Task<GetImagineResult> WaitForPusherResultAsync(string pusherChannel, string pusherEvent)
+        private async Task<ImagineResult> WaitForPusherResultAsync(string pusherChannel, string pusherEvent)
         {
             const string key = "a6a7b7662238ce4494d5";
             const string cluster = "mt1";
@@ -517,7 +647,7 @@ namespace BlockadeLabsSDK
                 return null;
             }
 
-            return new GetImagineResult { request = request };
+            return request;
         }
 
         private struct PusherEvent
@@ -526,7 +656,7 @@ namespace BlockadeLabsSDK
         }
 #endif
 
-        private async Task<GetImagineResult> PollForResultAsync(string imagineObfuscatedId)
+        private async Task<ImagineResult> PollForResultAsync(string imagineObfuscatedId)
         {
             while (!_isCancelled)
             {
@@ -547,13 +677,13 @@ namespace BlockadeLabsSDK
                     break;
                 }
 
-                if (result.request.status == Status.Error)
+                if (result.status == Status.Error)
                 {
-                    SetGenerateFailed(result.request.error_message);
+                    SetGenerateFailed(result.error_message);
                     break;
                 }
 
-                if (result.request.status == Status.Complete)
+                if (result.status == Status.Complete)
                 {
                     return result;
                 }
@@ -580,12 +710,12 @@ namespace BlockadeLabsSDK
         }
 
 #if UNITY_EDITOR
-        internal async Task DownloadResultAsync(GetImagineResult result, bool setSkybox = true)
+        internal async Task DownloadResultAsync(ImagineResult result, bool setSkybox = true)
         {
-            var textureUrl = result.request.file_url;
-            var depthMapUrl = result.request.depth_map_url;
+            var textureUrl = result.file_url;
+            var depthMapUrl = result.depth_map_url;
             var hasDepthMap = !string.IsNullOrWhiteSpace(depthMapUrl);
-            var prompt = result.request.prompt;
+            var prompt = result.prompt;
 
             if (string.IsNullOrWhiteSpace(textureUrl))
             {
@@ -602,16 +732,22 @@ namespace BlockadeLabsSDK
 
             AssetUtils.CreateGenerateBlockadeLabsFolder();
             var prefix = AssetUtils.CreateValidFilename(prompt);
-            var folderPath = GetOrCreateSkyboxFolder(prefix, result.request.id);
+            var folderPath = GetOrCreateSkyboxFolder(prefix, result.id);
             var skyboxAIPath = $"{folderPath}/{prefix}.asset";
             var skyboxAI = AssetDatabase.LoadAssetAtPath<SkyboxAI>(skyboxAIPath);
 
             if (skyboxAI == null)
             {
                 skyboxAI = ScriptableObject.CreateInstance<SkyboxAI>();
-                skyboxAI.SetMetadata(result.request);
+                skyboxAI.SetMetadata(result);
                 AssetDatabase.CreateAsset(skyboxAI, skyboxAIPath);
             }
+            else
+            {
+                skyboxAI.SetMetadata(result);
+                EditorUtility.SetDirty(skyboxAI);
+            }
+
 
             var tasks = new List<Task>();
             var texturePath = $"{folderPath}/{prefix} texture.png";
@@ -637,7 +773,10 @@ namespace BlockadeLabsSDK
                 return;
             }
 
-            AssetDatabase.Refresh();
+            if (tasks.Count > 0)
+            {
+                AssetDatabase.Refresh();
+            }
 
             if (skyboxAI.SkyboxTexture == null)
             {
@@ -664,6 +803,7 @@ namespace BlockadeLabsSDK
 
                 var depthTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(depthTexturePath);
                 skyboxAI.DepthTexture = depthTexture;
+                EditorUtility.SetDirty(skyboxAI);
             }
 
             if (skyboxAI.DepthMaterial == null)
@@ -678,11 +818,7 @@ namespace BlockadeLabsSDK
                 }
 
                 skyboxAI.DepthMaterial = depthMaterial;
-            }
-
-            if (setSkybox)
-            {
-                SetDepthMaterial(skyboxAI.DepthMaterial);
+                EditorUtility.SetDirty(skyboxAI);
             }
 
             if (skyboxAI.SkyboxMaterial == null)
@@ -697,11 +833,7 @@ namespace BlockadeLabsSDK
                 }
 
                 skyboxAI.SkyboxMaterial = skyboxMaterial;
-            }
-
-            if (setSkybox)
-            {
-                SetSkyboxMaterial(skyboxAI.SkyboxMaterial);
+                EditorUtility.SetDirty(skyboxAI);
             }
 
 #if UNITY_HDRP
@@ -717,6 +849,7 @@ namespace BlockadeLabsSDK
                 }
 
                 skyboxAI.VolumeProfile = volumeProfile;
+                EditorUtility.SetDirty(skyboxAI);
             }
 
             if (setSkybox)
@@ -725,12 +858,42 @@ namespace BlockadeLabsSDK
             }
 #endif
 
-            if (_skyboxMesh != null)
+            if (setSkybox)
             {
-                _skyboxMesh.SkyboxAsset = skyboxAI;
+                _viewRemixImage = false;
+                AssetDatabase.SaveAssetIfDirty(skyboxAI);
+                SetSkyboxMetadata(skyboxAI);
+                UpdateSkyboxAndDepthMesh();
+                SetState(State.Ready);
             }
 
             AssetUtils.PingAsset(skyboxAI);
+        }
+
+        private void SetSkyboxMetadata(SkyboxAI skybox)
+        {
+            Prompt = skybox.Prompt;
+            SendNegativeText = !string.IsNullOrWhiteSpace(skybox.NegativeText);
+            NegativeText = skybox.NegativeText;
+            ModelVersion = skybox.Model;
+            _styleFamilies = _modelVersion == SkyboxAiModelVersion.Model2 ? _model2Styles : _model3Styles;
+
+            foreach (var family in _allModelStyleFamilies)
+            {
+                foreach (var style in family.items)
+                {
+                    if (style.id == skybox.SkyboxStyleId)
+                    {
+                        SelectedStyleFamily = family;
+                        SelectedStyle = style;
+                    }
+                }
+            }
+
+            if (_skyboxMesh != null)
+            {
+                _skyboxMesh.SkyboxAsset = skybox;
+            }
         }
 
         private string GetOrCreateSkyboxFolder(string prefix, int skyboxId)
@@ -782,7 +945,7 @@ namespace BlockadeLabsSDK
             return AssetUtils.CreateUniqueFolder(prefix);
         }
 #else
-        internal async Task DownloadResultAsync(GetImagineResult result)
+        internal async Task DownloadResultAsync(ImagineResult result)
         {
             bool useComputeShader = SystemInfo.supportsComputeShaders && _cubemapComputeShader != null;
 
