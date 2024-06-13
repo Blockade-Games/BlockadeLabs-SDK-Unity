@@ -873,6 +873,8 @@ namespace BlockadeLabsSDK
             StartCoroutine(CoAnimateDepthScale(_depthScaleSlider.minValue + (_depthScaleSlider.maxValue - _depthScaleSlider.minValue) / 3f));
             _promptPanel.SetActive(false);
             _meshCreator.SetActive(true);
+            _generator.Remix = false;
+            _generator.ViewRemixImage = false;
             UpdateSpheres();
             UpdateCamera();
         }
