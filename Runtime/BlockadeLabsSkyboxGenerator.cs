@@ -173,6 +173,8 @@ namespace BlockadeLabsSDK
             }
         }
 
+        public bool SendNegativeText { get; set; } = true;
+
         [Tooltip("The seed is a specific value that guides the randomness in the image creation process. While usually assigned randomly, fixing the seed can help achieve consistent results with minor variations, despite other sources of entropy. This allows for controlled iterations of a prompt, with the seed ensuring a degree of predictability in the otherwise random generation process.")]
         [SerializeField]
         private int _seed;
@@ -493,7 +495,7 @@ namespace BlockadeLabsSDK
             var request = new CreateSkyboxRequest
             {
                 prompt = _prompt,
-                negative_text = _negativeText,
+                negative_text = SendNegativeText ? _negativeText : string.Empty,
                 seed = _seed,
                 enhance_prompt = _enhancePrompt,
                 skybox_style_id = SelectedStyle.id,
@@ -868,6 +870,7 @@ namespace BlockadeLabsSDK
         private void SetSkyboxMetadata(SkyboxAI skybox)
         {
             Prompt = skybox.Prompt;
+            SendNegativeText = !string.IsNullOrWhiteSpace(skybox.NegativeText);
             NegativeText = skybox.NegativeText;
             ModelVersion = skybox.Model;
             _styleFamilies = _modelVersion == SkyboxAiModelVersion.Model2 ? _model2Styles : _model3Styles;

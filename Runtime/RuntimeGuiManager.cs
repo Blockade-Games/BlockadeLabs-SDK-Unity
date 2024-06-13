@@ -542,6 +542,7 @@ namespace BlockadeLabsSDK
             _skyboxMesh.BakedMesh = null;
             _skyboxMesh.MeshDensity = MeshDensity.Medium;
             _skyboxMesh.DepthScale = _depthScaleSlider.minValue;
+            _generator.SendNegativeText = !string.IsNullOrWhiteSpace(_generator.NegativeText);
 
             // Bind to property changes that will update the UI
             _generator.OnPropertyChanged += OnGeneratorPropertyChanged;
@@ -601,7 +602,9 @@ namespace BlockadeLabsSDK
             UpdateVersionSelector();
             _promptInput.text = _generator.Prompt;
             _enhancePromptToggle.IsOn = _generator.EnhancePrompt;
+            _negativeTextToggle.IsOn = _generator.SendNegativeText;
             _negativeTextInput.text = _generator.NegativeText;
+
             _stylePickerPanel.SetStyles(_generator.StyleFamilies);
             UpdateHintText();
             UpdateGenerateButton();
@@ -750,7 +753,7 @@ namespace BlockadeLabsSDK
 
         private void OnNegativeTextToggleChanged(bool newValue)
         {
-            _generator.NegativeText = newValue ? _negativeTextInput.text : "";
+            _generator.SendNegativeText = newValue;
         }
 
         private void UpdateNegativeTextCharacterLimit()
@@ -768,7 +771,7 @@ namespace BlockadeLabsSDK
 
         private void OnNegativeTextInputChanged(string newValue)
         {
-            _generator.NegativeText = _negativeTextToggle.IsOn ? newValue : "";
+            _generator.NegativeText = newValue;
         }
 
         private void OnEnhancePromptToggleChanged(bool newValue)

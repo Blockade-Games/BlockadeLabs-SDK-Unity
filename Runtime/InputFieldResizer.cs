@@ -15,10 +15,31 @@ namespace BlockadeLabsSDK
             _inputField = GetComponent<TMP_InputField>();
             _rectTransform = GetComponent<RectTransform>();
             _padding = _rectTransform.rect.height - _inputField.placeholder.GetComponent<TMP_Text>().preferredHeight;
+        }
 
+        private void OnEnable()
+        {
             if (_inputField != null)
             {
-                _inputField.onValueChanged.AddListener(_ => StartCoroutine(CoAdjustHeight()));
+                _inputField.onValueChanged.AddListener(OnInputChanged);
+            }
+
+            StartCoroutine(CoAdjustHeight());
+        }
+
+        private void OnDisable()
+        {
+            if (_inputField != null)
+            {
+                _inputField.onValueChanged.RemoveListener(OnInputChanged);
+            }
+        }
+
+        private void OnInputChanged(string text)
+        {
+            if (gameObject.activeInHierarchy)
+            {
+                StartCoroutine(CoAdjustHeight());
             }
         }
 
@@ -32,6 +53,7 @@ namespace BlockadeLabsSDK
         {
             var currentHeight = _rectTransform.rect.height;
             var newHeight = _inputField.textComponent.preferredHeight + _padding;
+
             if (currentHeight != newHeight)
             {
                 _rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, newHeight);
