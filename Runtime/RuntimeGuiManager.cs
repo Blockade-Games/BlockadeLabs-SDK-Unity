@@ -810,6 +810,8 @@ namespace BlockadeLabsSDK
 
                 // todo if aspect ratio isn't 2:1 show popup warning
             }
+#else
+            await System.Threading.Tasks.Task.CompletedTask;
 #endif
         }
 
