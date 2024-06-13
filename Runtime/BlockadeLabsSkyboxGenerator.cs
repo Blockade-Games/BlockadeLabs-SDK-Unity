@@ -358,6 +358,8 @@ namespace BlockadeLabsSDK
 
         public bool HasSkyboxMetadata => _skyboxMesh != null && _skyboxMesh.SkyboxAsset != null;
 
+        public bool CanRemix => HasSkyboxMetadata || _remixImage != null;
+
 #if UNITY_EDITOR
         private int _progressId = 0;
 #endif
@@ -858,6 +860,7 @@ namespace BlockadeLabsSDK
 
             if (setSkybox)
             {
+                _viewRemixImage = false;
                 AssetDatabase.SaveAssetIfDirty(skyboxAI);
                 SetSkyboxMetadata(skyboxAI);
                 UpdateSkyboxAndDepthMesh();

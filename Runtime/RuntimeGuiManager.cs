@@ -670,7 +670,7 @@ namespace BlockadeLabsSDK
 
         private void UpdateCanRemix()
         {
-            _remixButton.interactable = _generator.HasSkyboxMetadata && _generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Ready;
+            _remixButton.interactable = _generator.CanRemix && _generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Ready;
 
             foreach (var disabledColor in _remixButton.GetComponentsInChildren<DisabledColor>())
             {
@@ -703,7 +703,7 @@ namespace BlockadeLabsSDK
 
         private void UpdateRemixPanel()
         {
-            _uploadButton.gameObject.SetActive(_generator.Remix && Application.isEditor);
+            _uploadButton.gameObject.SetActive(Application.isEditor);
             _remixImagePanel.SetActive(_generator.Remix && _generator.RemixImage != null);
             _remixImage.texture = _generator.RemixImage;
 
@@ -805,6 +805,7 @@ namespace BlockadeLabsSDK
             if (!string.IsNullOrWhiteSpace(remixFilePath))
             {
                 var texture = await ApiRequests.DownloadTextureAsync($"file://{remixFilePath}", true);
+                _generator.Remix = true;
                 _generator.RemixImage = texture;
                 _demoCamera.ResetView();
 
