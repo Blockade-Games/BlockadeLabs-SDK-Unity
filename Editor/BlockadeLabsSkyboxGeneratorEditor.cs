@@ -160,7 +160,7 @@ namespace BlockadeLabsSDK.Editor
 
             BlockadeGUI.DisableGroup(!_remix.boolValue, () =>
             {
-                _remixImage.objectReferenceValue = EditorGUILayout.ObjectField(new GUIContent(_remixImage.displayName, _remixImage.tooltip), _remixImage.objectReferenceValue, typeof(Texture2D), false);
+                generator.RemixImage = (Texture2D)EditorGUILayout.ObjectField(new GUIContent(_remixImage.displayName, _remixImage.tooltip), _remixImage.objectReferenceValue, typeof(Texture2D), false);
                 EditorGUILayout.Space();
             });
 

@@ -6,6 +6,14 @@ namespace BlockadeLabsSDK
     {
         public static void Destroy(this Object obj)
         {
+#if UNITY_EDITOR
+            // check if Obj is in asset database. Don't destroy it if it is
+            if (UnityEditor.AssetDatabase.Contains(obj))
+            {
+                return;
+            }
+#endif
+
             if (Application.isPlaying)
             {
                 Object.Destroy(obj);

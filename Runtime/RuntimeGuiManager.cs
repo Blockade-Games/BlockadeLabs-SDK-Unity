@@ -779,6 +779,7 @@ namespace BlockadeLabsSDK
         private void OnCreateButtonClicked()
         {
             _generator.Remix = false;
+            _generator.ViewRemixImage = false;
         }
 
         private void OnRemixButtonClicked()
@@ -1025,6 +1026,8 @@ namespace BlockadeLabsSDK
 
         public void ToggleHistoryPanel()
         {
+            _generator.Remix = false;
+            _generator.ViewRemixImage = false;
             _historyPanel.gameObject.SetActive(!_historyPanel.gameObject.activeSelf);
             _viewButton.gameObject.SetActive(!_historyPanel.gameObject.activeSelf);
             _versionSelector.gameObject.SetActive(!_historyPanel.gameObject.activeSelf);

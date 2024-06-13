@@ -231,42 +231,10 @@ namespace BlockadeLabsSDK
             {
                 if (_remixImage != value)
                 {
-                    _remixImage.Destroy();
-                    _remixCubemap.Destroy();
-
-                    if (value != null)
-                    {
-                        _remixImage = value;
-
-                        _remixCubemap = PanoramicToCubemap.Convert(_remixImage, _cubemapComputeShader, _remixImage.width);
-
-                        if (_remixDepthMaterial == null)
-                        {
-                            _remixDepthMaterial = CreateDepthMaterial(_remixCubemap, null);
-                        }
-                        else
-                        {
-                            _remixDepthMaterial.mainTexture = _remixCubemap;
-                        }
-
-                        if (_remixSkyboxMaterial == null)
-                        {
-                            _remixSkyboxMaterial = CreateSkyboxMaterial(_remixCubemap);
-                        }
-                        else
-                        {
-                            _remixSkyboxMaterial.SetTexture("_Tex", _remixCubemap);
-                        }
-
-                        ViewRemixImage = true;
-                    }
-                    else
-                    {
-                        ViewRemixImage = false;
-                        _remixDepthMaterial.Destroy();
-                        _remixSkyboxMaterial.Destroy();
-                    }
-
+                    DestroyRemixImage();
+                    _remixImage = value;
+                    _viewRemixImage = _remixImage != null;
+                    UpdateSkyboxAndDepthMesh();
                     OnPropertyChanged?.Invoke();
                 }
             }
@@ -279,36 +247,88 @@ namespace BlockadeLabsSDK
         private bool _viewRemixImage;
         public bool ViewRemixImage
         {
-            get => _viewRemixImage && RemixImage != null;
+            get => _viewRemixImage;
             set
             {
-                _viewRemixImage = value && RemixImage != null;
+                _viewRemixImage = value;
+                UpdateSkyboxAndDepthMesh();
+                OnPropertyChanged?.Invoke();
+            }
+        }
 
-                if (_viewRemixImage)
-                {
-                    SetDepthMaterial(_remixDepthMaterial);
-                    SetSkyboxMaterial(_remixSkyboxMaterial);
-                }
-                else
-                {
-                    if (_skyboxMesh.SkyboxAsset != null)
-                    {
-                        if (_skyboxMesh.SkyboxAsset.DepthMaterial != null)
-                        {
-                            SetDepthMaterial(_skyboxMesh.SkyboxAsset.DepthMaterial);
-                        }
+        private void EnsureRemixImageCubemap()
+        {
+            if (_remixCubemap == null)
+            {
+                _remixCubemap = PanoramicToCubemap.Convert(_remixImage, _cubemapComputeShader, _remixImage.width);
+            }
 
-                        if (_skyboxMesh.SkyboxAsset.SkyboxMaterial != null)
-                        {
-                            SetSkyboxMaterial(_skyboxMesh.SkyboxAsset.SkyboxMaterial);
-                        }
-                    }
-                    else
-                    {
-                        SetDepthMaterial(_depthMaterial);
-                        SetSkyboxMaterial(_skyboxMaterial);
-                    }
+            if (_remixDepthMaterial == null)
+            {
+                _remixDepthMaterial = CreateDepthMaterial(_remixCubemap, null);
+            }
+            else
+            {
+                _remixDepthMaterial.mainTexture = _remixCubemap;
+            }
+
+            if (_remixSkyboxMaterial == null)
+            {
+                _remixSkyboxMaterial = CreateSkyboxMaterial(_remixCubemap);
+            }
+            else
+            {
+                _remixSkyboxMaterial.SetTexture("_Tex", _remixCubemap);
+            }
+        }
+
+        private void UpdateSkyboxAndDepthMesh()
+        {
+            if (_remixImage != null && _viewRemixImage)
+            {
+                EnsureRemixImageCubemap();
+                SetDepthMaterial(_remixDepthMaterial);
+                SetSkyboxMaterial(_remixSkyboxMaterial);
+            }
+            else if (_skyboxMesh.SkyboxAsset != null)
+            {
+                if (_skyboxMesh.SkyboxAsset.DepthMaterial != null)
+                {
+                    SetDepthMaterial(_skyboxMesh.SkyboxAsset.DepthMaterial);
                 }
+
+                if (_skyboxMesh.SkyboxAsset.SkyboxMaterial != null)
+                {
+                    SetSkyboxMaterial(_skyboxMesh.SkyboxAsset.SkyboxMaterial);
+                }
+            }
+            else
+            {
+                SetDepthMaterial(_depthMaterial);
+                SetSkyboxMaterial(_skyboxMaterial);
+            }
+        }
+
+        private void DestroyRemixImage()
+        {
+            if (_remixImage != null)
+            {
+                _remixImage.Destroy();
+            }
+
+            if (_remixCubemap != null)
+            {
+                _remixCubemap.Destroy();
+            }
+
+            if (_remixDepthMaterial != null)
+            {
+                _remixDepthMaterial.Destroy();
+            }
+
+            if (_remixSkyboxMaterial != null)
+            {
+                _remixSkyboxMaterial.Destroy();
             }
         }
 
@@ -342,9 +362,7 @@ namespace BlockadeLabsSDK
 
         private void OnDestroy()
         {
-            _remixCubemap.Destroy();
-            _remixDepthMaterial.Destroy();
-            _remixSkyboxMaterial.Destroy();
+            DestroyRemixImage();
         }
 
         public bool CheckApiKeyValid()
@@ -799,11 +817,6 @@ namespace BlockadeLabsSDK
                 EditorUtility.SetDirty(skyboxAI);
             }
 
-            if (setSkybox)
-            {
-                SetDepthMaterial(skyboxAI.DepthMaterial);
-            }
-
             if (skyboxAI.SkyboxMaterial == null)
             {
                 var skyboxMaterialPath = $"{folderPath}/{prefix} skybox material.mat";
@@ -817,11 +830,6 @@ namespace BlockadeLabsSDK
 
                 skyboxAI.SkyboxMaterial = skyboxMaterial;
                 EditorUtility.SetDirty(skyboxAI);
-            }
-
-            if (setSkybox)
-            {
-                SetSkyboxMaterial(skyboxAI.SkyboxMaterial);
             }
 
 #if UNITY_HDRP
@@ -850,6 +858,7 @@ namespace BlockadeLabsSDK
             {
                 AssetDatabase.SaveAssetIfDirty(skyboxAI);
                 SetSkyboxMetadata(skyboxAI);
+                UpdateSkyboxAndDepthMesh();
                 SetState(State.Ready);
             }
 

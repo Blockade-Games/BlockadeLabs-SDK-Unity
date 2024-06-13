@@ -18,6 +18,7 @@ namespace BlockadeLabsSDK
         {
             _closeButton.onClick.AddListener(OnCloseButtonClicked);
             _viewControlImageToggle.onValueChanged.AddListener(ToggleViewControlImage);
+            _viewControlImageToggle.isOn = !_runtimeGuiManager.Generator.ViewRemixImage;
         }
 
         private void OnDisable()
