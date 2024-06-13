@@ -797,6 +797,7 @@ namespace BlockadeLabsSDK
                 depthImporter.mipmapEnabled = false;
                 depthImporter.wrapModeU = TextureWrapMode.Repeat;
                 depthImporter.wrapModeV = TextureWrapMode.Clamp;
+                depthImporter.isReadable = true;
                 depthImporter.SaveAndReimport();
 
                 var depthTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(depthTexturePath);
