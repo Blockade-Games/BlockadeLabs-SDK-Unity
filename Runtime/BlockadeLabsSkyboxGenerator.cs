@@ -411,8 +411,6 @@ namespace BlockadeLabsSDK
 
             _selectedStyleFamilyIndex = -1;
             _selectedStyleIndex = -1;
-            //_selectedStyleFamilyIndex = Math.Min(_selectedStyleFamilyIndex, _styleFamilies.Count - 1);
-            //_selectedStyleIndex = Math.Min(_selectedStyleIndex, _styleFamilies[_selectedStyleFamilyIndex].items.Count - 1);
 
             OnPropertyChanged?.Invoke();
             SetState(State.Ready);
