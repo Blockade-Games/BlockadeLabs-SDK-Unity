@@ -22,8 +22,11 @@ namespace BlockadeLabsSDK
         private IEnumerator CoListenForMouseClick()
         {
             var waitForEndOfFrame = new WaitForEndOfFrame();
-            // wait one frame to make sure we don't capture the click that showed this gameObject
-            yield return waitForEndOfFrame;
+            // wait until mouse isn't down so we don't capture the click that enabled this component
+            while (Input.GetMouseButton(0) || Input.GetMouseButtonUp(0))
+            {
+                yield return waitForEndOfFrame;
+            }
 
             while (true)
             {

@@ -1311,7 +1311,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Texture: {fileID: 2800000, guid: 9234a7d945d01f94992efb5988ac3c1f, type: 3}
+  m_Texture: {fileID: 0}
   m_UVRect:
     serializedVersion: 2
     x: 0
@@ -2357,7 +2357,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _button: {fileID: 7893924584303320337}
   _thumbnailImage: {fileID: 2469611424764656964}
-  _depthImage: {fileID: 2277290882086754104}
   _descriptionText: {fileID: 9150844851921730731}
   _timestampText: {fileID: 5935366840710599438}
   _likeToggle: {fileID: 260486669433644002}

@@ -206,12 +206,17 @@ namespace BlockadeLabsSDK
             _previousZoom = newZoom;
         }
 
+        public void ResetRotation()
+        {
+            _yaw = _initialRotation.y;
+            _pitch = _initialRotation.x;
+            transform.rotation = Quaternion.Euler(_pitch, _yaw, 0);
+        }
+
         public void ResetView()
         {
-            _pitch = _initialRotation.x;
-            _yaw = _initialRotation.y;
+            ResetRotation();
             _zoom = _zoomDefault;
-            transform.rotation = Quaternion.Euler(_pitch, _yaw, 0);
             transform.position = _skyboxSphere.position + transform.forward * _zoom;
         }
 

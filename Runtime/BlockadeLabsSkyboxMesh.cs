@@ -154,22 +154,22 @@ namespace BlockadeLabsSDK
             // Look for a mesh in the project
             AssetUtils.TryCreateFolder("Meshes", out var folder);
             var meshPath = $"{folder}/Tetrahedron_{subdivisions}.asset";
-            var mesh = AssetDatabase.LoadAssetAtPath<Mesh>(meshPath);
-            if (mesh != null)
+            var existingMesh = AssetDatabase.LoadAssetAtPath<Mesh>(meshPath);
+            if (existingMesh != null)
             {
-                _meshes.Add(subdivisions, mesh);
-                return mesh;
+                _meshes.Add(subdivisions, existingMesh);
+                return existingMesh;
             }
 #endif
 
-            mesh = TetrahedronMesh.GenerateMesh(subdivisions);
+            var newMesh = TetrahedronMesh.GenerateMesh(subdivisions);
 
 #if UNITY_EDITOR
-            AssetDatabase.CreateAsset(mesh, meshPath);
+            AssetDatabase.CreateAsset(newMesh, meshPath);
             AssetDatabase.SaveAssets();
 #endif
-            _meshes.Add(subdivisions, mesh);
-            return mesh;
+            _meshes.Add(subdivisions, newMesh);
+            return newMesh;
         }
 
         public void UpdateMaterialProperties()

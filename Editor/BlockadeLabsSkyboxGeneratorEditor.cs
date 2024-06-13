@@ -182,6 +182,11 @@ namespace BlockadeLabsSDK.Editor
 
         private async void InitializeAsync(BlockadeLabsSkyboxGenerator generator, bool sendAttribution)
         {
+            if (string.IsNullOrWhiteSpace(generator.ApiKey))
+            {
+                return;
+            }
+
             if (!generator.CheckApiKeyValid())
             {
                 return;

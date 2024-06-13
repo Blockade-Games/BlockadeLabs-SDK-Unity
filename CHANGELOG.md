@@ -1,5 +1,14 @@
 ﻿# Changelog
 
+## 1.9.0 - Jun 14, 2024.
+- Model 3.1: Higher quality skyboxes in Model 3!
+- Model 3.1 now supports Remix!
+- Model 3.1 now supports 3D!
+- History: You can now view and download all your skyboxes in the new History menu.
+- You can now use the Upload button to remix from your own image.
+- Mesh Baking: Saving a 3D prefab will now bake the depth into your skybox mesh, which you can use for occlusion and collision.
+- Tips will now appear while waiting for a skybox to generate.
+
 ## 1.8.0 - May 10, 2024.
 - Model 3 Preview: Skybox AI has taken a generational leap forward with the release of our Model 3 preview! This overhaul of our generative engine allows you to create stunning worlds and scenes that were previously impossible, with:
   - Dramatically improved generation quality, including: enhanced realism, extra details, more scene depth and coherency, more prompt adherence

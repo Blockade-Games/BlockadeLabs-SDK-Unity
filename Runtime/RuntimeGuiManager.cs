@@ -663,7 +663,7 @@ namespace BlockadeLabsSDK
 
             if (_generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Ready)
             {
-                _demoCamera.ResetView();
+                _demoCamera.ResetRotation();
                 UpdateSpheres();
             }
         }
@@ -807,10 +807,12 @@ namespace BlockadeLabsSDK
                 var texture = await ApiRequests.DownloadTextureAsync($"file://{remixFilePath}", true);
                 _generator.Remix = true;
                 _generator.RemixImage = texture;
-                _demoCamera.ResetView();
+                _demoCamera.ResetRotation();
 
                 // todo if aspect ratio isn't 2:1 show popup warning
             }
+#else
+            await System.Threading.Tasks.Task.CompletedTask;
 #endif
         }
 
@@ -896,9 +898,19 @@ namespace BlockadeLabsSDK
 
         private void OnSavePrefabButtonClicked()
         {
+            StartCoroutine(CoSavePrefab());
+        }
+
+        private IEnumerator CoSavePrefab()
+        {
             if (_skyboxMesh.HasDepthTexture)
             {
                 _skyboxMesh.BakeMesh();
+
+                while (_skyboxMesh.BakedMesh == null)
+                {
+                    yield return null;
+                }
             }
 
             _skyboxMesh.SavePrefab();
@@ -1021,8 +1033,11 @@ namespace BlockadeLabsSDK
             if (_generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Generating)
             {
                 var tip = await ApiRequests.GetSkyboxTipAsync(_generator.ModelVersion);
-                _tipText.text = "<b>Tip:</b> " + tip.tip.Replace("<p>", "").Replace("</p>", "");
-                _tipContainer.SetActive(true);
+                if (!string.IsNullOrWhiteSpace(tip?.tip))
+                {
+                    _tipText.text = "<b>Tip:</b> " + tip.tip.Replace("<p>", "").Replace("</p>", "");
+                    _tipContainer.SetActive(true);
+                }
             }
             else
             {
