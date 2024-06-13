@@ -805,7 +805,7 @@ namespace BlockadeLabsSDK
 #if UNITY_EDITOR
             _remixImagePanel.SetActive(false);
             _bottomSection.GetComponent<ContentSizeFitter>().enabled = false;
-            var remixFilePath = EditorUtility.OpenFilePanel("Select Remix Image", string.Empty, "png,jpg");
+            var remixFilePath = EditorUtility.OpenFilePanel("Select Remix Image", string.Empty, "png,jpg,jpeg");
             Texture2D texture;
 
             if (!string.IsNullOrWhiteSpace(remixFilePath))
