@@ -663,7 +663,7 @@ namespace BlockadeLabsSDK
 
             if (_generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Ready)
             {
-                _demoCamera.ResetView();
+                _demoCamera.ResetRotation();
                 UpdateSpheres();
             }
         }
@@ -806,7 +806,7 @@ namespace BlockadeLabsSDK
             {
                 var texture = await ApiRequests.DownloadTextureAsync($"file://{remixFilePath}", true);
                 _generator.RemixImage = texture;
-                _demoCamera.ResetView();
+                _demoCamera.ResetRotation();
 
                 // todo if aspect ratio isn't 2:1 show popup warning
             }
