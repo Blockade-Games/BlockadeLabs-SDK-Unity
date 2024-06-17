@@ -14,6 +14,14 @@ namespace BlockadeLabsSDK
         }
 
         [SerializeField]
+        private RectTransform _rectTransform;
+        public RectTransform RectTransform
+        {
+            get { return _rectTransform; }
+            set { _rectTransform = value; }
+        }
+
+        [SerializeField]
         private bool _autoPan = true;
         public bool AutoPan
         {
@@ -123,6 +131,7 @@ namespace BlockadeLabsSDK
             MeshCreator
         }
 
+        private Vector2 _initialRotation;
         private Vector3 _mousePosition;
         private float _yaw;
         private float _pitch;
@@ -149,7 +158,14 @@ namespace BlockadeLabsSDK
             }
         }
 
-        void Update()
+        private void Awake()
+        {
+            _pitch = transform.rotation.eulerAngles.x;
+            _yaw = transform.rotation.eulerAngles.y;
+            _initialRotation = new Vector2(_pitch, _yaw);
+        }
+
+        private void Update()
         {
             switch (_state)
             {
@@ -164,8 +180,20 @@ namespace BlockadeLabsSDK
                     break;
             }
 
-            bool mouseOverGameView = Input.mousePosition.x >= 0 && Input.mousePosition.x < Screen.width &&
-                Input.mousePosition.y >= 0 && Input.mousePosition.y < Screen.height;
+            bool mouseOverGameView;
+
+            if (_rectTransform)
+            {
+                mouseOverGameView = RectTransformUtility.RectangleContainsScreenPoint(_rectTransform, Input.mousePosition);
+            }
+            else
+            {
+                mouseOverGameView = Input.mousePosition.x >= 0 &&
+                                    Input.mousePosition.x < Screen.width &&
+                                    Input.mousePosition.y >= 0 &&
+                                    Input.mousePosition.y < Screen.height;
+            }
+
             if (!MouseIsOverUI() && Input.mouseScrollDelta.y != 0 && mouseOverGameView)
             {
                 _zoom += Input.mouseScrollDelta.y * _zoomSpeed * 0.001f;
@@ -176,6 +204,20 @@ namespace BlockadeLabsSDK
             var newZoom = Mathf.Lerp(_previousZoom, _zoom, _smooth * Time.deltaTime);
             transform.position = _skyboxSphere.position + transform.forward * newZoom;
             _previousZoom = newZoom;
+        }
+
+        public void ResetRotation()
+        {
+            _yaw = _initialRotation.y;
+            _pitch = _initialRotation.x;
+            transform.rotation = Quaternion.Euler(_pitch, _yaw, 0);
+        }
+
+        public void ResetView()
+        {
+            ResetRotation();
+            _zoom = _zoomDefault;
+            transform.position = _skyboxSphere.position + transform.forward * _zoom;
         }
 
         private void UpdateWaitingToAutoPan()
@@ -212,6 +254,11 @@ namespace BlockadeLabsSDK
 
         private bool MouseIsOverUI()
         {
+            if (_rectTransform)
+            {
+                return !RectTransformUtility.RectangleContainsScreenPoint(_rectTransform, Input.mousePosition);
+            }
+
             return EventSystem.current?.IsPointerOverGameObject() ?? false;
         }
 

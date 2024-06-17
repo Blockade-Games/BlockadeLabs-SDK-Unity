@@ -12,7 +12,7 @@ namespace BlockadeLabsSDK
         private const string GenerateFolderName = "Blockade Labs SDK";
         private const string GenerateFolderPath = RootFolder + "/" + GenerateFolderName;
 
-        private static void CreateGenerateFolder()
+        internal static void CreateGenerateBlockadeLabsFolder()
         {
             if (!AssetDatabase.IsValidFolder(GenerateFolderPath))
             {
@@ -22,23 +22,32 @@ namespace BlockadeLabsSDK
 
         internal static string CreateUniqueFolder(string name)
         {
-            CreateGenerateFolder();
+            CreateGenerateBlockadeLabsFolder();
             var uniquePath = AssetDatabase.GenerateUniqueAssetPath(GenerateFolderPath + "/" + name);
             var uniqueName = uniquePath.Substring(uniquePath.LastIndexOf('/') + 1);
             AssetDatabase.CreateFolder(GenerateFolderPath, uniqueName);
             return uniquePath;
         }
 
-        internal static string GetOrCreateFolder(string name)
+        /// <summary>
+        /// Try to create a folder with the given name. 
+        /// </summary>
+        /// <param name="name">Directory name.</param>
+        /// <param name="path">Path to the directory.</param>
+        /// <returns>Returns true if the folder was created.</returns>
+        internal static bool TryCreateFolder(string name, out string path)
         {
-            CreateGenerateFolder();
-            var path = GenerateFolderPath + "/" + name;
-            if (!AssetDatabase.IsValidFolder(path))
+            CreateGenerateBlockadeLabsFolder();
+            path = $"{GenerateFolderPath}/{name}";
+
+            if (AssetDatabase.IsValidFolder(path))
             {
-                AssetDatabase.CreateFolder(GenerateFolderPath, name);
+                return false;
             }
 
-            return path;
+            AssetDatabase.CreateFolder(GenerateFolderPath, name);
+            return true;
+
         }
 
         internal static string CreateValidFilename(string name)
@@ -56,18 +65,18 @@ namespace BlockadeLabsSDK
             return name.TrimStart('_').TrimEnd('_').Trim();
         }
 
-        internal static T LoadAsset<T>(string guid) where T : UnityEngine.Object
+        internal static T LoadAsset<T>(string guid) where T : Object
         {
             return AssetDatabase.LoadAssetAtPath<T>(AssetDatabase.GUIDToAssetPath(guid));
         }
 
-        internal static void PingAsset(UnityEngine.Object asset)
+        internal static void PingAsset(Object asset)
         {
             EditorApplication.ExecuteMenuItem("Window/General/Project");
             EditorGUIUtility.PingObject(asset);
         }
 
-        internal static string GetFolder(UnityEngine.Object asset)
+        internal static string GetFolder(Object asset)
         {
             var path = AssetDatabase.GetAssetPath(asset);
             return path.Substring(0, path.LastIndexOf('/'));
@@ -109,7 +118,7 @@ namespace BlockadeLabsSDK
         internal static void SavePrefabNextTo(GameObject gameObject, Object nextToAsset)
         {
             var folder = AssetUtils.GetFolder(nextToAsset);
-            SaveAsset(gameObject, folder, gameObject.name);
+            SavePrefab(gameObject, folder, gameObject.name);
         }
 
         internal static void SaveAsset(Object asset, string folder, string name)
@@ -125,6 +134,11 @@ namespace BlockadeLabsSDK
             var prefabPath = AssetDatabase.GenerateUniqueAssetPath($"{folder}/{name}.prefab");
             var prefab = PrefabUtility.SaveAsPrefabAsset(gameObject, prefabPath);
             AssetUtils.PingAsset(prefab);
+        }
+
+        internal static string ToProjectPath(this string @string)
+        {
+            return @string.Replace("\\", "/").Replace(Application.dataPath, "Assets");
         }
     }
 }

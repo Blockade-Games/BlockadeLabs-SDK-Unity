@@ -1,6 +1,6 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
-using Newtonsoft.Json;
 using UnityEngine.Scripting;
 
 namespace BlockadeLabsSDK
@@ -10,11 +10,13 @@ namespace BlockadeLabsSDK
     {
         public string prompt;
         public string negative_text;
-        public bool enhance_prompt;
-        public int seed;
-        public int skybox_style_id;
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public bool? enhance_prompt;
+        public int? seed;
+        public int? skybox_style_id;
         public int? remix_imagine_id;
+        public string control_model;
+        [JsonIgnore]
+        public byte[] control_image;
     }
 
     [Preserve, Serializable]
@@ -23,7 +25,7 @@ namespace BlockadeLabsSDK
         public string id;
         public string obfuscated_id;
         public string prompt;
-        public string status;
+        public Status status;
         public string error_message;
         public string pusher_channel;
         public string pusher_event;
@@ -32,22 +34,45 @@ namespace BlockadeLabsSDK
     [Preserve, Serializable]
     internal class GetImagineResult
     {
-        public GetImagineRequest request;
+        public ImagineResult request;
+        public ImagineResult imagine;
     }
 
     [Preserve, Serializable]
-    internal class GetImagineRequest
+    internal class ImagineResult
     {
         public int id;
+        public int api_key_id;
         public string obfuscated_id;
         public string file_url;
+        public string thumb_url;
         public string depth_map_url;
-        public string status;
+        public Status status;
         public string error_message;
         public string prompt;
         public string negative_text;
         public int seed;
         public int skybox_style_id;
+        public string skybox_style_name;
+        public DateTime completed_at;
+        public bool isMyFavorite;
+        public string model;
+        public string type;
+        public int? remix_imagine_id;
+        public string remix_imagine_obfuscated_id;
+        public int? remix_starter_id;
+    }
+
+    [Preserve]
+    public enum Status
+    {
+        All,
+        Pending,
+        Dispatched,
+        Processing,
+        Complete,
+        Abort,
+        Error
     }
 
     [Preserve, Serializable]
@@ -84,5 +109,26 @@ namespace BlockadeLabsSDK
     {
         Model2 = 2,
         Model3 = 3
+    }
+
+    [Preserve, Serializable]
+    public class SkyboxTip
+    {
+        public string tip;
+    }
+
+    [Preserve, Serializable]
+    internal class GetHistoryResult
+    {
+        public List<ImagineResult> data;
+        public int totalCount;
+        public bool has_more;
+    }
+
+    [Preserve, Serializable]
+    internal class OperationResult
+    {
+        public string error;
+        public string success;
     }
 }
