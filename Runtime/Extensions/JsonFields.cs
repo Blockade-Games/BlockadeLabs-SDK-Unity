@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using BlockadeLabsSDK.Skyboxes;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine.Scripting;
@@ -61,18 +62,6 @@ namespace BlockadeLabsSDK
         public int? remix_imagine_id;
         public string remix_imagine_obfuscated_id;
         public int? remix_starter_id;
-    }
-
-    [Preserve]
-    public enum Status
-    {
-        All,
-        Pending,
-        Dispatched,
-        Processing,
-        Complete,
-        Abort,
-        Error
     }
 
     [Preserve, Serializable]

@@ -1,3 +1,4 @@
+using BlockadeLabsSDK.Skyboxes;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -824,13 +825,9 @@ namespace BlockadeLabsSDK
                 }
                 else
                 {
-#if !UNITY_2021_1_OR_NEWERs
                     // ReSharper disable once MethodHasAsyncOverload
                     // WriteAllTextAsync not defined in Unity 2020.3
                     var skyboxData = File.ReadAllText(dataFile);
-#else
-                    var skyboxData = await File.ReadAllTextAsync(dataFile).ConfigureAwait(true);
-#endif
                     var imagineResult = JsonConvert.DeserializeObject<GetImagineResult>(skyboxData).request;
 
                     if (imagineResult.id == skyboxId)

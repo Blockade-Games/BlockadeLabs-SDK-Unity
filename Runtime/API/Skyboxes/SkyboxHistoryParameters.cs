@@ -1,45 +1,42 @@
-﻿using UnityEngine.Scripting;
-
-namespace BlockadeLabsSDK
+namespace BlockadeLabsSDK.Skyboxes
 {
-    [Preserve]
-    public class HistorySearchQueryParameters
+    public sealed class SkyboxHistoryParameters
     {
         /// <summary>
         /// Filter by status.<br/>
         /// Options: all, pending, dispatched, processing, complete, abort, error (default: all)
         /// </summary>
-        public string StatusFilter { get; set; } = null;
+        public Status? StatusFilter { get; set; }
 
         /// <summary>
         /// Number of items to be returned per page (default: 18)
         /// </summary>
-        public int? Limit { get; set; } = null;
+        public int? Limit { get; set; }
 
         /// <summary>
         /// Page number (default: 0)
         /// </summary>
-        public int? Offset { get; set; } = null;
+        public int? Offset { get; set; }
 
         /// <summary>
         /// Sort order. Options: ASC, DESC (default: DESC)
         /// </summary>
-        public string Order { get; set; } = null;
+        public SortOrder? Order { get; set; }
 
         /// <summary>
         /// Filter by id
         /// </summary>
-        public int? ImagineId { get; set; } = null;
+        public int? ImagineId { get; set; }
 
         /// <summary>
         /// Filter by title or prompt
         /// </summary>
-        public string QueryFilter { get; set; } = null;
+        public string QueryFilter { get; set; }
 
         /// <summary>
         /// Filter by generator
         /// </summary>
-        public string GeneratorFilter { get; set; } = null;
+        public string GeneratorFilter { get; set; }
 
         /// <summary>
         /// Filter by favorites only
@@ -54,6 +51,6 @@ namespace BlockadeLabsSDK
         /// <summary>
         /// Filter by Skybox Style Id. Defaults to any.
         /// </summary>
-        public int SkyboxStyleId { get; set; } = 0;
+        public int? SkyboxStyleId { get; set; } = null;
     }
 }

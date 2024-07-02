@@ -1,4 +1,5 @@
-﻿using System;
+﻿using BlockadeLabsSDK.Skyboxes;
+using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -26,9 +27,9 @@ namespace BlockadeLabsSDK
         [SerializeField]
         private TMP_Dropdown _sortDropdown;
 
-        private HistorySearchQueryParameters _searchQueryParameters = new HistorySearchQueryParameters();
+        private SkyboxHistoryParameters _searchQueryParameters = new SkyboxHistoryParameters();
 
-        public event Action<HistorySearchQueryParameters> OnSearchQueryChanged;
+        public event Action<SkyboxHistoryParameters> OnSearchQueryChanged;
 
         private void Start()
         {
@@ -93,8 +94,8 @@ namespace BlockadeLabsSDK
         {
             _searchQueryParameters.Order = value switch
             {
-                0 => "DESC",
-                _ => "ASC"
+                0 => SortOrder.Desc,
+                _ => SortOrder.Asc
             };
             OnSearchQueryChanged?.Invoke(_searchQueryParameters);
         }

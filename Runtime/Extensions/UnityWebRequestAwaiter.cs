@@ -3,31 +3,31 @@ using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.Networking;
 
-namespace BlockadeLabsSDK
+namespace BlockadeLabsSDK.Extensions
 {
     internal class UnityWebRequestAwaiter : INotifyCompletion
     {
-        private UnityWebRequestAsyncOperation asyncOp;
-        private Action continuation;
+        private UnityWebRequestAsyncOperation _asyncOp;
+        private Action _continuation;
 
         public UnityWebRequestAwaiter(UnityWebRequestAsyncOperation asyncOp)
         {
-            this.asyncOp = asyncOp;
+            _asyncOp = asyncOp;
             asyncOp.completed += OnRequestCompleted;
         }
 
-        public bool IsCompleted { get { return asyncOp.isDone; } }
+        public bool IsCompleted => _asyncOp.isDone;
 
         public void GetResult() { }
 
         public void OnCompleted(Action continuation)
         {
-            this.continuation = continuation;
+            _continuation = continuation;
         }
 
         private void OnRequestCompleted(AsyncOperation obj)
         {
-            continuation();
+            _continuation();
         }
     }
 }

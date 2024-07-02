@@ -1,4 +1,5 @@
-﻿using System;
+﻿using BlockadeLabsSDK.Skyboxes;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -30,7 +31,7 @@ namespace BlockadeLabsSDK
         private int _pageSize = 9;
         private bool _isFetchingHistory;
         private GetHistoryResult _lastHistoryResult;
-        private HistorySearchQueryParameters _lastQueryParams;
+        private SkyboxHistoryParameters _lastQueryParams;
 
         private readonly List<HistoryItemBehaviour> _historyItems = new List<HistoryItemBehaviour>();
 
@@ -65,13 +66,13 @@ namespace BlockadeLabsSDK
                 !_isFetchingHistory &&
                 scrollPosition.y <= 0)
             {
-                _lastQueryParams ??= new HistorySearchQueryParameters();
+                _lastQueryParams ??= new SkyboxHistoryParameters();
                 _lastQueryParams.Offset = _historyItems.Count / _pageSize;
                 await FetchHistoryAsync(_lastQueryParams, clearResults: false);
             }
         }
 
-        private async void OnSearchQueryChanged(HistorySearchQueryParameters searchParameters)
+        private async void OnSearchQueryChanged(SkyboxHistoryParameters searchParameters)
         {
             searchParameters.Offset = 0;
             await FetchHistoryAsync(searchParameters);
@@ -85,7 +86,7 @@ namespace BlockadeLabsSDK
             }
         }
 
-        private async Task FetchHistoryAsync(HistorySearchQueryParameters searchParameters = null, bool clearResults = true)
+        private async Task FetchHistoryAsync(SkyboxHistoryParameters searchParameters = null, bool clearResults = true)
         {
             if (_isFetchingHistory) { return; }
             _isFetchingHistory = true;
@@ -97,7 +98,7 @@ namespace BlockadeLabsSDK
                     ClearHistory();
                 }
 
-                searchParameters ??= _lastQueryParams ??= new HistorySearchQueryParameters();
+                searchParameters ??= _lastQueryParams ??= new SkyboxHistoryParameters();
                 searchParameters.Limit = _pageSize;
                 _lastHistoryResult = await ApiRequests.GetSkyboxHistoryAsync(_lastQueryParams = searchParameters);
 

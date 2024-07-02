@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using BlockadeLabsSDK.Skyboxes;
+using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -6,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking;
+using BlockadeLabsSDK.Extensions;
 
 namespace BlockadeLabsSDK
 {
@@ -173,7 +175,7 @@ namespace BlockadeLabsSDK
             return await GetAsync<SkyboxTip>("skybox/get-one-tip-unity");
         }
 
-        public static async Task<GetHistoryResult> GetSkyboxHistoryAsync(HistorySearchQueryParameters searchQueryParams = null)
+        public static async Task<GetHistoryResult> GetSkyboxHistoryAsync(SkyboxHistoryParameters searchQueryParams = null)
         {
             Dictionary<string, string> searchQuery = null;
 
@@ -181,9 +183,9 @@ namespace BlockadeLabsSDK
             {
                 searchQuery = new Dictionary<string, string>();
 
-                if (!string.IsNullOrWhiteSpace(searchQueryParams.StatusFilter))
+                if (searchQueryParams.StatusFilter.HasValue)
                 {
-                    searchQuery.Add("status", searchQueryParams.StatusFilter.ToLower());
+                    searchQuery.Add("status", searchQueryParams.StatusFilter.ToString().ToLower());
                 }
 
                 if (searchQueryParams.Limit.HasValue)
@@ -196,9 +198,9 @@ namespace BlockadeLabsSDK
                     searchQuery.Add("offset", searchQueryParams.Offset.ToString());
                 }
 
-                if (!string.IsNullOrWhiteSpace(searchQueryParams.Order))
+                if (searchQueryParams.Order.HasValue)
                 {
-                    searchQuery.Add("order", searchQueryParams.Order.ToUpper());
+                    searchQuery.Add("order", searchQueryParams.Order.ToString().ToUpper());
                 }
 
                 if (searchQueryParams.ImagineId.HasValue)
