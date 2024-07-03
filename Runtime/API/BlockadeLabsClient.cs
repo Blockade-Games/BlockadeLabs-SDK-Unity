@@ -67,7 +67,7 @@ namespace BlockadeLabsSDK
             DefaultRequestHeaders = new Dictionary<string, string>
             {
 #if !UNITY_WEBGL
-                { "User-Agent", "com.rest.blockadelabs" },
+                { "User-Agent", "com.blockadelabs.sdk" },
 #endif
                 { "x-api-key", Authentication.Info.ApiKey }
             };
