@@ -84,30 +84,20 @@ namespace BlockadeLabsSDK
                 url = cachePath;
             }
 
-            Texture2D texture;
             using var webRequest = UnityWebRequestTexture.GetTexture(url);
-            webRequest.disposeDownloadHandlerOnDispose = true;
+            var response = await webRequest.SendAsync(null, cancellationToken);
+            response.Validate(debug);
 
-            try
+            if (!isCached && Application.platform != RuntimePlatform.WebGLPlayer)
             {
-                var response = await webRequest.SendAsync(null, cancellationToken);
-                response.Validate(debug);
-
-                if (!isCached && Application.platform != RuntimePlatform.WebGLPlayer)
-                {
-                    await WriteCacheItemAsync(webRequest.downloadHandler.data, cachePath, cancellationToken).ConfigureAwait(true);
-                }
-
-                texture = ((DownloadHandlerTexture)webRequest.downloadHandler).texture;
-
-                if (texture == null)
-                {
-                    throw new RestException(response, $"Failed to load texture from \"{url}\"!");
-                }
+                await WriteCacheItemAsync(webRequest.downloadHandler.data, cachePath, cancellationToken).ConfigureAwait(true);
             }
-            finally
+
+            var texture = ((DownloadHandlerTexture)webRequest.downloadHandler).texture;
+
+            if (texture == null)
             {
-                webRequest.downloadHandler?.Dispose();
+                throw new RestException(response, $"Failed to load texture from \"{url}\"!");
             }
 
             texture.name = Path.GetFileNameWithoutExtension(cachePath);
