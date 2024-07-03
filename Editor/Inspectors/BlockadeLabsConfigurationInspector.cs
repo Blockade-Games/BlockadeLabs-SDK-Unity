@@ -10,7 +10,7 @@ namespace BlockadeLabsSDK.Editor
         private static bool triggerReload;
 
         private SerializedProperty apiKey;
-        private SerializedProperty proxyDomain;
+        private SerializedProperty proxyDomainUrl;
 
         #region Project Settings Window
 
@@ -29,7 +29,7 @@ namespace BlockadeLabsSDK.Editor
             try
             {
                 apiKey = serializedObject.FindProperty(nameof(apiKey));
-                proxyDomain = serializedObject.FindProperty(nameof(proxyDomain));
+                proxyDomainUrl = serializedObject.FindProperty(nameof(proxyDomainUrl));
             }
             catch (Exception)
             {
@@ -47,7 +47,7 @@ namespace BlockadeLabsSDK.Editor
             EditorGUI.BeginChangeCheck();
 
             EditorGUILayout.PropertyField(apiKey);
-            EditorGUILayout.PropertyField(proxyDomain);
+            EditorGUILayout.PropertyField(proxyDomainUrl);
 
             if (EditorGUI.EndChangeCheck())
             {
