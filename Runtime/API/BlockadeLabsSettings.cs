@@ -28,7 +28,7 @@ namespace BlockadeLabsSDK
 
             if (configuration != null)
             {
-                Info = new BlockadeLabsSettingsInfo(configuration.ProxyDomain);
+                Info = new BlockadeLabsSettingsInfo(configuration.ProxyDomainUrl);
                 cachedDefault = this;
             }
             else

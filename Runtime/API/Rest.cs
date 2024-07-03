@@ -22,21 +22,21 @@ namespace BlockadeLabsSDK
 
         private static readonly UnityMainThread UnityMainThread = new UnityMainThread();
 
-        public static async Task<Response> GetAsync(string url, IReadOnlyDictionary<string, string> headers, CancellationToken cancellationToken)
+        public static async Task<RestResponse> GetAsync(string url, IReadOnlyDictionary<string, string> headers, CancellationToken cancellationToken)
         {
             await UnityMainThread;
             using var webRequest = UnityWebRequest.Get(url);
             return await webRequest.SendAsync(headers, cancellationToken);
         }
 
-        public static async Task<Response> PostAsync(string url, WWWForm formData, IReadOnlyDictionary<string, string> headers, CancellationToken cancellationToken)
+        public static async Task<RestResponse> PostAsync(string url, WWWForm formData, IReadOnlyDictionary<string, string> headers, CancellationToken cancellationToken)
         {
             await UnityMainThread;
             using var webRequest = UnityWebRequest.Post(url, formData);
             return await webRequest.SendAsync(headers, cancellationToken);
         }
 
-        public static async Task<Response> PostAsync(string url, string jsonPayload, IReadOnlyDictionary<string, string> headers, CancellationToken cancellationToken)
+        public static async Task<RestResponse> PostAsync(string url, string jsonPayload, IReadOnlyDictionary<string, string> headers, CancellationToken cancellationToken)
         {
             await UnityMainThread;
             using var webRequest = new UnityWebRequest(url, UnityWebRequest.kHttpVerbPOST);
@@ -49,7 +49,7 @@ namespace BlockadeLabsSDK
             return await webRequest.SendAsync(headers, cancellationToken);
         }
 
-        public static async Task<Response> DeleteAsync(string url, IReadOnlyDictionary<string, string> headers, CancellationToken cancellationToken)
+        public static async Task<RestResponse> DeleteAsync(string url, IReadOnlyDictionary<string, string> headers, CancellationToken cancellationToken)
         {
             await UnityMainThread;
             using var webRequest = UnityWebRequest.Delete(url);
@@ -127,7 +127,7 @@ namespace BlockadeLabsSDK
             return filePath;
         }
 
-        private static async Task<Response> SendAsync(this UnityWebRequest webRequest, IReadOnlyDictionary<string, string> headers = null, CancellationToken cancellationToken = default)
+        private static async Task<RestResponse> SendAsync(this UnityWebRequest webRequest, IReadOnlyDictionary<string, string> headers = null, CancellationToken cancellationToken = default)
         {
             await UnityMainThread;
 
@@ -233,23 +233,23 @@ namespace BlockadeLabsSDK
             }
             catch (Exception e)
             {
-                return new Response(webRequest.url, webRequest.method, requestBody, false, $"{nameof(Rest)}.{nameof(SendAsync)}::{nameof(UnityWebRequest.SendWebRequest)} Failed!", null, -1, null, e.ToString());
+                return new RestResponse(webRequest.url, webRequest.method, requestBody, false, $"{nameof(Rest)}.{nameof(SendAsync)}::{nameof(UnityWebRequest.SendWebRequest)} Failed!", null, -1, null, e.ToString());
             }
 
             if (webRequest.result == UnityWebRequest.Result.ConnectionError || webRequest.result == UnityWebRequest.Result.ProtocolError && webRequest.responseCode >= 400)
             {
-                return new Response(webRequest, requestBody, false);
+                return new RestResponse(webRequest, requestBody, false);
             }
 
-            return new Response(webRequest, requestBody, true);
+            return new RestResponse(webRequest, requestBody, true);
         }
 
         #region Download Cache
 
-        private const string download_cache = nameof(download_cache);
+        private const string blockadelabs_download_cache = nameof(blockadelabs_download_cache);
 
         public static string DownloadCacheDirectory
-            => Path.Combine(Application.temporaryCachePath, download_cache);
+            => Path.Combine(Application.temporaryCachePath, blockadelabs_download_cache);
 
         public static bool TryGetDownloadCacheItem(string uri, out string filePath)
         {

@@ -7,18 +7,18 @@ namespace BlockadeLabsSDK
     {
         [SerializeField]
         [Tooltip("The api key.")]
-        private string apiKey;
+        private string _apiKey;
 
         public string ApiKey
         {
-            get => apiKey;
-            internal set => apiKey = value;
+            get => _apiKey;
+            internal set => _apiKey = value;
         }
 
         [SerializeField]
         [Tooltip("Optional proxy domain to make requests though.")]
-        private string proxyDomain;
+        private string _proxyDomainUrl;
 
-        public string ProxyDomain => proxyDomain;
+        public string ProxyDomainUrl => _proxyDomainUrl;
     }
 }

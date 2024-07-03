@@ -127,10 +127,6 @@ namespace BlockadeLabsSDK.Skyboxes
         [JsonProperty("file_url")]
         public string MainTextureUrl { get; private set; }
 
-        [JsonIgnore]
-        [Obsolete("Get texture from ExportedAssets")]
-        public Texture2D MainTexture { get; internal set; }
-
         [Preserve]
         [JsonProperty("thumb_url")]
         public string ThumbUrl { get; }
@@ -142,11 +138,6 @@ namespace BlockadeLabsSDK.Skyboxes
         [Preserve]
         [JsonProperty("depth_map_url")]
         public string DepthTextureUrl { get; private set; }
-
-        [Preserve]
-        [JsonIgnore]
-        [Obsolete("Get depth from ExportedAssets")]
-        public Texture2D DepthTexture { get; internal set; }
 
         [Preserve]
         [JsonProperty("title")]
@@ -225,15 +216,6 @@ namespace BlockadeLabsSDK.Skyboxes
 
         [Preserve]
         public static implicit operator int(SkyboxInfo skyboxInfo) => skyboxInfo.Id;
-
-        /// <summary>
-        /// Loads the textures for this skybox.
-        /// </summary>
-        /// <param name="cancellationToken">Optional, <see cref="CancellationToken"/>.</param>
-        [Preserve]
-        [Obsolete("Use LoadAssetsAsync")]
-        public async Task LoadTexturesAsync(CancellationToken cancellationToken = default)
-            => await LoadAssetsAsync(false, cancellationToken);
 
         /// <summary>
         /// Downloads and loads all the assets associated with this skybox.

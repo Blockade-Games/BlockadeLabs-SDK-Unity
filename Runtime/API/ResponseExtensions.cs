@@ -8,7 +8,7 @@ namespace BlockadeLabsSDK
         private const string RateLimit = "X-RateLimit-Limit";
         private const string RateLimitRemaining = "X-RateLimit-Remaining";
 
-        internal static void SetResponseData(this BaseResponse response, Response restResponse, BlockadeLabsClient client)
+        internal static void SetResponseData(this BaseResponse response, RestResponse restResponse, BlockadeLabsClient client)
         {
             if (response is IListResponse<BaseResponse> listResponse)
             {
@@ -36,13 +36,13 @@ namespace BlockadeLabsSDK
         }
 
         /// <summary>
-        /// Validates the <see cref="Response"/> and will throw a <see cref="RestException"/> if the response is unsuccessful.
+        /// Validates the <see cref="RestResponse"/> and will throw a <see cref="RestException"/> if the response is unsuccessful.
         /// </summary>
-        /// <param name="response"><see cref="Response"/>.</param>
-        /// <param name="debug">Print debug information of <see cref="Response"/>.</param>
+        /// <param name="response"><see cref="RestResponse"/>.</param>
+        /// <param name="debug">Print debug information of <see cref="RestResponse"/>.</param>
         /// <param name="methodName">Optional, <see cref="CallerMemberNameAttribute"/>.</param>
         /// <exception cref="RestException"></exception>
-        internal static void Validate(this Response response, bool debug = false, [CallerMemberName] string methodName = null)
+        internal static void Validate(this RestResponse response, bool debug = false, [CallerMemberName] string methodName = null)
         {
             if (!response.Successful)
             {

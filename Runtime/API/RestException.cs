@@ -4,12 +4,12 @@ namespace BlockadeLabsSDK
 {
     public sealed class RestException : Exception
     {
-        public RestException(Response response, string message = null, Exception innerException = null)
+        public RestException(RestResponse response, string message = null, Exception innerException = null)
             : base(string.IsNullOrWhiteSpace(message) ? response.ToString() : message, innerException)
         {
-            Response = response;
+            RestResponse = response;
         }
 
-        public Response Response { get; }
+        public RestResponse RestResponse { get; }
     }
 }

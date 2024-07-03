@@ -57,19 +57,6 @@ namespace BlockadeLabsSDK.Skyboxes
         /// <summary>
         /// Returns the list of predefined styles that can influence the overall aesthetic of your skybox generation.
         /// </summary>
-        /// <param name="cancellationToken">Optional, <see cref="CancellationToken"/>.</param>
-        /// <returns>A list of <see cref="SkyboxStyle"/>s.</returns>
-        [Obsolete("use overload with model parameter")]
-        public async Task<IReadOnlyList<SkyboxStyle>> GetSkyboxStylesAsync(CancellationToken cancellationToken = default)
-        {
-            var response = await Rest.GetAsync(GetUrl("skybox/styles"), client.DefaultRequestHeaders, cancellationToken);
-            response.Validate(EnableDebug);
-            return JsonConvert.DeserializeObject<IReadOnlyList<SkyboxStyle>>(response.Body, BlockadeLabsClient.JsonSerializationOptions);
-        }
-
-        /// <summary>
-        /// Returns the list of predefined styles that can influence the overall aesthetic of your skybox generation.
-        /// </summary>
         /// <param name="model">The <see cref="SkyboxModel"/> to get styles for.</param>
         /// <param name="cancellationToken">Optional, <see cref="CancellationToken"/>.</param>
         /// <returns>A list of <see cref="SkyboxStyle"/>s.</returns>

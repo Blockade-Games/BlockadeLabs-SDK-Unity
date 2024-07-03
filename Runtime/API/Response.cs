@@ -6,7 +6,7 @@ using UnityEngine.Networking;
 
 namespace BlockadeLabsSDK
 {
-    public class Response
+    public class RestResponse
     {
         /// <summary>
         /// Constructor.
@@ -20,7 +20,7 @@ namespace BlockadeLabsSDK
         /// <param name="responseCode">Response code from the resource.</param>
         /// <param name="headers">Response headers from the resource.</param>
         /// <param name="error">Optional, error message from the resource.</param>
-        public Response(string request, string method, string requestBody, bool successful, string body, byte[] data, long responseCode, IReadOnlyDictionary<string, string> headers, string error = null)
+        public RestResponse(string request, string method, string requestBody, bool successful, string body, byte[] data, long responseCode, IReadOnlyDictionary<string, string> headers, string error = null)
         {
             Request = request;
             RequestBody = requestBody;
@@ -40,7 +40,7 @@ namespace BlockadeLabsSDK
         /// <param name="requestBody">The request body that prompted the response.</param>
         /// <param name="successful">Was the request successful?</param>
         /// <param name="responseBody">Optional, response body override.</param>
-        public Response(UnityWebRequest webRequest, string requestBody, bool successful, string responseBody = null)
+        public RestResponse(UnityWebRequest webRequest, string requestBody, bool successful, string responseBody = null)
         {
             Request = webRequest.url;
             RequestBody = requestBody;
