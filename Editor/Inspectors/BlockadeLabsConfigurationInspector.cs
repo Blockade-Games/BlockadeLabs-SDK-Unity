@@ -101,9 +101,11 @@ namespace BlockadeLabsSDK.Editor
             var update = false;
             BlockadeLabsConfiguration instance;
 
-            if (!Directory.Exists("Assets/Resources"))
+            const string resourcesDirectory = "Assets/Blockade Labs SDK/Resources";
+
+            if (!Directory.Exists(resourcesDirectory))
             {
-                Directory.CreateDirectory("Assets/Resources");
+                Directory.CreateDirectory(resourcesDirectory);
                 update = true;
             }
 
@@ -120,7 +122,7 @@ namespace BlockadeLabsSDK.Editor
 
                 if (!currentPath.Contains("Resources"))
                 {
-                    var newPath = $"Assets/Resources/{instance!.name}.asset";
+                    var newPath = $"{resourcesDirectory}/{instance!.name}.asset";
 
                     if (!File.Exists(newPath))
                     {
@@ -154,7 +156,7 @@ namespace BlockadeLabsSDK.Editor
                 else
                 {
                     instance = CreateInstance<BlockadeLabsConfiguration>();
-                    AssetDatabase.CreateAsset(instance, $"Assets/Resources/{nameof(BlockadeLabsConfiguration)}.asset");
+                    AssetDatabase.CreateAsset(instance, $"{resourcesDirectory}/{nameof(BlockadeLabsConfiguration)}.asset");
                     update = true;
                 }
             }
