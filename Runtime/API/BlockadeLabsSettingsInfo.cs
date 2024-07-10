@@ -2,16 +2,16 @@ using System;
 
 namespace BlockadeLabsSDK
 {
-    public sealed class BlockadeLabsSettingsInfo
+    public sealed class BlockadeLabsClientSettingsInfo
     {
         internal const string Https = "https://";
         internal const string DefaultDomain = "backend.blockadelabs.com";
         internal const string DefaultVersion = "v1";
 
         /// <summary>
-        /// Creates a new instance of <see cref="BlockadeLabsSettingsInfo"/> for use with BlockadeLabs.
+        /// Creates a new instance of <see cref="BlockadeLabsClientSettingsInfo"/> for use with BlockadeLabs.
         /// </summary>
-        public BlockadeLabsSettingsInfo()
+        public BlockadeLabsClientSettingsInfo()
         {
             Domain = DefaultDomain;
             BaseRequest = $"/api/{DefaultVersion}/";
@@ -19,10 +19,10 @@ namespace BlockadeLabsSDK
         }
 
         /// <summary>
-        /// Creates a new instance of <see cref="BlockadeLabsSettingsInfo"/> for use with BlockadeLabs.
+        /// Creates a new instance of <see cref="BlockadeLabsClientSettingsInfo"/> for use with BlockadeLabs.
         /// </summary>
         /// <param name="domain">Base api domain.</param>
-        public BlockadeLabsSettingsInfo(string domain)
+        public BlockadeLabsClientSettingsInfo(string domain)
         {
             if (string.IsNullOrWhiteSpace(domain))
             {

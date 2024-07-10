@@ -3,70 +3,70 @@ using UnityEngine;
 
 namespace BlockadeLabsSDK
 {
-    public sealed class BlockadeLabsSettings
+    public sealed class BlockadeLabsClientSettings
     {
         /// <summary>
-        /// Creates a new instance of <see cref="BlockadeLabsSettings"/> with default <see cref="BlockadeLabsSettingsInfo"/>.
+        /// Creates a new instance of <see cref="BlockadeLabsClientSettings"/> with default <see cref="BlockadeLabsClientSettingsInfo"/>.
         /// </summary>
-        public BlockadeLabsSettings()
+        public BlockadeLabsClientSettings()
         {
-            Info = new BlockadeLabsSettingsInfo();
+            Info = new BlockadeLabsClientSettingsInfo();
             cachedDefault = this;
         }
 
         /// <summary>
-        /// Creates a new instance of <see cref="BlockadeLabsSettings"/> with provided <see cref="configuration"/>.
+        /// Creates a new instance of <see cref="BlockadeLabsClientSettings"/> with provided <see cref="configuration"/>.
         /// </summary>
         /// <param name="configuration"><see cref="BlockadeLabsConfiguration"/>.</param>
-        public BlockadeLabsSettings(BlockadeLabsConfiguration configuration)
+        public BlockadeLabsClientSettings(BlockadeLabsConfiguration configuration)
         {
             if (configuration == null)
             {
-                Debug.LogWarning($"This can be speed up by directly passing a {nameof(BlockadeLabsConfiguration)} to the {nameof(BlockadeLabsSettings)}.ctr");
+                Debug.LogWarning($"This can be speed up by directly passing a {nameof(BlockadeLabsConfiguration)} to the {nameof(BlockadeLabsClientSettings)}.ctr");
                 configuration = Resources.LoadAll<BlockadeLabsConfiguration>(string.Empty).FirstOrDefault(asset => asset != null);
             }
 
             if (configuration != null)
             {
-                Info = new BlockadeLabsSettingsInfo(configuration.ProxyDomainUrl);
+                Info = new BlockadeLabsClientSettingsInfo(configuration.ProxyDomainUrl);
                 cachedDefault = this;
             }
             else
             {
-                Info = new BlockadeLabsSettingsInfo();
+                Info = new BlockadeLabsClientSettingsInfo();
                 cachedDefault = this;
             }
         }
 
         /// <summary>
-        /// Creates a new instance of <see cref="BlockadeLabsSettings"/> with the provided <see cref="settingsInfo"/>.
+        /// Creates a new instance of <see cref="BlockadeLabsClientSettings"/> with the provided <see cref="clientSettingsInfo"/>.
         /// </summary>
-        /// <param name="settingsInfo"><see cref="BlockadeLabsSettingsInfo"/>.</param>
-        public BlockadeLabsSettings(BlockadeLabsSettingsInfo settingsInfo)
+        /// <param name="clientSettingsInfo"><see cref="BlockadeLabsClientSettingsInfo"/>.</param>
+        public BlockadeLabsClientSettings(BlockadeLabsClientSettingsInfo clientSettingsInfo)
         {
-            Info = settingsInfo;
+            Info = clientSettingsInfo;
             cachedDefault = this;
         }
 
         /// <summary>
-        /// Creates a new instance of <see cref="BlockadeLabsSettings"/>.
+        /// Creates a new instance of <see cref="BlockadeLabsClientSettings"/>.
         /// </summary>
         /// <param name="domain">Base api domain.</param>
-        public BlockadeLabsSettings(string domain)
+        public BlockadeLabsClientSettings(string domain)
         {
-            Info = new BlockadeLabsSettingsInfo(domain);
+            Info = new BlockadeLabsClientSettingsInfo(domain);
             cachedDefault = this;
         }
 
-        private static BlockadeLabsSettings cachedDefault;
+        private static BlockadeLabsClientSettings cachedDefault;
 
-        public static BlockadeLabsSettings Default
+        public static BlockadeLabsClientSettings Default
         {
-            get => cachedDefault ??= new BlockadeLabsSettings(configuration: null);
+            get => cachedDefault ??= new BlockadeLabsClientSettings(configuration: null);
             internal set => cachedDefault = value;
         }
 
-        public BlockadeLabsSettingsInfo Info { get; }
+        public BlockadeLabsClientSettingsInfo Info { get; }
 
         public string BaseRequestUrlFormat => Info.BaseRequestUrlFormat;
     }

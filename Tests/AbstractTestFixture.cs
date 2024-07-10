@@ -7,7 +7,7 @@ namespace BlockadeLabsSDK.Tests
         protected AbstractTestFixture()
         {
             var auth = new BlockadeLabsAuthentication().LoadDefaultsReversed();
-            var settings = new BlockadeLabsSettings();
+            var settings = new BlockadeLabsClientSettings();
             BlockadeLabsClient = new BlockadeLabsClient(auth, settings)
             {
                 EnableDebug = true
