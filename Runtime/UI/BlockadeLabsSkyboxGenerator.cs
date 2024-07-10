@@ -19,7 +19,6 @@ using UnityEditor;
 
 #if PUSHER_PRESENT
 using PusherClient;
-using System.Linq;
 #endif
 
 namespace BlockadeLabsSDK
@@ -522,7 +521,7 @@ namespace BlockadeLabsSDK
             const string key = "a6a7b7662238ce4494d5";
             const string cluster = "mt1";
 
-            var pusher = new Pusher(key, new PusherOptions()
+            var pusher = new Pusher(key, new PusherOptions
             {
                 Cluster = cluster,
                 Encrypted = true
@@ -534,18 +533,19 @@ namespace BlockadeLabsSDK
             await pusher.ConnectAsync();
 
             var channel = await pusher.SubscribeAsync(pusherChannel);
+
             if (channel == null)
             {
                 return null;
             }
 
-            var tcs = new TaskCompletionSource<GetImagineRequest>();
+            var tcs = new TaskCompletionSource<ImagineResult>();
             channel.Bind(pusherEvent, (string evt) =>
             {
                 LogVerbose("Pusher Event: " + evt);
                 var data = JsonConvert.DeserializeObject<PusherEvent>(evt).data;
-                var request = JsonConvert.DeserializeObject<GetImagineRequest>(data);
-                if (request.status == "error" || request.status == "complete")
+                var request = JsonConvert.DeserializeObject<ImagineResult>(data);
+                if (request.status == Status.Error || request.status == Status.Complete)
                 {
                     channel.Unbind(pusherEvent);
                     tcs.SetResult(request);
@@ -566,7 +566,8 @@ namespace BlockadeLabsSDK
             await pusher.DisconnectAsync();
 
             var request = tcs.Task.Result;
-            if (request.status == "error")
+
+            if (request.status == Status.Error)
             {
                 SetGenerateFailed(request.error_message);
                 return null;
@@ -575,7 +576,7 @@ namespace BlockadeLabsSDK
             return request;
         }
 
-        private struct PusherEvent
+        private class PusherEvent
         {
             public string data;
         }

@@ -9,6 +9,10 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.Scripting;
 
+#if PUSHER_PRESENT
+using PusherClient;
+#endif
+
 namespace BlockadeLabsSDK.Skyboxes
 {
     public sealed class SkyboxEndpoint : BlockadeLabsBaseEndpoint
@@ -81,7 +85,7 @@ namespace BlockadeLabsSDK.Skyboxes
 
             if (model != null)
             {
-                @params = new Dictionary<string, string>() { { "model_version", ((int)model).ToString() } };
+                @params = new Dictionary<string, string> { { "model_version", ((int)model).ToString() } };
             }
 
             var response = await Rest.GetAsync(GetUrl("skybox/families", @params), client.DefaultRequestHeaders, cancellationToken);
@@ -180,7 +184,9 @@ namespace BlockadeLabsSDK.Skyboxes
             response.Validate(EnableDebug);
             var skyboxInfo = JsonConvert.DeserializeObject<SkyboxInfo>(response.Body, BlockadeLabsClient.JsonSerializationOptions);
             progressCallback?.Report(skyboxInfo);
-
+#if PUSHER_PRESENT
+            skyboxInfo = await WaitForStatusChange(skyboxInfo.PusherChannel, skyboxInfo.PusherEvent, progressCallback, cancellationToken);
+#else
             while (!cancellationToken.IsCancellationRequested)
             {
                 await Task.Delay(pollingInterval ?? 3000, CancellationToken.None).ConfigureAwait(true);
@@ -196,7 +202,7 @@ namespace BlockadeLabsSDK.Skyboxes
 
                 break;
             }
-
+#endif // PUSHER_PRESENT
             if (cancellationToken.IsCancellationRequested)
             {
                 var cancelResult = await CancelSkyboxGenerationAsync(skyboxInfo, CancellationToken.None);
@@ -230,7 +236,7 @@ namespace BlockadeLabsSDK.Skyboxes
                 }
                 else
                 {
-                    exportTasks.Add(ExportSkyboxAsync(skyboxInfo, DefaultExportOptions.Equirectangular_PNG, null, pollingInterval, cancellationToken));
+                    exportTasks.Add(ExportSkyboxAsync(skyboxInfo, DefaultExportOptions.Equirectangular_JPG, null, pollingInterval, cancellationToken));
                     exportTasks.Add(ExportSkyboxAsync(skyboxInfo, DefaultExportOptions.DepthMap_PNG, null, pollingInterval, cancellationToken));
                 }
 
@@ -428,6 +434,12 @@ namespace BlockadeLabsSDK.Skyboxes
             var exportRequest = JsonConvert.DeserializeObject<SkyboxExportRequest>(response.Body, BlockadeLabsClient.JsonSerializationOptions);
             progressCallback?.Report(exportRequest);
 
+#if PUSHER_PRESENT
+            if (exportRequest.Status != Status.Complete)
+            {
+                exportRequest = await WaitForStatusChange(exportRequest.PusherChannel, exportRequest.PusherEvent, progressCallback, cancellationToken);
+            }
+#else
             while (!cancellationToken.IsCancellationRequested)
             {
                 await Task.Delay(pollingInterval ?? 3000, CancellationToken.None).ConfigureAwait(true);
@@ -443,7 +455,7 @@ namespace BlockadeLabsSDK.Skyboxes
 
                 break;
             }
-
+#endif // PUSHER_PRESENT
             if (cancellationToken.IsCancellationRequested)
             {
                 var cancelResult = await CancelSkyboxExportAsync(exportRequest, CancellationToken.None);
@@ -506,5 +518,119 @@ namespace BlockadeLabsSDK.Skyboxes
 
             return skyboxOp.Success.Equals("true");
         }
+
+#if PUSHER_PRESENT
+        private Pusher _pusher;
+
+        private Pusher Pusher
+        {
+            get
+            {
+                if (_pusher != null)
+                {
+                    return _pusher;
+                }
+
+                const string key = "a6a7b7662238ce4494d5";
+                const string cluster = "mt1";
+                _pusher = new Pusher(key, new PusherOptions
+                {
+                    Cluster = cluster,
+                    Encrypted = true
+                });
+
+                _pusher.Error += (_, e) => Debug.LogException(e);
+
+                if (EnableDebug)
+                {
+                    _pusher.ConnectionStateChanged += (_, state) => Debug.Log($"Pusher Connection State: {state}");
+                    _pusher.Subscribed += (_, channel) => Debug.Log($"Pusher Subscribed: {channel.Name}");
+                }
+
+                return _pusher;
+            }
+        }
+
+        private async Task<T> WaitForStatusChange<T>(string pusherChannel, string pusherEvent, IProgress<T> progressCallback, CancellationToken cancellationToken)
+            where T : IStatus
+        {
+            if (Pusher.State == ConnectionState.Uninitialized)
+            {
+                await Pusher.ConnectAsync().ConfigureAwait(true);
+            }
+
+            var channel = await Pusher.SubscribeAsync(pusherChannel).ConfigureAwait(true);
+
+            if (channel == null)
+            {
+                throw new Exception($"Failed to subscribe to pusher channel {pusherChannel}!");
+            }
+
+            var tcs = new TaskCompletionSource<T>();
+
+            try
+            {
+                channel.Bind(pusherEvent, (string @event) =>
+                {
+                    if (EnableDebug)
+                    {
+                        Debug.Log($"Pusher Event: [{pusherChannel}] {@event}");
+                    }
+
+                    try
+                    {
+                        var data = JsonConvert.DeserializeObject<PusherEvent>(@event).Data;
+                        var result = JsonConvert.DeserializeObject<T>(data, BlockadeLabsClient.JsonSerializationOptions);
+                        progressCallback?.Report(result);
+
+                        if (result.Status == Status.Complete ||
+                            result.Status == Status.Error ||
+                            result.Status == Status.Abort)
+                        {
+                            tcs.TrySetResult(result);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        tcs.TrySetException(e);
+                    }
+                });
+
+                while (!tcs.Task.IsCompleted && !tcs.Task.IsCanceled && !tcs.Task.IsFaulted)
+                {
+                    // ReSharper disable once MethodSupportsCancellation
+                    await Task.Delay(16).ConfigureAwait(true);
+                    if (cancellationToken.IsCancellationRequested) { throw new OperationCanceledException(); }
+                }
+
+                return await tcs.Task;
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+                throw;
+            }
+            finally
+            {
+                channel.Unbind(pusherEvent);
+                await Pusher.UnsubscribeAsync(pusherChannel).ConfigureAwait(true);
+            }
+        }
+
+        [Preserve]
+        private class PusherEvent
+        {
+            [Preserve]
+            [JsonConstructor]
+            public PusherEvent([JsonProperty("data")] string data)
+            {
+                Data = data;
+            }
+
+            [Preserve]
+            [JsonProperty("data")]
+            public string Data;
+        }
+#endif // PUSHER_PRESENT
     }
 }

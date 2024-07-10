@@ -15,7 +15,7 @@ using Object = UnityEngine.Object;
 namespace BlockadeLabsSDK.Skyboxes
 {
     [Preserve]
-    public sealed class SkyboxInfo : BaseResponse
+    public sealed class SkyboxInfo : BaseResponse, IStatus
     {
         [Preserve]
         [JsonConstructor]

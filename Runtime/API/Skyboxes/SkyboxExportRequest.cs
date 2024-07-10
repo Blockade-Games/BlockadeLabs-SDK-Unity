@@ -6,7 +6,7 @@ using UnityEngine.Scripting;
 namespace BlockadeLabsSDK.Skyboxes
 {
     [Preserve]
-    public sealed class SkyboxExportRequest : BaseResponse
+    public sealed class SkyboxExportRequest : BaseResponse, IStatus
     {
         [Preserve]
         [JsonConstructor]
