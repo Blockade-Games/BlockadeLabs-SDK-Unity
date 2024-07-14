@@ -84,7 +84,7 @@ namespace BlockadeLabsSDK.Skyboxes
             var @params = new Dictionary<string, string> { { "model_version", ((int)model).ToString() } };
             var response = await Rest.GetAsync(GetUrl("skybox/styles", @params), client.DefaultRequestHeaders, cancellationToken);
             response.Validate(EnableDebug);
-            return JsonConvert.DeserializeObject<IReadOnlyList<SkyboxStyle>>(response.Body, BlockadeLabsClient.JsonSerializationOptions);
+            return JsonConvert.DeserializeObject<IReadOnlyList<SkyboxStyle>>(response.Body, BlockadeLabsClient.JsonSerializationOptions).Where(style => style.Model == model).ToList();
         }
 
         /// <summary>
@@ -105,7 +105,10 @@ namespace BlockadeLabsSDK.Skyboxes
 
             var response = await Rest.GetAsync(GetUrl("skybox/families", @params), client.DefaultRequestHeaders, cancellationToken);
             response.Validate(EnableDebug);
-            return JsonConvert.DeserializeObject<IReadOnlyList<SkyboxStyle>>(response.Body, BlockadeLabsClient.JsonSerializationOptions);
+            var styles = JsonConvert.DeserializeObject<IReadOnlyList<SkyboxStyle>>(response.Body, BlockadeLabsClient.JsonSerializationOptions);
+            return model != null
+                ? styles.Where(style => style.Model == model).ToList()
+                : styles;
         }
 
         /// <summary>
@@ -119,7 +122,7 @@ namespace BlockadeLabsSDK.Skyboxes
             var @params = new Dictionary<string, string> { { "model_version", ((int)model).ToString() } };
             var response = await Rest.GetAsync(GetUrl("skybox/menu", @params), client.DefaultRequestHeaders, cancellationToken);
             response.Validate(EnableDebug);
-            return JsonConvert.DeserializeObject<IReadOnlyList<SkyboxStyle>>(response.Body, BlockadeLabsClient.JsonSerializationOptions);
+            return JsonConvert.DeserializeObject<IReadOnlyList<SkyboxStyle>>(response.Body, BlockadeLabsClient.JsonSerializationOptions).Where(style => style.Model == model).ToList();
         }
 
         /// <summary>

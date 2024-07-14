@@ -26,6 +26,7 @@ namespace BlockadeLabsSDK.Tests
                 foreach (var skyboxStyle in skyboxStyles)
                 {
                     Debug.Log(skyboxStyle);
+                    Assert.IsTrue(skyboxStyle.Model == SkyboxModel.Model2);
                 }
 
                 var skyboxFamilyStyles = await BlockadeLabsClient.SkyboxEndpoint.GetSkyboxStyleFamiliesAsync(SkyboxModel.Model3);
@@ -34,6 +35,7 @@ namespace BlockadeLabsSDK.Tests
                 foreach (var skyboxStyle in skyboxFamilyStyles)
                 {
                     Debug.Log(skyboxStyle);
+                    Assert.IsTrue(skyboxStyle.Model == SkyboxModel.Model3);
                 }
 
                 var skyboxMenuStyles = await BlockadeLabsClient.SkyboxEndpoint.GetSkyboxStylesMenuAsync(SkyboxModel.Model3);
