@@ -90,9 +90,9 @@ namespace BlockadeLabsSDK.Editor
 
         public static bool IsFetchingStyles => isFetchingStyles;
 
-        private static IReadOnlyList<BlockadeLabsSDK.Skyboxes.SkyboxStyle> styles = new List<BlockadeLabsSDK.Skyboxes.SkyboxStyle>();
+        private static IReadOnlyList<Skyboxes.SkyboxStyle> styles = new List<Skyboxes.SkyboxStyle>();
 
-        public static IReadOnlyList<BlockadeLabsSDK.Skyboxes.SkyboxStyle> Styles => styles;
+        public static IReadOnlyList<Skyboxes.SkyboxStyle> Styles => styles;
 
         private static GUIContent[] options = Array.Empty<GUIContent>();
 
