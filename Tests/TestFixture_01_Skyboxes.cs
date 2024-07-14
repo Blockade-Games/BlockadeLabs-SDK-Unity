@@ -229,5 +229,13 @@ namespace BlockadeLabsSDK.Tests
                 Debug.Log(JsonConvert.SerializeObject(exportOption));
             }
         }
+
+        [Test]
+        public async Task Test_09_GetSkyboxTip()
+        {
+            var tip = await BlockadeLabsClient.SkyboxEndpoint.GetOneTipAsync();
+            Assert.IsNotNull(tip);
+            Debug.Log(tip);
+        }
     }
 }

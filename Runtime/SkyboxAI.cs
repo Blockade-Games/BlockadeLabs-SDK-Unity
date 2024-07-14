@@ -1,5 +1,6 @@
 using BlockadeLabsSDK.Skyboxes;
 using Newtonsoft.Json;
+using System;
 using UnityEngine;
 
 #if UNITY_HDRP
@@ -48,16 +49,6 @@ namespace BlockadeLabsSDK
         {
             get => _skyboxStyleName;
             internal set => _skyboxStyleName = value;
-        }
-
-        [SerializeField]
-        private Status _status;
-
-        [JsonProperty("status")]
-        public Status Status
-        {
-            get => _status;
-            internal set => _status = value;
         }
 
         [SerializeField]
@@ -141,33 +132,36 @@ namespace BlockadeLabsSDK
             internal set => _model = value;
         }
 
+        [Obsolete]
         internal void SetMetadata(ImagineResult result)
         {
             _id = result.id;
             _obfuscatedId = result.obfuscated_id;
             _skyboxStyleId = result.skybox_style_id;
             _skyboxStyleName = result.skybox_style_name;
-            _status = result.status;
             _type = result.type;
             _prompt = result.prompt;
             _negativeText = result.negative_text;
             _model = result.model == "Model 3" ? SkyboxModel.Model3 : SkyboxModel.Model2;
         }
 
-        internal ImagineResult GetMetadata()
+        internal void SetMetadata(SkyboxInfo skybox)
         {
-            return new ImagineResult
-            {
-                id = _id,
-                obfuscated_id = _obfuscatedId,
-                skybox_style_id = _skyboxStyleId,
-                skybox_style_name = _skyboxStyleName,
-                status = _status,
-                type = _type,
-                prompt = _prompt,
-                negative_text = _negativeText,
-                model = _model == SkyboxModel.Model3 ? "Model 3" : "Model 2"
-            };
+            _id = skybox.Id;
+            _obfuscatedId = skybox.ObfuscatedId;
+            _skyboxStyleId = skybox.SkyboxStyleId;
+            _skyboxStyleName = skybox.SkyboxStyleName;
+            _type = skybox.Type;
+            _prompt = skybox.Prompt;
+            _negativeText = skybox.NegativeText;
+            _model = skybox.Model;
+        }
+
+        public static implicit operator SkyboxAI(SkyboxInfo skybox)
+        {
+            var skyboxAI = CreateInstance<SkyboxAI>();
+            skyboxAI.SetMetadata(skybox);
+            return skyboxAI;
         }
     }
 }

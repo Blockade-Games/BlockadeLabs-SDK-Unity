@@ -8,9 +8,11 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking;
 using BlockadeLabsSDK.Extensions;
+using System;
 
 namespace BlockadeLabsSDK
 {
+    [Obsolete]
     internal static class ApiRequests
     {
         private static readonly string ApiEndpoint = "https://backend.blockadelabs.com/api/v1/";

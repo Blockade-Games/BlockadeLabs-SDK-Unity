@@ -373,8 +373,8 @@ namespace BlockadeLabsSDK
         private void CleanupStyleFamilyList(List<SkyboxStyleFamily> styleFamilies)
         {
             // Remove anything with status: "disabled"
-            styleFamilies.ForEach(x => x.items?.RemoveAll(y => y.status == "disabled"));
-            styleFamilies.RemoveAll(x => x.status == "disabled" || x.items?.Count == 0);
+            styleFamilies.ForEach(family => family.items?.RemoveAll(style => style.status == "disabled"));
+            styleFamilies.RemoveAll(family => family.status == "disabled" || family.items?.Count == 0);
 
             // Ensure each style has a family to simplify logic everywhere.
             for (int i = 0; i < styleFamilies.Count; i++)
@@ -503,7 +503,7 @@ namespace BlockadeLabsSDK
             catch (Exception e)
             {
                 Debug.LogException(e);
-                SetGenerateFailed("Error generating skybox: " + e.Message);
+                SetGenerateFailed($"Error generating skybox: {e.Message}");
             }
         }
 

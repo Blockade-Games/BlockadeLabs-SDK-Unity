@@ -6,11 +6,9 @@ using UnityEngine.Serialization;
 using UnityEngine.UI;
 using BlockadeLabsSDK.Skyboxes;
 
-
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
-
 
 namespace BlockadeLabsSDK
 {
@@ -1014,15 +1012,14 @@ namespace BlockadeLabsSDK
                 _hintText.text = (_generator.HasSkyboxMetadata && _generator.Remix) ? _remixHint : _createHint;
             }
 
-            _modeTooltip.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(
-                RectTransform.Axis.Horizontal, tooltipText.GetPreferredValues().x + 20);
+            _modeTooltip.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, tooltipText.GetPreferredValues().x + 20);
             _modeTooltip.SetActive(tooltipText.text != "");
         }
 
         private void UpdateVersionSelector()
         {
-            bool isModel2 = _generator.ModelVersion == SkyboxModel.Model2;
-            bool isModel3 = _generator.ModelVersion == SkyboxModel.Model3;
+            var isModel2 = _generator.ModelVersion == SkyboxModel.Model2;
+            var isModel3 = _generator.ModelVersion == SkyboxModel.Model3;
 
             _model2Button.gameObject.SetActive(!isModel2);
             _model3Button.gameObject.SetActive(!isModel3);

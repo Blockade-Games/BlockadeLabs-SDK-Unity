@@ -50,9 +50,28 @@ namespace BlockadeLabsSDK.Skyboxes
             public string Error { get; }
         }
 
+        private class SkyboxTip
+        {
+            [JsonConstructor]
+            public SkyboxTip([JsonProperty("tip")] string tip)
+            {
+                Tip = tip;
+            }
+
+            [JsonProperty("tip")]
+            public string Tip { get; }
+        }
+
         public SkyboxEndpoint(BlockadeLabsClient client) : base(client) { }
 
         protected override string Root => string.Empty;
+
+        internal async Task<string> GetOneTipAsync()
+        {
+            var response = await Rest.GetAsync(GetUrl("skybox/get-one-tip-unity"), client.DefaultRequestHeaders, CancellationToken.None);
+            response.Validate(EnableDebug);
+            return JsonConvert.DeserializeObject<SkyboxTip>(response.Body, BlockadeLabsClient.JsonSerializationOptions)?.Tip;
+        }
 
         /// <summary>
         /// Returns the list of predefined styles that can influence the overall aesthetic of your skybox generation.
