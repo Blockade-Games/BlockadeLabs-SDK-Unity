@@ -183,8 +183,7 @@ namespace BlockadeLabsSDK.Skyboxes
 #if PUSHER_PRESENT
             try
             {
-                skyboxInfo = await WaitForStatusChange(skyboxInfo.PusherChannel, skyboxInfo.PusherEvent,
-                    progressCallback, cancellationToken);
+                skyboxInfo = await WaitForStatusChange(skyboxInfo.PusherChannel, skyboxInfo.PusherEvent, progressCallback, cancellationToken);
             }
             finally
 #else
