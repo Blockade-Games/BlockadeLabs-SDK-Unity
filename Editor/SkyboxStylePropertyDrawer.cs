@@ -26,7 +26,7 @@ namespace BlockadeLabsSDK.Editor
             }
             catch (AuthenticationException)
             {
-                EditorGUI.HelpBox(position, "Check blockade labs api key", MessageType.Error);
+                EditorGUI.HelpBox(position, "Check BlockadeLabs api key", MessageType.Error);
 
                 return;
             }
