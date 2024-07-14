@@ -9,10 +9,6 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.Scripting;
 
-#if PUSHER_PRESENT
-using PusherClient;
-#endif
-
 namespace BlockadeLabsSDK.Skyboxes
 {
     public sealed class SkyboxEndpoint : BlockadeLabsBaseEndpoint
@@ -185,7 +181,12 @@ namespace BlockadeLabsSDK.Skyboxes
             var skyboxInfo = JsonConvert.DeserializeObject<SkyboxInfo>(response.Body, BlockadeLabsClient.JsonSerializationOptions);
             progressCallback?.Report(skyboxInfo);
 #if PUSHER_PRESENT
-            skyboxInfo = await WaitForStatusChange(skyboxInfo.PusherChannel, skyboxInfo.PusherEvent, progressCallback, cancellationToken);
+            try
+            {
+                skyboxInfo = await WaitForStatusChange(skyboxInfo.PusherChannel, skyboxInfo.PusherEvent,
+                    progressCallback, cancellationToken);
+            }
+            finally
 #else
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -203,13 +204,15 @@ namespace BlockadeLabsSDK.Skyboxes
                 break;
             }
 #endif // PUSHER_PRESENT
-            if (cancellationToken.IsCancellationRequested)
             {
-                var cancelResult = await CancelSkyboxGenerationAsync(skyboxInfo, CancellationToken.None);
-
-                if (!cancelResult)
+                if (cancellationToken.IsCancellationRequested)
                 {
-                    throw new Exception($"Failed to cancel generation for {skyboxInfo.Id}");
+                    var cancelResult = await CancelSkyboxGenerationAsync(skyboxInfo, CancellationToken.None);
+
+                    if (!cancelResult)
+                    {
+                        throw new Exception($"Failed to cancel generation for {skyboxInfo.Id}");
+                    }
                 }
             }
 
@@ -520,9 +523,9 @@ namespace BlockadeLabsSDK.Skyboxes
         }
 
 #if PUSHER_PRESENT
-        private Pusher _pusher;
+        private PusherClient.Pusher _pusher;
 
-        private Pusher Pusher
+        private PusherClient.Pusher Pusher
         {
             get
             {
@@ -533,7 +536,7 @@ namespace BlockadeLabsSDK.Skyboxes
 
                 const string key = "a6a7b7662238ce4494d5";
                 const string cluster = "mt1";
-                _pusher = new Pusher(key, new PusherOptions
+                _pusher = new PusherClient.Pusher(key, new PusherClient.PusherOptions
                 {
                     Cluster = cluster,
                     Encrypted = true
@@ -554,7 +557,7 @@ namespace BlockadeLabsSDK.Skyboxes
         private async Task<T> WaitForStatusChange<T>(string pusherChannel, string pusherEvent, IProgress<T> progressCallback, CancellationToken cancellationToken)
             where T : IStatus
         {
-            if (Pusher.State == ConnectionState.Uninitialized)
+            if (Pusher.State == PusherClient.ConnectionState.Uninitialized)
             {
                 await Pusher.ConnectAsync().ConfigureAwait(true);
             }
@@ -600,7 +603,7 @@ namespace BlockadeLabsSDK.Skyboxes
                 {
                     // ReSharper disable once MethodSupportsCancellation
                     await Task.Delay(16).ConfigureAwait(true);
-                    if (cancellationToken.IsCancellationRequested) { throw new OperationCanceledException(); }
+                    cancellationToken.ThrowIfCancellationRequested();
                 }
 
                 return await tcs.Task;

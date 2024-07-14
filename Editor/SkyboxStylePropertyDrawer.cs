@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace BlockadeLabsSDK.Editor
 {
-    [CustomPropertyDrawer(typeof(SkyboxStyle))]
+    [CustomPropertyDrawer(typeof(Skyboxes.SkyboxStyle))]
     public class SkyboxStylePropertyDrawer : PropertyDrawer
     {
         private static BlockadeLabsClient blockadeLabsClient;
