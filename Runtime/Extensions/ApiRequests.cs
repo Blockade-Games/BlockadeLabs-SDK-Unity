@@ -46,7 +46,7 @@ namespace BlockadeLabsSDK
             return JsonConvert.DeserializeObject<T>(request.downloadHandler.text);
         }
 
-        public static async Task<List<SkyboxStyleFamily>> GetSkyboxStylesMenuAsync(SkyboxAiModelVersion modelVersion)
+        public static async Task<List<SkyboxStyleFamily>> GetSkyboxStylesMenuAsync(SkyboxModel modelVersion)
         {
             var modelQuery = new Dictionary<string, string> { { "model_version", ((int)modelVersion).ToString() } };
             return await GetAsync<List<SkyboxStyleFamily>>("skybox/menu", modelQuery);
@@ -170,7 +170,7 @@ namespace BlockadeLabsSDK
             LogVerbose($"Complete download: {url}");
         }
 
-        public static async Task<SkyboxTip> GetSkyboxTipAsync(SkyboxAiModelVersion model)
+        public static async Task<SkyboxTip> GetSkyboxTipAsync(SkyboxModel model)
         {
             return await GetAsync<SkyboxTip>("skybox/get-one-tip-unity");
         }

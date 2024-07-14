@@ -4,6 +4,8 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
+using BlockadeLabsSDK.Skyboxes;
+
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -560,8 +562,8 @@ namespace BlockadeLabsSDK
             OnErrorChanged();
 
             // Titlebar
-            _model2Button.onClick.AddListener(() => SetModelVersion(SkyboxAiModelVersion.Model2));
-            _model3Button.onClick.AddListener(() => SetModelVersion(SkyboxAiModelVersion.Model3));
+            _model2Button.onClick.AddListener(() => SetModelVersion(SkyboxModel.Model2));
+            _model3Button.onClick.AddListener(() => SetModelVersion(SkyboxModel.Model3));
 
             // Prompt Panel Controls
             _promptInput.onValueChanged.AddListener(OnPromptInputChanged);
@@ -727,7 +729,7 @@ namespace BlockadeLabsSDK
             }
         }
 
-        private void SetModelVersion(SkyboxAiModelVersion version)
+        private void SetModelVersion(SkyboxModel version)
         {
             _generator.ModelVersion = version;
             _generator.Remix = false;
@@ -992,7 +994,7 @@ namespace BlockadeLabsSDK
             {
                 _hintText.text = _editHint;
 
-                if (_generator.ModelVersion == SkyboxAiModelVersion.Model3)
+                if (_generator.ModelVersion == SkyboxModel.Model3)
                 {
                     tooltipText.text = "Coming soon to SkyboxAI Model 3";
                     _modeTooltip.transform.SetParent(_editButton.transform, false);
@@ -1019,8 +1021,8 @@ namespace BlockadeLabsSDK
 
         private void UpdateVersionSelector()
         {
-            bool isModel2 = _generator.ModelVersion == SkyboxAiModelVersion.Model2;
-            bool isModel3 = _generator.ModelVersion == SkyboxAiModelVersion.Model3;
+            bool isModel2 = _generator.ModelVersion == SkyboxModel.Model2;
+            bool isModel3 = _generator.ModelVersion == SkyboxModel.Model3;
 
             _model2Button.gameObject.SetActive(!isModel2);
             _model3Button.gameObject.SetActive(!isModel3);

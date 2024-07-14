@@ -41,8 +41,8 @@ namespace BlockadeLabsSDK
 
         [Tooltip("The version of the generation engine to use.")]
         [SerializeField]
-        private SkyboxAiModelVersion _modelVersion = SkyboxAiModelVersion.Model3;
-        public SkyboxAiModelVersion ModelVersion
+        private SkyboxModel _modelVersion = SkyboxModel.Model3;
+        public SkyboxModel ModelVersion
         {
             get => _modelVersion;
             set
@@ -337,7 +337,7 @@ namespace BlockadeLabsSDK
         {
             ClearError();
 
-            _model2Styles = await ApiRequests.GetSkyboxStylesMenuAsync(SkyboxAiModelVersion.Model2);
+            _model2Styles = await ApiRequests.GetSkyboxStylesMenuAsync(SkyboxModel.Model2);
 
             if (_model2Styles == null || _model2Styles.Count == 0)
             {
@@ -345,7 +345,7 @@ namespace BlockadeLabsSDK
                 return;
             }
 
-            _model3Styles = await ApiRequests.GetSkyboxStylesMenuAsync(SkyboxAiModelVersion.Model3);
+            _model3Styles = await ApiRequests.GetSkyboxStylesMenuAsync(SkyboxModel.Model3);
 
             if (_model3Styles == null || _model3Styles.Count == 0)
             {
@@ -362,7 +362,7 @@ namespace BlockadeLabsSDK
 
         private void UpdateActiveStyleList()
         {
-            _styleFamilies = _modelVersion == SkyboxAiModelVersion.Model2 ? _model2Styles : _model3Styles;
+            _styleFamilies = _modelVersion == SkyboxModel.Model2 ? _model2Styles : _model3Styles;
 
             _selectedStyleFamilyIndex = -1;
             _selectedStyleIndex = -1;
@@ -431,7 +431,7 @@ namespace BlockadeLabsSDK
             {
                 if (_remixImage != null)
                 {
-                    request.control_model = _modelVersion == SkyboxAiModelVersion.Model3 ? "remix" : "sketch";
+                    request.control_model = _modelVersion == SkyboxModel.Model3 ? "remix" : "sketch";
                     request.control_image = _remixImage.EncodeToPNG();
                 }
                 else
@@ -897,7 +897,7 @@ namespace BlockadeLabsSDK
             SendNegativeText = !string.IsNullOrWhiteSpace(skybox.NegativeText);
             NegativeText = skybox.NegativeText;
             ModelVersion = skybox.Model;
-            _styleFamilies = _modelVersion == SkyboxAiModelVersion.Model2 ? _model2Styles : _model3Styles;
+            _styleFamilies = _modelVersion == SkyboxModel.Model2 ? _model2Styles : _model3Styles;
 
             foreach (var family in _allModelStyleFamilies)
             {

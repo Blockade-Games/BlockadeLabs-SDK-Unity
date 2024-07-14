@@ -1,4 +1,5 @@
-﻿using System;
+﻿using BlockadeLabsSDK.Skyboxes;
+using System;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
@@ -70,7 +71,7 @@ namespace BlockadeLabsSDK.Editor
 
                 if (EditorGUI.EndChangeCheck() && generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Ready)
                 {
-                    generator.ModelVersion = (SkyboxAiModelVersion)_modelVersion.intValue;
+                    generator.ModelVersion = (SkyboxModel)_modelVersion.intValue;
                     _remix.boolValue = false;
                 }
 
