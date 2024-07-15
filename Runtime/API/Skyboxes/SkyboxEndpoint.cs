@@ -161,7 +161,7 @@ namespace BlockadeLabsSDK
         /// <returns><see cref="SkyboxInfo"/>.</returns>
         public async Task<SkyboxInfo> GenerateSkyboxAsync(SkyboxRequest skyboxRequest, SkyboxExportOption[] exportOptions = null, IProgress<SkyboxInfo> progressCallback = null, int? pollingInterval = null, CancellationToken cancellationToken = default)
         {
-            pollingInterval ??= 1000;
+            pollingInterval ??= 1;
             var formData = new WWWForm();
             formData.AddField("prompt", skyboxRequest.Prompt);
 
@@ -225,7 +225,7 @@ namespace BlockadeLabsSDK
 #else
             while (!cancellationToken.IsCancellationRequested)
             {
-                await Task.Delay(pollingInterval, CancellationToken.None).ConfigureAwait(true);
+                await Task.Delay(pollingInterval * 1000, CancellationToken.None).ConfigureAwait(true);
                 skyboxInfo = await GetSkyboxInfoAsync(skyboxInfo, CancellationToken.None);
                 progressCallback?.Report(skyboxInfo);
 
@@ -466,7 +466,7 @@ namespace BlockadeLabsSDK
         /// <returns>Updated <see cref="SkyboxInfo"/> with exported assets loaded into memory.</returns>
         public async Task<SkyboxInfo> ExportSkyboxAsync(SkyboxInfo skyboxInfo, SkyboxExportOption exportOption, IProgress<SkyboxExportRequest> progressCallback = null, int? pollingInterval = null, CancellationToken cancellationToken = default)
         {
-            pollingInterval ??= 1000;
+            pollingInterval ??= 1;
             var payload = $"{{\"skybox_id\":\"{skyboxInfo.ObfuscatedId}\",\"type_id\":{exportOption.Id}}}";
             var response = await Rest.PostAsync(GetUrl("skybox/export"), payload, client.DefaultRequestHeaders, cancellationToken);
             response.Validate(EnableDebug);
@@ -481,7 +481,7 @@ namespace BlockadeLabsSDK
 #else
             while (!cancellationToken.IsCancellationRequested)
             {
-                await Task.Delay(pollingInterval, CancellationToken.None).ConfigureAwait(true);
+                await Task.Delay(pollingInterval * 1000, CancellationToken.None).ConfigureAwait(true);
                 exportRequest = await GetExportRequestStatusAsync(exportRequest, CancellationToken.None);
                 progressCallback?.Report(exportRequest);
 
@@ -645,7 +645,7 @@ namespace BlockadeLabsSDK
                     cancellationToken.ThrowIfCancellationRequested();
                     timer += 16;
 
-                    if (timer >= pollingInterval)
+                    if (timer >= pollingInterval * 1000)
                     {
                         progressCallback?.Report(partial);
                         timer = 0;
