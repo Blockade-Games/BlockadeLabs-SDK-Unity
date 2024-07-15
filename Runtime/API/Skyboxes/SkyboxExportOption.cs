@@ -1,7 +1,7 @@
 using Newtonsoft.Json;
 using UnityEngine.Scripting;
 
-namespace BlockadeLabsSDK.Skyboxes
+namespace BlockadeLabsSDK
 {
     [Preserve]
     public sealed class SkyboxExportOption : BaseResponse

@@ -9,18 +9,20 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.Scripting;
 
-namespace BlockadeLabsSDK.Skyboxes
+namespace BlockadeLabsSDK
 {
     public sealed class SkyboxEndpoint : BlockadeLabsBaseEndpoint
     {
         [Preserve]
-        private class SkyboxInfoRequest
+        internal class SkyboxInfoRequest
         {
             [Preserve]
             [JsonConstructor]
-            public SkyboxInfoRequest([JsonProperty("request")] SkyboxInfo skyboxInfo)
+            public SkyboxInfoRequest(
+                [JsonProperty("request")] SkyboxInfo request = null,
+                [JsonProperty("imagine")] SkyboxInfo imagine = null)
             {
-                SkyboxInfo = skyboxInfo;
+                SkyboxInfo = request ?? imagine;
             }
 
             [Preserve]
@@ -73,6 +75,15 @@ namespace BlockadeLabsSDK.Skyboxes
             return JsonConvert.DeserializeObject<SkyboxTip>(response.Body, BlockadeLabsClient.JsonSerializationOptions)?.Tip;
         }
 
+        internal async Task<SkyboxInfo> ToggleFavoriteAsync(int id, CancellationToken cancellationToken = default)
+        {
+            var response = await Rest.PostAsync(GetUrl($"imagine/favorite/{id}"), formData: null, client.DefaultRequestHeaders, cancellationToken);
+            response.Validate(EnableDebug);
+            var skyboxInfo = JsonConvert.DeserializeObject<SkyboxInfoRequest>(response.Body, BlockadeLabsClient.JsonSerializationOptions).SkyboxInfo;
+            skyboxInfo.SetResponseData(response, client);
+            return skyboxInfo;
+        }
+
         /// <summary>
         /// Returns the list of predefined styles that can influence the overall aesthetic of your skybox generation.
         /// </summary>
@@ -84,7 +95,8 @@ namespace BlockadeLabsSDK.Skyboxes
             var @params = new Dictionary<string, string> { { "model_version", ((int)model).ToString() } };
             var response = await Rest.GetAsync(GetUrl("skybox/styles", @params), client.DefaultRequestHeaders, cancellationToken);
             response.Validate(EnableDebug);
-            return JsonConvert.DeserializeObject<IReadOnlyList<SkyboxStyle>>(response.Body, BlockadeLabsClient.JsonSerializationOptions).Where(style => style.Model == model).ToList();
+            return JsonConvert.DeserializeObject<IReadOnlyList<SkyboxStyle>>(response.Body, BlockadeLabsClient.JsonSerializationOptions)
+                .Where(style => style.FamilyStyles != null ? style.FamilyStyles[0].Model == model : style.Model == model).ToList();
         }
 
         /// <summary>
@@ -107,7 +119,7 @@ namespace BlockadeLabsSDK.Skyboxes
             response.Validate(EnableDebug);
             var styles = JsonConvert.DeserializeObject<IReadOnlyList<SkyboxStyle>>(response.Body, BlockadeLabsClient.JsonSerializationOptions);
             return model != null
-                ? styles.Where(style => style.Model == model).ToList()
+                ? styles.Where(style => style.FamilyStyles != null ? style.FamilyStyles[0].Model == model : style.Model == model).ToList()
                 : styles;
         }
 
@@ -122,7 +134,8 @@ namespace BlockadeLabsSDK.Skyboxes
             var @params = new Dictionary<string, string> { { "model_version", ((int)model).ToString() } };
             var response = await Rest.GetAsync(GetUrl("skybox/menu", @params), client.DefaultRequestHeaders, cancellationToken);
             response.Validate(EnableDebug);
-            return JsonConvert.DeserializeObject<IReadOnlyList<SkyboxStyle>>(response.Body, BlockadeLabsClient.JsonSerializationOptions).Where(style => style.Model == model).ToList();
+            return JsonConvert.DeserializeObject<IReadOnlyList<SkyboxStyle>>(response.Body, BlockadeLabsClient.JsonSerializationOptions)
+                .Where(style => style.FamilyStyles != null ? style.FamilyStyles[0].Model == model : style.Model == model).ToList();
         }
 
         /// <summary>

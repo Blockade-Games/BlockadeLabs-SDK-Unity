@@ -75,7 +75,7 @@ namespace BlockadeLabsSDK
         [SerializeField]
         private Button _closeButton;
 
-        private ImagineResult _imagineResult;
+        private SkyboxInfo _skybox;
         private Material _previewMaterial;
 
         private Material PreviewMaterial
@@ -143,7 +143,7 @@ namespace BlockadeLabsSDK
         {
             _runtimeGuiManager.ToggleHistoryPanel();
             gameObject.SetActive(false);
-            await _runtimeGuiManager.Generator.DownloadResultAsync(_imagineResult);
+            await _runtimeGuiManager.Generator.DownloadResultAsync(_skybox);
         }
 
         private void OnCloseButtonClicked()
@@ -154,37 +154,37 @@ namespace BlockadeLabsSDK
 
         private async void OnLikeToggleValueChanged(bool value)
         {
-            var result = await ApiRequests.ToggleFavorite(_imagineResult.id);
-            _likeToggle.SetIsOnWithoutNotify(result.isMyFavorite);
+            var result = await BlockadeLabsSkyboxGenerator.BlockadeLabsClient.SkyboxEndpoint.ToggleFavoriteAsync(_skybox, destroyCancellationToken);
+            _likeToggle.SetIsOnWithoutNotify(result.IsMyFavorite);
         }
 
-        internal void ShowPreviewPopup(ImagineResult imagineResult)
+        internal void ShowPreviewPopup(SkyboxInfo imagineResult)
         {
-            _imagineResult = imagineResult;
-            GetSkyboxTextures(_imagineResult);
-            _titleText.text = $"World #{imagineResult.id}";
-            _likeToggle.SetIsOnWithoutNotify(imagineResult.isMyFavorite);
-            _model3Tag.gameObject.SetActive(_imagineResult.model == "Model 3");
-            _statusText.text = $"Status: <color=\"white\">{imagineResult.status}</color>";
-            _promptText.text = imagineResult.prompt;
-            _negativeTextTitle.gameObject.SetActive(!string.IsNullOrWhiteSpace(imagineResult.negative_text));
-            _negativePromptScrollRect.gameObject.SetActive(!string.IsNullOrWhiteSpace(imagineResult.negative_text));
-            _negativePromptText.text = imagineResult.negative_text;
-            var hasDepth = !string.IsNullOrWhiteSpace(imagineResult.depth_map_url);
+            _skybox = imagineResult;
+            GetSkyboxTextures(_skybox);
+            _titleText.text = $"World #{imagineResult.Id}";
+            _likeToggle.SetIsOnWithoutNotify(imagineResult.IsMyFavorite);
+            _model3Tag.gameObject.SetActive(_skybox.Model == SkyboxModel.Model3);
+            _statusText.text = $"Status: <color=\"white\">{imagineResult.Status}</color>";
+            _promptText.text = imagineResult.Prompt;
+            _negativeTextTitle.gameObject.SetActive(!string.IsNullOrWhiteSpace(imagineResult.NegativeText));
+            _negativePromptScrollRect.gameObject.SetActive(!string.IsNullOrWhiteSpace(imagineResult.NegativeText));
+            _negativePromptText.text = imagineResult.NegativeText;
+            var hasDepth = !string.IsNullOrWhiteSpace(imagineResult.DepthTextureUrl);
             _depthMapText.text = $"Depth Map: <color=\"white\">{(hasDepth ? "On" : "Off")}</color>";
             _depthMapStatusText.text = _depthMapText.text;
-            _seedText.text = $"Seed: <color=\"white\">{imagineResult.seed}</color>";
-            _styleText.text = $"Style: <color=\"white\">{imagineResult.skybox_style_name.ToTitleCase()}</color>";
-            _typeText.text = $"Type: <color=\"white\">{imagineResult.type.ToTitleCase()}</color>";
-            _dateCompletedText.text = $"Date Completed: <color=\"white\">{imagineResult.completed_at:d}</color>";
-            _remixDetails.text = imagineResult.remix_imagine_id.HasValue
-                ? $"Remixed From: <color=\"white\">World #{imagineResult.remix_imagine_id.Value:d}</color>" : string.Empty;
+            _seedText.text = $"Seed: <color=\"white\">{imagineResult.Seed}</color>";
+            _styleText.text = $"Style: <color=\"white\">{imagineResult.SkyboxStyleName.ToTitleCase()}</color>";
+            _typeText.text = $"Type: <color=\"white\">{imagineResult.Type.ToTitleCase()}</color>";
+            _dateCompletedText.text = $"Date Completed: <color=\"white\">{imagineResult.CompletedAt:d}</color>";
+            _remixDetails.text = imagineResult.RemixId.HasValue
+                ? $"Remixed From: <color=\"white\">World #{imagineResult.RemixId.Value:d}</color>" : string.Empty;
             gameObject.SetActive(true);
         }
 
         private static readonly Dictionary<string, Tuple<Texture2D, Texture2D>> _imageCache = new Dictionary<string, Tuple<Texture2D, Texture2D>>();
 
-        private async void GetSkyboxTextures(ImagineResult result)
+        private async void GetSkyboxTextures(SkyboxInfo result)
         {
             try
             {
@@ -193,7 +193,7 @@ namespace BlockadeLabsSDK
                 _depthPreviewImage.texture = null;
                 PreviewMaterial.mainTexture = null;
 
-                if (_imageCache.TryGetValue(result.obfuscated_id, out var cachedImages))
+                if (_imageCache.TryGetValue(result.ObfuscatedId, out var cachedImages))
                 {
                     var (skybox, depth) = cachedImages;
 
@@ -213,30 +213,30 @@ namespace BlockadeLabsSDK
                 else
                 {
                     var (skybox, depth) = cachedImages = new Tuple<Texture2D, Texture2D>(null, null);
-                    _imageCache[result.obfuscated_id] = cachedImages;
+                    _imageCache[result.ObfuscatedId] = cachedImages;
                     var downloadTasks = new List<Task>();
 
                     if (skybox == null)
                     {
-                        downloadTasks.Add(ApiRequests.DownloadTextureAsync(result.file_url, cancellationToken: destroyCancellationToken).ContinueWith(task =>
+                        downloadTasks.Add(Rest.DownloadTextureAsync(result.MainTextureUrl, cancellationToken: destroyCancellationToken).ContinueWith(task =>
                         {
                             skybox = task.Result;
-                        }));
+                        }, destroyCancellationToken));
                     }
 
-                    if (depth == null && !string.IsNullOrWhiteSpace(result.depth_map_url))
+                    if (depth == null && !string.IsNullOrWhiteSpace(result.DepthTextureUrl))
                     {
-                        downloadTasks.Add(ApiRequests.DownloadTextureAsync(result.depth_map_url, cancellationToken: destroyCancellationToken).ContinueWith(task =>
+                        downloadTasks.Add(Rest.DownloadTextureAsync(result.DepthTextureUrl, cancellationToken: destroyCancellationToken).ContinueWith(task =>
                         {
                             depth = task.Result;
-                        }));
+                        }, destroyCancellationToken));
                     }
 
                     await Task.WhenAll(downloadTasks).ConfigureAwait(true);
 
-                    _imageCache[result.obfuscated_id] = new Tuple<Texture2D, Texture2D>(skybox, depth);
+                    _imageCache[result.ObfuscatedId] = new Tuple<Texture2D, Texture2D>(skybox, depth);
 
-                    if (_imagineResult.obfuscated_id == result.obfuscated_id)
+                    if (_skybox.ObfuscatedId == result.ObfuscatedId)
                     {
                         PreviewMaterial.mainTexture = skybox;
                         _previewSkyboxRenderer.sharedMaterial = PreviewMaterial;

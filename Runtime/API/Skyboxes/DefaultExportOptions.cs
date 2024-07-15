@@ -1,6 +1,6 @@
 using UnityEngine.Scripting;
 
-namespace BlockadeLabsSDK.Skyboxes
+namespace BlockadeLabsSDK
 {
     [Preserve]
     public static class DefaultExportOptions

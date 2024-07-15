@@ -1,12 +1,21 @@
 using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.Scripting;
 
-namespace BlockadeLabsSDK.Skyboxes
+namespace BlockadeLabsSDK
 {
     [Preserve]
+    [Serializable]
     public sealed class SkyboxStyle
     {
+        internal SkyboxStyle()
+        {
+            _name = "All Styles";
+            _id = 0;
+        }
+
         [Preserve]
         [JsonConstructor]
         internal SkyboxStyle(
@@ -25,11 +34,10 @@ namespace BlockadeLabsSDK.Skyboxes
             [JsonProperty("status")] string status,
             [JsonProperty("model")] SkyboxModel? model,
             [JsonProperty("model_version")] int? modelVersion,
-            [JsonProperty("skybox_style_families")] List<SkyboxStyleFamily> skyboxStyleFamilies,
             [JsonProperty("items")] List<SkyboxStyle> familyStyles)
         {
-            Name = name;
-            Id = id;
+            _name = name;
+            _id = id;
             Type = type;
             Description = description;
             MaxChar = maxChar;
@@ -41,19 +49,24 @@ namespace BlockadeLabsSDK.Skyboxes
             New = isNew;
             Experimental = experimental;
             Status = status;
-            Model = model;
+            _model = model ?? 0;
             ModelVersion = modelVersion;
-            SkyboxStyleFamilies = skyboxStyleFamilies;
             FamilyStyles = familyStyles;
         }
 
+        [SerializeField]
+        private string _name;
+
         [Preserve]
         [JsonProperty("name")]
-        public string Name { get; }
+        public string Name => _name;
+
+        [SerializeField]
+        private int _id;
 
         [Preserve]
         [JsonProperty("id")]
-        public int Id { get; }
+        public int Id => _id;
 
         [Preserve]
         [JsonProperty("type", DefaultValueHandling = DefaultValueHandling.Ignore)]
@@ -99,17 +112,16 @@ namespace BlockadeLabsSDK.Skyboxes
         [JsonProperty("status", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string Status { get; }
 
+        [SerializeField]
+        private SkyboxModel _model;
+
         [Preserve]
         [JsonProperty("model", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public SkyboxModel? Model { get; }
+        public SkyboxModel? Model => _model;
 
         [Preserve]
         [JsonProperty("model_version", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public int? ModelVersion { get; }
-
-        [Preserve]
-        [JsonProperty("skybox_style_families", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public IReadOnlyList<SkyboxStyleFamily> SkyboxStyleFamilies { get; }
 
         [Preserve]
         [JsonProperty("items", DefaultValueHandling = DefaultValueHandling.Ignore)]

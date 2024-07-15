@@ -1,6 +1,4 @@
-﻿using BlockadeLabsSDK.Skyboxes;
-using System;
-using System.Linq;
+﻿using System;
 using UnityEditor;
 using UnityEngine;
 
@@ -9,6 +7,7 @@ namespace BlockadeLabsSDK.Editor
     [CustomEditor(typeof(BlockadeLabsSkyboxGenerator))]
     public class BlockadeLabsSkyboxGeneratorEditor : UnityEditor.Editor
     {
+        private SerializedProperty _configuration;
         private SerializedProperty _apiKey;
         private SerializedProperty _modelVersion;
         private SerializedProperty _skyboxMesh;
@@ -19,8 +18,8 @@ namespace BlockadeLabsSDK.Editor
         private SerializedProperty _HDRPVolume;
         private SerializedProperty _HDRPVolumeProfile;
 #endif
-        private SerializedProperty _selectedStyleFamilyIndex;
-        private SerializedProperty _selectedStyleIndex;
+        private SerializedProperty _selectStyleFamily;
+        private SerializedProperty _selectedStyle;
         private SerializedProperty _prompt;
         private SerializedProperty _negativeText;
         private SerializedProperty _remix;
@@ -28,26 +27,29 @@ namespace BlockadeLabsSDK.Editor
         private SerializedProperty _seed;
         private SerializedProperty _enhancePrompt;
 
+        private UnityEditor.Editor _configurationEditor;
+
         private void OnEnable()
         {
-            _apiKey = serializedObject.FindProperty("_apiKey");
-            _modelVersion = serializedObject.FindProperty("_modelVersion");
-            _skyboxMesh = serializedObject.FindProperty("_skyboxMesh");
-            _skyboxMaterial = serializedObject.FindProperty("_skyboxMaterial");
-            _depthMaterial = serializedObject.FindProperty("_depthMaterial");
-            _cubemapComputeShader = serializedObject.FindProperty("_cubemapComputeShader");
+            _configuration = serializedObject.FindProperty(nameof(_configuration));
+            _apiKey = serializedObject.FindProperty(nameof(_apiKey));
+            _modelVersion = serializedObject.FindProperty(nameof(_modelVersion));
+            _skyboxMesh = serializedObject.FindProperty(nameof(_skyboxMesh));
+            _skyboxMaterial = serializedObject.FindProperty(nameof(_skyboxMaterial));
+            _depthMaterial = serializedObject.FindProperty(nameof(_depthMaterial));
+            _cubemapComputeShader = serializedObject.FindProperty(nameof(_cubemapComputeShader));
 #if UNITY_HDRP
-            _HDRPVolume = serializedObject.FindProperty("_HDRPVolume");
-            _HDRPVolumeProfile = serializedObject.FindProperty("_HDRPVolumeProfile");
+            _HDRPVolume = serializedObject.FindProperty(nameof(_HDRPVolume));
+            _HDRPVolumeProfile = serializedObject.FindProperty(nameof(_HDRPVolumeProfile));
 #endif
-            _selectedStyleFamilyIndex = serializedObject.FindProperty("_selectedStyleFamilyIndex");
-            _selectedStyleIndex = serializedObject.FindProperty("_selectedStyleIndex");
-            _prompt = serializedObject.FindProperty("_prompt");
-            _negativeText = serializedObject.FindProperty("_negativeText");
-            _remix = serializedObject.FindProperty("_remix");
+            _selectStyleFamily = serializedObject.FindProperty(nameof(_selectStyleFamily));
+            _selectedStyle = serializedObject.FindProperty(nameof(_selectedStyle));
+            _prompt = serializedObject.FindProperty(nameof(_prompt));
+            _negativeText = serializedObject.FindProperty(nameof(_negativeText));
+            _remix = serializedObject.FindProperty(nameof(_remix));
             _remixImage = serializedObject.FindProperty(nameof(_remixImage));
-            _seed = serializedObject.FindProperty("_seed");
-            _enhancePrompt = serializedObject.FindProperty("_enhancePrompt");
+            _seed = serializedObject.FindProperty(nameof(_seed));
+            _enhancePrompt = serializedObject.FindProperty(nameof(_enhancePrompt));
 
             if (_apiKey.stringValue != null)
             {
@@ -60,12 +62,15 @@ namespace BlockadeLabsSDK.Editor
             serializedObject.Update();
 
             var generator = (BlockadeLabsSkyboxGenerator)target;
+            var generating = generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Generating;
 
-            bool generating = generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Generating;
-            BlockadeGUI.DisableGroup(generating, () =>
+            if (!BlockadeLabsSkyboxGenerator.BlockadeLabsClient.HasValidAuthentication)
             {
-                DrawApiKey(generator);
+                DrawApiKey();
+            }
 
+            BlockadeGUI.DisableGroup(generating || !BlockadeLabsSkyboxGenerator.BlockadeLabsClient.HasValidAuthentication, () =>
+            {
                 EditorGUI.BeginChangeCheck();
                 EditorGUILayout.PropertyField(_modelVersion);
 
@@ -89,7 +94,7 @@ namespace BlockadeLabsSDK.Editor
                     EditorGUILayout.HelpBox(generator.LastError, MessageType.Error);
                 }
 
-                if (generator.CurrentState == BlockadeLabsSkyboxGenerator.State.NeedApiKey || generator.StyleFamilies?.Count == 0)
+                if (generator.CurrentState == BlockadeLabsSkyboxGenerator.State.NeedApiKey || generator.StyleFamily?.Count == 0)
                 {
                     return;
                 }
@@ -116,42 +121,30 @@ namespace BlockadeLabsSDK.Editor
             }
         }
 
-        private void DrawApiKey(BlockadeLabsSkyboxGenerator generator)
+        private void DrawApiKey()
         {
-            BlockadeGUI.Horizontal(() =>
+            var apiKey = _apiKey.stringValue;
+
+            if (!string.IsNullOrWhiteSpace(apiKey) && _configuration.objectReferenceValue == null)
             {
-                EditorGUILayout.PropertyField(_apiKey, new GUIContent("API key"));
-                if (GUILayout.Button("Apply", GUILayout.Width(80)))
-                {
-                    InitializeAsync(generator, true);
-                }
-            });
+                var configuration = BlockadeLabsConfigurationInspector.GetOrCreateInstance();
+                configuration.ApiKey = apiKey;
+                BlockadeLabsSkyboxGenerator.BlockadeLabsClient = new BlockadeLabsClient(configuration);
+                _configuration.objectReferenceValue = configuration;
+                _apiKey.stringValue = string.Empty;
+            }
+            else if (_configuration.objectReferenceValue == null)
+            {
+                BlockadeLabsConfigurationInspector.GetOrCreateInstance();
+            }
+
+            CreateCachedEditor(_configuration.objectReferenceValue, typeof(BlockadeLabsConfigurationInspector), ref _configurationEditor);
+            _configurationEditor.OnInspectorGUI();
         }
 
         private void DrawSkyboxFields(BlockadeLabsSkyboxGenerator generator)
         {
-            BlockadeGUI.Horizontal(() =>
-            {
-                EditorGUILayout.LabelField("Style", GUILayout.Width(EditorGUIUtility.labelWidth));
-                var familyOptions = generator.StyleFamilies.Select(f => f.name).ToArray();
-                var selectedFamilyIndex = EditorGUILayout.Popup(_selectedStyleFamilyIndex.intValue, familyOptions);
-
-                if (selectedFamilyIndex != _selectedStyleFamilyIndex.intValue)
-                {
-                    generator.SelectedStyleFamily = generator.StyleFamilies[selectedFamilyIndex];
-                }
-
-                if (generator.SelectedStyleFamily != null)
-                {
-                    var styleOptions = generator.SelectedStyleFamily.items.Select(s => s.name).ToArray();
-                    var selectedStyleIndex = EditorGUILayout.Popup(_selectedStyleIndex.intValue, styleOptions);
-                    if (selectedStyleIndex != _selectedStyleIndex.intValue)
-                    {
-                        generator.SelectedStyle = generator.SelectedStyleFamily.items[selectedStyleIndex];
-                    }
-                }
-            });
-
+            EditorGUILayout.PropertyField(_selectedStyle);
 
             EditorStyles.textField.wordWrap = true;
             EditorGUILayout.PropertyField(_prompt, GUILayout.Height(EditorGUIUtility.singleLineHeight * 3));
@@ -183,11 +176,6 @@ namespace BlockadeLabsSDK.Editor
 
         private async void InitializeAsync(BlockadeLabsSkyboxGenerator generator, bool sendAttribution)
         {
-            if (string.IsNullOrWhiteSpace(generator.ApiKey))
-            {
-                return;
-            }
-
             if (!generator.CheckApiKeyValid())
             {
                 return;
@@ -201,6 +189,7 @@ namespace BlockadeLabsSDK.Editor
             try
             {
                 await generator.LoadAsync();
+
                 if (sendAttribution)
                 {
                     VSAttribution.SendAttributionEvent("Initialization", "BlockadeLabs", _apiKey.stringValue);

@@ -1,6 +1,6 @@
 using System.Runtime.Serialization;
 
-namespace BlockadeLabsSDK.Skyboxes
+namespace BlockadeLabsSDK
 {
     public enum SkyboxModel
     {

@@ -1,5 +1,4 @@
 using BlockadeLabsSDK.Extensions;
-using BlockadeLabsSDK.Skyboxes;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using System;
@@ -25,8 +24,20 @@ namespace BlockadeLabsSDK.Tests
 
                 foreach (var skyboxStyle in skyboxStyles)
                 {
-                    Debug.Log(skyboxStyle);
-                    Assert.IsTrue(skyboxStyle.Model == SkyboxModel.Model2);
+                    if (skyboxStyle.FamilyStyles != null)
+                    {
+                        Debug.Log($"family: {skyboxStyle}");
+                        foreach (var familyStyle in skyboxStyle.FamilyStyles)
+                        {
+                            Debug.Log($"Style: {familyStyle}");
+                            Assert.IsTrue(familyStyle.Model == SkyboxModel.Model2);
+                        }
+                    }
+                    else
+                    {
+                        Debug.Log($"Style: {skyboxStyle}");
+                        Assert.IsTrue(skyboxStyle.Model == SkyboxModel.Model2);
+                    }
                 }
 
                 var skyboxFamilyStyles = await BlockadeLabsClient.SkyboxEndpoint.GetSkyboxStyleFamiliesAsync(SkyboxModel.Model3);
@@ -34,8 +45,20 @@ namespace BlockadeLabsSDK.Tests
 
                 foreach (var skyboxStyle in skyboxFamilyStyles)
                 {
-                    Debug.Log(skyboxStyle);
-                    Assert.IsTrue(skyboxStyle.Model == SkyboxModel.Model3);
+                    if (skyboxStyle.FamilyStyles != null)
+                    {
+                        Debug.Log($"family: {skyboxStyle}");
+                        foreach (var familyStyle in skyboxStyle.FamilyStyles)
+                        {
+                            Debug.Log($"Style: {familyStyle}");
+                            Assert.IsTrue(familyStyle.Model == SkyboxModel.Model3);
+                        }
+                    }
+                    else
+                    {
+                        Debug.Log($"Style: {skyboxStyle}");
+                        Assert.IsTrue(skyboxStyle.Model == SkyboxModel.Model3);
+                    }
                 }
 
                 var skyboxMenuStyles = await BlockadeLabsClient.SkyboxEndpoint.GetSkyboxStylesMenuAsync(SkyboxModel.Model3);
@@ -43,7 +66,20 @@ namespace BlockadeLabsSDK.Tests
 
                 foreach (var skyboxStyle in skyboxMenuStyles)
                 {
-                    Debug.Log(skyboxStyle);
+                    if (skyboxStyle.FamilyStyles != null)
+                    {
+                        Debug.Log($"family: {skyboxStyle}");
+                        foreach (var familyStyle in skyboxStyle.FamilyStyles)
+                        {
+                            Debug.Log($"Style: {familyStyle}");
+                            Assert.IsTrue(familyStyle.Model == SkyboxModel.Model3);
+                        }
+                    }
+                    else
+                    {
+                        Debug.Log($"Style: {skyboxStyle}");
+                        Assert.IsTrue(skyboxStyle.Model == SkyboxModel.Model3);
+                    }
                 }
             }
             catch (Exception e)

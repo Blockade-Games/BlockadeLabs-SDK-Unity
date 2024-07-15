@@ -111,13 +111,13 @@ namespace BlockadeLabsSDK
 
         internal static void SaveAssetNextTo(Object asset, Object nextToAsset)
         {
-            var folder = AssetUtils.GetFolder(nextToAsset);
+            var folder = GetFolder(nextToAsset);
             SaveAsset(asset, folder, asset.name);
         }
 
         internal static void SavePrefabNextTo(GameObject gameObject, Object nextToAsset)
         {
-            var folder = AssetUtils.GetFolder(nextToAsset);
+            var folder = GetFolder(nextToAsset);
             SavePrefab(gameObject, folder, gameObject.name);
         }
 
@@ -126,14 +126,14 @@ namespace BlockadeLabsSDK
             var path = AssetDatabase.GenerateUniqueAssetPath($"{folder}/{name}.asset");
             AssetDatabase.CreateAsset(asset, path);
             AssetDatabase.SaveAssets();
-            AssetUtils.PingAsset(asset);
+            PingAsset(asset);
         }
 
         internal static void SavePrefab(GameObject gameObject, string folder, string name)
         {
             var prefabPath = AssetDatabase.GenerateUniqueAssetPath($"{folder}/{name}.prefab");
             var prefab = PrefabUtility.SaveAsPrefabAsset(gameObject, prefabPath);
-            AssetUtils.PingAsset(prefab);
+            PingAsset(prefab);
         }
 
         internal static string ToProjectPath(this string @string)

@@ -1,5 +1,4 @@
-﻿using BlockadeLabsSDK.Skyboxes;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -30,7 +29,7 @@ namespace BlockadeLabsSDK
 
         private int _pageSize = 9;
         private bool _isFetchingHistory;
-        private GetHistoryResult _lastHistoryResult;
+        private SkyboxHistory _lastHistoryResult;
         private SkyboxHistoryParameters _lastQueryParams;
 
         private readonly List<HistoryItemBehaviour> _historyItems = new List<HistoryItemBehaviour>();
@@ -62,7 +61,7 @@ namespace BlockadeLabsSDK
 
         private async void OnScrollRectValueChanged(Vector2 scrollPosition)
         {
-            if (_lastHistoryResult is { has_more: true } &&
+            if (_lastHistoryResult is { HasMore: true } &&
                 !_isFetchingHistory &&
                 scrollPosition.y <= 0)
             {
@@ -82,7 +81,7 @@ namespace BlockadeLabsSDK
         {
             if (state == BlockadeLabsSkyboxGenerator.State.Ready)
             {
-                _stylePickerPanel.SetStyles(_runtimeGuiManager.Generator.AllModelStyleFamilies);
+                _stylePickerPanel.SetStyles(null);
             }
         }
 
@@ -100,11 +99,11 @@ namespace BlockadeLabsSDK
 
                 searchParameters ??= _lastQueryParams ??= new SkyboxHistoryParameters();
                 searchParameters.Limit = _pageSize;
-                _lastHistoryResult = await ApiRequests.GetSkyboxHistoryAsync(_lastQueryParams = searchParameters);
+                _lastHistoryResult = await BlockadeLabsSkyboxGenerator.BlockadeLabsClient.SkyboxEndpoint.GetSkyboxHistoryAsync(_lastQueryParams = searchParameters);
 
-                foreach (var item in _lastHistoryResult.data)
+                foreach (var item in _lastHistoryResult.Items)
                 {
-                    if (item.status != Status.Complete) { continue; }
+                    if (item.Status != Status.Complete) { continue; }
 
                     var historyItemBehaviour = Instantiate(_historyItemPrefab, _historyItemsContainer);
                     historyItemBehaviour.gameObject.SetActive(false);
@@ -134,16 +133,16 @@ namespace BlockadeLabsSDK
             _historyItems.Clear();
         }
 
-        private void OnHistoryItemClick(ImagineResult imagineResult)
+        private void OnHistoryItemClick(SkyboxInfo imagineResult)
             => _runtimeGuiManager.PreviewPopup.ShowPreviewPopup(imagineResult);
 
-        private void OnHistoryItemDelete(ImagineResult imagineResult)
+        private void OnHistoryItemDelete(SkyboxInfo skybox)
             => _runtimeGuiManager.DialogPopup.ShowDialog(
                 "Are you absolutely sure?",
                 "Are you sure you want to remove your skybox? This is not reversible.",
                 onConfirm: async () =>
                 {
-                    var result = await ApiRequests.DeleteSkyboxAsync(imagineResult.id);
+                    var result = await BlockadeLabsSkyboxGenerator.BlockadeLabsClient.SkyboxEndpoint.DeleteSkyboxAsync(skybox);
 
                     if (result)
                     {
@@ -155,10 +154,10 @@ namespace BlockadeLabsSDK
                     // empty callback will close dialog
                 });
 
-        private async void OnHistoryItemDownload(ImagineResult imagineResult)
+        private async void OnHistoryItemDownload(SkyboxInfo skybox)
         {
 #if UNITY_EDITOR
-            await _runtimeGuiManager.Generator.DownloadResultAsync(imagineResult, false);
+            await _runtimeGuiManager.Generator.DownloadResultAsync(skybox, false);
 #else
             await Task.CompletedTask;
 #endif

@@ -40,10 +40,10 @@ namespace BlockadeLabsSDK
         [SerializeField]
         private GameObject _apiBadge;
 
-        private ImagineResult _imagineResult;
-        private Action<ImagineResult> _clickCallback;
-        private Action<ImagineResult> _deleteCallback;
-        private Action<ImagineResult> _downloadCallback;
+        private SkyboxInfo _skybox;
+        private Action<SkyboxInfo> _clickCallback;
+        private Action<SkyboxInfo> _deleteCallback;
+        private Action<SkyboxInfo> _downloadCallback;
 
         private static readonly Dictionary<string, Texture2D> _imageCache = new Dictionary<string, Texture2D>();
 
@@ -85,18 +85,18 @@ namespace BlockadeLabsSDK
 
         private async void OnLikeToggleValueChanged(bool value)
         {
-            var result = await ApiRequests.ToggleFavorite(_imagineResult.id);
-            _likeToggle.SetIsOnWithoutNotify(result.isMyFavorite);
+            var result = await BlockadeLabsSkyboxGenerator.BlockadeLabsClient.SkyboxEndpoint.ToggleFavoriteAsync(_skybox, destroyCancellationToken);
+            _likeToggle.SetIsOnWithoutNotify(result.IsMyFavorite);
         }
 
         private void OnClick()
-            => _clickCallback?.Invoke(_imagineResult);
+            => _clickCallback?.Invoke(_skybox);
 
         private void OnRemoveButtonClicked()
-            => _deleteCallback?.Invoke(_imagineResult);
+            => _deleteCallback?.Invoke(_skybox);
 
         private void OnDownloadButtonClicked()
-            => _downloadCallback?.Invoke(_imagineResult);
+            => _downloadCallback?.Invoke(_skybox);
 
         private void OnOptionsToggleValueChanged(bool value)
         {
@@ -128,26 +128,26 @@ namespace BlockadeLabsSDK
             }
         }
 
-        internal async void SetItemData(ImagineResult item, Action<ImagineResult> clickCallback, Action<ImagineResult> deleteCallback, Action<ImagineResult> downloadCallback)
+        internal async void SetItemData(SkyboxInfo item, Action<SkyboxInfo> clickCallback, Action<SkyboxInfo> deleteCallback, Action<SkyboxInfo> downloadCallback)
         {
             _button.interactable = false;
 
             try
             {
-                _imagineResult = item;
+                _skybox = item;
                 _clickCallback = clickCallback;
                 _deleteCallback = deleteCallback;
                 _downloadCallback = downloadCallback;
-                _descriptionText.text = $"<b>{item.skybox_style_name}</b> | {item.prompt}";
-                _timestampText.text = item.completed_at.ToString("G");
-                _likeToggle.SetIsOnWithoutNotify(item.isMyFavorite);
-                _modelBadge.SetActive(item.model == "Model 3");
-                _apiBadge.SetActive(item.api_key_id != 0);
+                _descriptionText.text = $"<b>{item.SkyboxStyleName}</b> | {item.Prompt}";
+                _timestampText.text = item.CompletedAt.ToString("G");
+                _likeToggle.SetIsOnWithoutNotify(item.IsMyFavorite);
+                _modelBadge.SetActive(item.Model == SkyboxModel.Model3);
+                _apiBadge.SetActive(item.ApiKeyId != 0);
 
-                if (!_imageCache.TryGetValue(item.obfuscated_id, out var cachedThumbnail))
+                if (!_imageCache.TryGetValue(item.ObfuscatedId, out var cachedThumbnail))
                 {
-                    cachedThumbnail = await ApiRequests.DownloadTextureAsync(item.thumb_url, cancellationToken: destroyCancellationToken);
-                    _imageCache[item.obfuscated_id] = cachedThumbnail;
+                    cachedThumbnail = await Rest.DownloadTextureAsync(item.ThumbUrl, cancellationToken: destroyCancellationToken);
+                    _imageCache[item.ObfuscatedId] = cachedThumbnail;
                 }
 
                 _thumbnailImage.texture = cachedThumbnail;

@@ -1,4 +1,4 @@
-namespace BlockadeLabsSDK.Skyboxes
+namespace BlockadeLabsSDK
 {
     public sealed class SkyboxHistoryParameters
     {

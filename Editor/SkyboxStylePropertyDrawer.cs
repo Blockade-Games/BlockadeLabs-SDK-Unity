@@ -7,18 +7,14 @@ using UnityEngine;
 
 namespace BlockadeLabsSDK.Editor
 {
-    [CustomPropertyDrawer(typeof(Skyboxes.SkyboxStyle))]
+    [CustomPropertyDrawer(typeof(SkyboxStyle))]
     public class SkyboxStylePropertyDrawer : PropertyDrawer
     {
-        private static BlockadeLabsClient blockadeLabsClient;
-
-        private static BlockadeLabsClient BlockadeLabsClient => blockadeLabsClient ??= new BlockadeLabsClient();
-
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             try
             {
-                if (!BlockadeLabsClient.HasValidAuthentication)
+                if (!BlockadeLabsSkyboxGenerator.BlockadeLabsClient.HasValidAuthentication)
                 {
                     EditorGUI.LabelField(position, "Cannot fetch skybox styles");
                     return;
@@ -27,18 +23,17 @@ namespace BlockadeLabsSDK.Editor
             catch (AuthenticationException)
             {
                 EditorGUI.HelpBox(position, "Check BlockadeLabs api key", MessageType.Error);
-
                 return;
             }
             catch (Exception e)
             {
                 Debug.LogError(e);
-
                 return;
             }
 
-            var id = property.FindPropertyRelative("id");
-            var name = property.FindPropertyRelative("name");
+            var id = property.FindPropertyRelative("_id");
+            var name = property.FindPropertyRelative("_name");
+            var model = property.FindPropertyRelative("_model");
 
             if (options.Length < 1)
             {
@@ -56,7 +51,7 @@ namespace BlockadeLabsSDK.Editor
 
             // dropdown
             var index = -1;
-            dynamic currentOption = null;
+            SkyboxStyle currentOption = null;
 
             if (id.intValue > 0)
             {
@@ -80,9 +75,10 @@ namespace BlockadeLabsSDK.Editor
 
             if (EditorGUI.EndChangeCheck())
             {
-                currentOption = styles?.FirstOrDefault(style => options[index].text.Contains(style.Name));
+                currentOption = styles?.FirstOrDefault(style => options[index].tooltip.Contains(style.Id.ToString()));
                 id.intValue = currentOption!.Id;
                 name.stringValue = currentOption!.Name;
+                model.intValue = (int)currentOption.Model!;
             }
         }
 
@@ -90,9 +86,9 @@ namespace BlockadeLabsSDK.Editor
 
         public static bool IsFetchingStyles => isFetchingStyles;
 
-        private static IReadOnlyList<Skyboxes.SkyboxStyle> styles = new List<Skyboxes.SkyboxStyle>();
+        private static List<SkyboxStyle> styles = new List<SkyboxStyle>();
 
-        public static IReadOnlyList<Skyboxes.SkyboxStyle> Styles => styles;
+        public static IReadOnlyList<SkyboxStyle> Styles => styles;
 
         private static GUIContent[] options = Array.Empty<GUIContent>();
 
@@ -105,8 +101,31 @@ namespace BlockadeLabsSDK.Editor
 
             try
             {
-                styles = await BlockadeLabsClient.SkyboxEndpoint.GetSkyboxStyleFamiliesAsync();
-                options = styles.OrderBy(style => style.Id).Select(style => new GUIContent(style.Name, style.Id.ToString())).ToArray();
+                styles.Clear();
+                var result = await BlockadeLabsSkyboxGenerator.BlockadeLabsClient.SkyboxEndpoint.GetSkyboxStyleFamiliesAsync();
+                var styleOptions = new List<GUIContent>();
+
+                foreach (var style in result.OrderBy(style => style.SortOrder))
+                {
+                    var styleName = style.Name.Replace("/", " ");
+
+                    if (style.FamilyStyles != null && style.FamilyStyles.Count > 0)
+                    {
+                        foreach (var familyStyle in style.FamilyStyles.OrderBy(familyStyle => familyStyle.SortOrder))
+                        {
+                            styles.Add(familyStyle);
+                            var name = familyStyle.Name.Replace("/", " ");
+                            styleOptions.Add(new GUIContent($"{familyStyle.Model}/{styleName}/{name}", familyStyle.Id.ToString()));
+                        }
+                    }
+                    else
+                    {
+                        styles.Add(style);
+                        styleOptions.Add(new GUIContent($"{style.Model}/{styleName}", style.Id.ToString()));
+                    }
+                }
+
+                options = styleOptions.ToArray();
             }
             catch (Exception e)
             {

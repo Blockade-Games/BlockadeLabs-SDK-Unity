@@ -4,7 +4,6 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
-using BlockadeLabsSDK.Skyboxes;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -605,7 +604,7 @@ namespace BlockadeLabsSDK
             _negativeTextToggle.IsOn = _generator.SendNegativeText;
             _negativeTextInput.text = _generator.NegativeText;
 
-            _stylePickerPanel.SetStyles(_generator.StyleFamilies);
+            _stylePickerPanel.SetStyles(_generator.StyleFamily);
             UpdateHintText();
             UpdateGenerateButton();
             UpdatePromptCharacterLimit();
@@ -617,7 +616,7 @@ namespace BlockadeLabsSDK
             _promptCharacterWarning.SetActive(false);
             _negativeTextCharacterWarning.SetActive(false);
 
-            _selectedStyleText.text = _generator.SelectedStyle?.name ?? "Select a Style";
+            _selectedStyleText.text = _generator.SelectedStyle?.Name ?? "Select a Style";
             _stylePickerPanel.SetSelectedStyle(_generator.SelectedStyleFamily, _generator.SelectedStyle);
         }
 
@@ -696,8 +695,8 @@ namespace BlockadeLabsSDK
             // get the latest favorite status
             if (_generator.HasSkyboxMetadata)
             {
-                var imagine = await ApiRequests.GetRequestStatusAsync(_generator.SkyboxMesh.SkyboxAsset.ObfuscatedId);
-                _likeToggle.SetIsOnWithoutNotify(imagine.isMyFavorite);
+                var skybox = await BlockadeLabsSkyboxGenerator.BlockadeLabsClient.SkyboxEndpoint.GetSkyboxInfoAsync(_generator.SkyboxMesh.SkyboxAsset.Id);
+                _likeToggle.SetIsOnWithoutNotify(skybox.IsMyFavorite);
             }
         }
 
@@ -742,8 +741,8 @@ namespace BlockadeLabsSDK
         {
             if (_generator.SelectedStyle != null)
             {
-                _promptCharacterLimit.text = _generator.Prompt.Length + "/" + _generator.SelectedStyle.maxChar;
-                _promptCharacterLimit.color = _generator.Prompt.Length > _generator.SelectedStyle.maxChar ? Color.red : Color.white;
+                _promptCharacterLimit.text = _generator.Prompt.Length + "/" + _generator.SelectedStyle.MaxChar;
+                _promptCharacterLimit.color = _generator.Prompt.Length > _generator.SelectedStyle.MaxChar ? Color.red : Color.white;
             }
             else
             {
@@ -760,8 +759,8 @@ namespace BlockadeLabsSDK
         {
             if (_generator.SelectedStyle != null)
             {
-                _negativeTextCharacterLimit.text = _generator.NegativeText.Length + "/" + _generator.SelectedStyle.negativeTextMaxChar;
-                _negativeTextCharacterLimit.color = _generator.NegativeText.Length > _generator.SelectedStyle.negativeTextMaxChar ? Color.red : Color.white;
+                _negativeTextCharacterLimit.text = _generator.NegativeText.Length + "/" + _generator.SelectedStyle.NegativeTextMaxChar;
+                _negativeTextCharacterLimit.color = _generator.NegativeText.Length > _generator.SelectedStyle.NegativeTextMaxChar ? Color.red : Color.white;
             }
             else
             {
@@ -792,8 +791,8 @@ namespace BlockadeLabsSDK
 
         private async void OnLikeToggle(bool newValue)
         {
-            var result = await ApiRequests.ToggleFavorite(_skyboxMesh.SkyboxAsset.Id);
-            _likeToggle.SetIsOnWithoutNotify(result.isMyFavorite);
+            var result = await BlockadeLabsSkyboxGenerator.BlockadeLabsClient.SkyboxEndpoint.ToggleFavoriteAsync(_skyboxMesh.SkyboxAsset.Id);
+            _likeToggle.SetIsOnWithoutNotify(result.IsMyFavorite);
         }
 
         private async void OnRemixUpload()
@@ -804,7 +803,7 @@ namespace BlockadeLabsSDK
 
             if (!string.IsNullOrWhiteSpace(remixFilePath))
             {
-                var texture = await ApiRequests.DownloadTextureAsync($"file://{remixFilePath}", true);
+                var texture = await Rest.DownloadTextureAsync($"file://{remixFilePath}");
                 _generator.Remix = true;
                 _generator.RemixImage = texture;
                 _demoCamera.ResetRotation();
@@ -837,17 +836,17 @@ namespace BlockadeLabsSDK
                 return;
             }
 
-            if (_generator.Prompt.Length > _generator.SelectedStyle.maxChar)
+            if (_generator.Prompt.Length > _generator.SelectedStyle.MaxChar)
             {
                 _promptCharacterWarning.SetActive(true);
-                _promptCharacterWarning.GetComponentInChildren<TMP_Text>().text = $"Prompt should be {_generator.SelectedStyle.maxChar} characters or less";
+                _promptCharacterWarning.GetComponentInChildren<TMP_Text>().text = $"Prompt should be {_generator.SelectedStyle.MaxChar} characters or less";
                 return;
             }
 
-            if (_generator.NegativeText.Length > _generator.SelectedStyle.negativeTextMaxChar)
+            if (_generator.NegativeText.Length > _generator.SelectedStyle.NegativeTextMaxChar)
             {
                 _negativeTextCharacterWarning.SetActive(true);
-                _negativeTextCharacterWarning.GetComponentInChildren<TMP_Text>().text = $"Negative text should be {_generator.SelectedStyle.negativeTextMaxChar} characters or less";
+                _negativeTextCharacterWarning.GetComponentInChildren<TMP_Text>().text = $"Negative text should be {_generator.SelectedStyle.NegativeTextMaxChar} characters or less";
                 return;
             }
 
@@ -1031,10 +1030,11 @@ namespace BlockadeLabsSDK
         {
             if (_generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Generating)
             {
-                var tip = await ApiRequests.GetSkyboxTipAsync(_generator.ModelVersion);
-                if (!string.IsNullOrWhiteSpace(tip?.tip))
+                var tip = await BlockadeLabsSkyboxGenerator.BlockadeLabsClient.SkyboxEndpoint.GetOneTipAsync();
+
+                if (!string.IsNullOrWhiteSpace(tip))
                 {
-                    _tipText.text = "<b>Tip:</b> " + tip.tip.Replace("<p>", "").Replace("</p>", "");
+                    _tipText.text = "<b>Tip:</b> " + tip.Replace("<p>", "").Replace("</p>", "");
                     _tipContainer.SetActive(true);
                 }
             }

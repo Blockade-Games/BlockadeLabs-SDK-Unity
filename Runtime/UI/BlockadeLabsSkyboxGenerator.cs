@@ -1,10 +1,8 @@
-using BlockadeLabsSDK.Skyboxes;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using System.Collections;
 using System.Linq;
 using UnityEngine;
 
@@ -17,30 +15,46 @@ using UnityEngine.Rendering.HighDefinition;
 using UnityEditor;
 #endif
 
-#if PUSHER_PRESENT
-using PusherClient;
-#endif
-
 namespace BlockadeLabsSDK
 {
     public class BlockadeLabsSkyboxGenerator : MonoBehaviour
     {
-        [Tooltip("API Key from Blockade Labs. Get one at api.blockadelabs.com")]
+        private static BlockadeLabsClient _blockadeLabsClient;
+
+        internal static BlockadeLabsClient BlockadeLabsClient
+        {
+            get
+            {
+                _blockadeLabsClient ??= new BlockadeLabsClient(new BlockadeLabsAuthentication().LoadDefaultsReversed(), new BlockadeLabsClientSettings());
+#if BLOCKADE_DEBUG
+                _blockadeLabsClient.EnableDebug = true;
+#endif
+                return _blockadeLabsClient;
+            }
+            set => _blockadeLabsClient = value;
+        }
+
         [SerializeField]
+        [Obsolete("Use BlockadeLabsConfiguration instead")]
+        [Tooltip("API Key from Blockade Labs. Get one at api.blockadelabs.com")]
         private string _apiKey = "API key needed. Get one at api.blockadelabs.com";
+
+        [Obsolete]
         public string ApiKey
         {
             get => _apiKey;
             set
             {
-                if (_apiKey == value) { return; }
-                _apiKey = value;
+                _blockadeLabsClient = new BlockadeLabsClient(new BlockadeLabsAuthentication(value), new BlockadeLabsClientSettings());
                 CheckApiKeyValid();
             }
         }
 
-        [Tooltip("The version of the generation engine to use.")]
         [SerializeField]
+        private BlockadeLabsConfiguration _configuration;
+
+        [SerializeField]
+        [Tooltip("The version of the generation engine to use.")]
         private SkyboxModel _modelVersion = SkyboxModel.Model3;
         public SkyboxModel ModelVersion
         {
@@ -106,37 +120,41 @@ namespace BlockadeLabsSDK
         }
 #endif
 
-        private List<SkyboxStyleFamily> _styleFamilies;
-        public IReadOnlyList<SkyboxStyleFamily> StyleFamilies => _styleFamilies;
+        private List<SkyboxStyle> _styleFamily;
+        public IReadOnlyList<SkyboxStyle> StyleFamily => _styleFamily;
 
-        private List<SkyboxStyleFamily> _allModelStyleFamilies;
-        public IReadOnlyList<SkyboxStyleFamily> AllModelStyleFamilies => _allModelStyleFamilies;
+        private List<SkyboxStyle> _allModelStyleFamilies;
+        public IReadOnlyList<SkyboxStyle> AllModelStyleFamilies => _allModelStyleFamilies;
 
-        private List<SkyboxStyleFamily> _model2Styles;
-        private List<SkyboxStyleFamily> _model3Styles;
+        private IReadOnlyList<SkyboxStyle> _model2Styles;
+        private IReadOnlyList<SkyboxStyle> _model3Styles;
 
         [SerializeField]
-        private int _selectedStyleFamilyIndex;
-        public SkyboxStyleFamily SelectedStyleFamily
+        private SkyboxStyle _selectStyleFamily = null;
+
+        public SkyboxStyle SelectedStyleFamily
         {
-            get => _selectedStyleFamilyIndex >= 0 ? _styleFamilies?[_selectedStyleFamilyIndex] : null;
+            get => _selectStyleFamily;
             set
             {
-                _selectedStyleFamilyIndex = _styleFamilies.IndexOf(value);
-                _selectedStyleIndex = 0;
-                OnPropertyChanged?.Invoke();
+                if (_selectStyleFamily != value)
+                {
+                    _selectStyleFamily = value;
+                    OnPropertyChanged?.Invoke();
+                }
             }
         }
 
         [SerializeField]
-        private int _selectedStyleIndex;
+        private SkyboxStyle _selectedStyle = null;
+
         public SkyboxStyle SelectedStyle
         {
-            get => _selectedStyleIndex >= 0 ? SelectedStyleFamily?.items?[_selectedStyleIndex] : null;
+            get => _selectedStyle;
             set
             {
-                _selectedStyleFamilyIndex = _styleFamilies.IndexOf(_styleFamilies.Find(x => x.items.Contains(value)));
-                _selectedStyleIndex = _styleFamilies[_selectedStyleFamilyIndex].items.IndexOf(value);
+                if (_selectedStyle == value) { return; }
+                _selectedStyle = value;
                 OnPropertyChanged?.Invoke();
             }
         }
@@ -295,14 +313,13 @@ namespace BlockadeLabsSDK
 
         public bool CheckApiKeyValid()
         {
-            if (string.IsNullOrWhiteSpace(_apiKey) || _apiKey.Contains("api.blockadelabs.com"))
+            if (_blockadeLabsClient is { HasValidAuthentication: false })
             {
                 SetError("Something went wrong. Please recheck you API key.");
                 SetState(State.NeedApiKey);
                 return false;
             }
 
-            ApiRequests.ApiKey = _apiKey;
             return true;
         }
 
@@ -337,24 +354,18 @@ namespace BlockadeLabsSDK
         {
             ClearError();
 
-            _model2Styles = await ApiRequests.GetSkyboxStylesMenuAsync(SkyboxModel.Model2);
-
-            if (_model2Styles == null || _model2Styles.Count == 0)
+            try
+            {
+                _model2Styles = (await BlockadeLabsClient.SkyboxEndpoint.GetSkyboxStylesMenuAsync(SkyboxModel.Model2)).Where(style => style.Status != "disabled").ToList();
+                _model3Styles = (await BlockadeLabsClient.SkyboxEndpoint.GetSkyboxStylesMenuAsync(SkyboxModel.Model3)).Where(style => style.Status != "disabled").ToList();
+            }
+            catch (Exception e)
             {
                 SetError("Something went wrong. Please recheck you API key.");
+                Debug.LogException(e);
                 return;
             }
 
-            _model3Styles = await ApiRequests.GetSkyboxStylesMenuAsync(SkyboxModel.Model3);
-
-            if (_model3Styles == null || _model3Styles.Count == 0)
-            {
-                SetError("Something went wrong. Please recheck you API key.");
-                return;
-            }
-
-            CleanupStyleFamilyList(_model2Styles);
-            CleanupStyleFamilyList(_model3Styles);
             _allModelStyleFamilies = _model3Styles.Concat(_model2Styles).ToList();
             UpdateActiveStyleList();
             SetState(State.Ready);
@@ -362,46 +373,10 @@ namespace BlockadeLabsSDK
 
         private void UpdateActiveStyleList()
         {
-            _styleFamilies = _modelVersion == SkyboxModel.Model2 ? _model2Styles : _model3Styles;
-
-            _selectedStyleFamilyIndex = -1;
-            _selectedStyleIndex = -1;
-
+            _styleFamily = (_modelVersion == SkyboxModel.Model2 ? _model2Styles : _model3Styles).ToList();
+            _selectStyleFamily = null;
+            _selectedStyle = null;
             OnPropertyChanged?.Invoke();
-        }
-
-        private void CleanupStyleFamilyList(List<SkyboxStyleFamily> styleFamilies)
-        {
-            // Remove anything with status: "disabled"
-            styleFamilies.ForEach(family => family.items?.RemoveAll(style => style.status == "disabled"));
-            styleFamilies.RemoveAll(family => family.status == "disabled" || family.items?.Count == 0);
-
-            // Ensure each style has a family to simplify logic everywhere.
-            for (int i = 0; i < styleFamilies.Count; i++)
-            {
-                if (styleFamilies[i].type == "style")
-                {
-                    var style = styleFamilies[i];
-                    styleFamilies[i] = new SkyboxStyleFamily
-                    {
-                        type = "family",
-                        id = style.id,
-                        name = style.name,
-                        sortOrder = style.sortOrder,
-                        description = style.description,
-                        maxChar = style.maxChar,
-                        negativeTextMaxChar = style.negativeTextMaxChar,
-                        image = style.image,
-                        premium = style.premium,
-                        isNew = style.isNew,
-                        experimental = style.experimental,
-                        status = style.status,
-                        model = style.model,
-                        model_version = style.model_version,
-                        items = new List<SkyboxStyle> { style }
-                    };
-                }
-            }
         }
 
         public async void GenerateSkyboxAsync()
@@ -418,32 +393,17 @@ namespace BlockadeLabsSDK
                 return;
             }
 
-            var request = new CreateSkyboxRequest
-            {
-                prompt = _prompt,
-                negative_text = SendNegativeText ? _negativeText : string.Empty,
-                seed = _seed,
-                enhance_prompt = _enhancePrompt,
-                skybox_style_id = SelectedStyle.id,
-            };
+            var request = new SkyboxRequest(SelectedStyle, _prompt, _remix ? _remixImage : null, SendNegativeText ? _negativeText : string.Empty, _enhancePrompt, _seed);
 
-            if (_remix)
+            if (_remix && _remixImage == null)
             {
-                if (_remixImage != null)
+                if (!HasSkyboxMetadata)
                 {
-                    request.control_model = _modelVersion == SkyboxModel.Model3 ? "remix" : "sketch";
-                    request.control_image = _remixImage.EncodeToPNG();
+                    SetError("Missing skybox ID. Please use a previously generated skybox or disable remix.");
+                    return;
                 }
-                else
-                {
-                    if (!HasSkyboxMetadata)
-                    {
-                        SetError("Missing skybox ID. Please use a previously generated skybox or disable remix.");
-                        return;
-                    }
 
-                    request.remix_imagine_id = _skyboxMesh.SkyboxAsset.Id;
-                }
+                request.RemixImagineId = _skyboxMesh.SkyboxAsset.Id;
             }
 
             ClearError();
@@ -453,7 +413,12 @@ namespace BlockadeLabsSDK
 
             try
             {
-                var response = await ApiRequests.GenerateSkyboxAsync(request);
+                var progress = new Progress<SkyboxInfo>(info =>
+                {
+
+                });
+                var response = await BlockadeLabsClient.SkyboxEndpoint.GenerateSkyboxAsync(request, progressCallback: progress);
+
                 if (_isCancelled)
                 {
                     return;
@@ -464,33 +429,28 @@ namespace BlockadeLabsSDK
                     throw new Exception("Error generating skybox.");
                 }
 
-                if (response.status == Status.Error)
+                if (response.Status == Status.Error)
                 {
-                    throw new Exception(response.error_message);
+                    throw new Exception(response.ErrorMessage);
                 }
 
                 if (_enhancePrompt)
                 {
-                    _prompt = response.prompt;
+                    _prompt = response.Prompt;
                     _enhancePrompt = false;
                     OnPropertyChanged?.Invoke();
                 }
 
                 UpdateProgress(33);
 
-#if PUSHER_PRESENT
-                var result = await WaitForPusherResultAsync(response.pusher_channel, response.pusher_event);
-#else
-                var result = await PollForResultAsync(response.obfuscated_id);
-#endif
-                if (_isCancelled || result == null)
+                if (_isCancelled)
                 {
                     return;
                 }
 
                 UpdateProgress(80);
 
-                await DownloadResultAsync(result);
+                await DownloadResultAsync(response);
 
                 if (_isCancelled)
                 {
@@ -515,133 +475,13 @@ namespace BlockadeLabsSDK
         }
 
 
-#if PUSHER_PRESENT
-        private async Task<ImagineResult> WaitForPusherResultAsync(string pusherChannel, string pusherEvent)
-        {
-            const string key = "a6a7b7662238ce4494d5";
-            const string cluster = "mt1";
-
-            var pusher = new Pusher(key, new PusherOptions
-            {
-                Cluster = cluster,
-                Encrypted = true
-            });
-
-            pusher.Error += (s, ex) => SetGenerateFailed("Pusher Exception: " + ex.Message);
-            pusher.ConnectionStateChanged += (s, state) => LogVerbose("Pusher Connection State Changed: " + state);
-
-            await pusher.ConnectAsync();
-
-            var channel = await pusher.SubscribeAsync(pusherChannel);
-
-            if (channel == null)
-            {
-                return null;
-            }
-
-            var tcs = new TaskCompletionSource<ImagineResult>();
-            channel.Bind(pusherEvent, (string evt) =>
-            {
-                LogVerbose("Pusher Event: " + evt);
-                var data = JsonConvert.DeserializeObject<PusherEvent>(evt).data;
-                var request = JsonConvert.DeserializeObject<ImagineResult>(data);
-                if (request.status == Status.Error || request.status == Status.Complete)
-                {
-                    channel.Unbind(pusherEvent);
-                    tcs.SetResult(request);
-                }
-            });
-
-            LogVerbose("Waiting for Pusher event: " + pusherChannel + " " + pusherEvent);
-            while (!tcs.Task.IsCompleted && !_isCancelled)
-            {
-                await WaitForSeconds(1);
-                if (_percentageCompleted < 80)
-                {
-                    UpdateProgress(_percentageCompleted + 2);
-                }
-            }
-
-            LogVerbose("Pusher received event.");
-            await pusher.DisconnectAsync();
-
-            var request = tcs.Task.Result;
-
-            if (request.status == Status.Error)
-            {
-                SetGenerateFailed(request.error_message);
-                return null;
-            }
-
-            return request;
-        }
-
-        private class PusherEvent
-        {
-            public string data;
-        }
-#endif
-
-        private async Task<ImagineResult> PollForResultAsync(string imagineObfuscatedId)
-        {
-            while (!_isCancelled)
-            {
-                if (_percentageCompleted < 80)
-                {
-                    UpdateProgress(_percentageCompleted + 2);
-                }
-
-                await WaitForSeconds(1);
-                if (_isCancelled)
-                {
-                    break;
-                }
-
-                var result = await ApiRequests.GetRequestStatusAsync(imagineObfuscatedId);
-                if (_isCancelled)
-                {
-                    break;
-                }
-
-                if (result.status == Status.Error)
-                {
-                    SetGenerateFailed(result.error_message);
-                    break;
-                }
-
-                if (result.status == Status.Complete)
-                {
-                    return result;
-                }
-            }
-
-            return null;
-        }
-
-        private async Task WaitForSeconds(float seconds)
-        {
 #if UNITY_EDITOR
-            await Task.Delay((int)(seconds * 1000)).ConfigureAwait(true);
-#else
-            var tcs = new TaskCompletionSource<object>();
-            StartCoroutine(WaitForSecondsEnumerator(tcs, seconds));
-            await tcs.Task;
-#endif
-        }
-
-        private IEnumerator WaitForSecondsEnumerator(TaskCompletionSource<object> tcs, float seconds)
+        internal async Task DownloadResultAsync(SkyboxInfo skybox, bool setSkybox = true)
         {
-            yield return new WaitForSeconds(seconds);
-            tcs.SetResult(null);
-        }
-
-#if UNITY_EDITOR
-        internal async Task DownloadResultAsync(ImagineResult result, bool setSkybox = true)
-        {
-            var textureUrl = result.file_url;
-            var depthMapUrl = result.depth_map_url;
+            var textureUrl = skybox.MainTextureUrl;
+            var depthMapUrl = skybox.DepthTextureUrl;
             var hasDepthMap = !string.IsNullOrWhiteSpace(depthMapUrl);
-            var prompt = result.prompt;
+            var prompt = skybox.Prompt;
 
             if (string.IsNullOrWhiteSpace(textureUrl))
             {
@@ -658,22 +498,21 @@ namespace BlockadeLabsSDK
 
             AssetUtils.CreateGenerateBlockadeLabsFolder();
             var prefix = AssetUtils.CreateValidFilename(prompt);
-            var folderPath = GetOrCreateSkyboxFolder(prefix, result.id);
+            var folderPath = GetOrCreateSkyboxFolder(prefix, skybox.Id);
             var skyboxAIPath = $"{folderPath}/{prefix}.asset";
             var skyboxAI = AssetDatabase.LoadAssetAtPath<SkyboxAI>(skyboxAIPath);
 
             if (skyboxAI == null)
             {
                 skyboxAI = ScriptableObject.CreateInstance<SkyboxAI>();
-                skyboxAI.SetMetadata(result);
+                skyboxAI.SetMetadata(skybox);
                 AssetDatabase.CreateAsset(skyboxAI, skyboxAIPath);
             }
             else
             {
-                skyboxAI.SetMetadata(result);
+                skyboxAI.SetMetadata(skybox);
                 EditorUtility.SetDirty(skyboxAI);
             }
-
 
             var tasks = new List<Task>();
             var texturePath = $"{folderPath}/{prefix} texture.png";
@@ -829,9 +668,9 @@ namespace BlockadeLabsSDK
                     // ReSharper disable once MethodHasAsyncOverload
                     // WriteAllTextAsync not defined in Unity 2020.3
                     var skyboxData = File.ReadAllText(dataFile);
-                    var imagineResult = JsonConvert.DeserializeObject<GetImagineResult>(skyboxData).request;
+                    var skyboxInfo = JsonConvert.DeserializeObject<SkyboxEndpoint.SkyboxInfoRequest>(skyboxData).SkyboxInfo;
 
-                    if (imagineResult.id == skyboxId)
+                    if (skyboxInfo.Id == skyboxId)
                     {
                         return currentDirectoryPath.ToProjectPath();
                     }
@@ -864,15 +703,13 @@ namespace BlockadeLabsSDK
             var skyboxAI = ScriptableObject.CreateInstance<SkyboxAI>();
             skyboxAI.SetMetadata(result);
 
-            skyboxAI.SkyboxTexture = PanoramicToCubemap.Convert(
-                textures[0], useComputeShader ? _cubemapComputeShader : null, 2048);
+            skyboxAI.SkyboxTexture = PanoramicToCubemap.Convert(textures[0], useComputeShader ? _cubemapComputeShader : null, 2048);
 
             ObjectUtils.Destroy(textures[0]);
 
             skyboxAI.DepthTexture = textures.Length > 1 ? textures[1] : null;
             skyboxAI.DepthMaterial = CreateDepthMaterial(skyboxAI.SkyboxTexture, skyboxAI.DepthTexture);
             skyboxAI.SkyboxMaterial = CreateSkyboxMaterial(skyboxAI.SkyboxTexture);
-
 
 #if UNITY_HDRP
             skyboxAI.VolumeProfile = CreateVolumeProfile(skyboxAI.SkyboxTexture);
@@ -897,13 +734,13 @@ namespace BlockadeLabsSDK
             SendNegativeText = !string.IsNullOrWhiteSpace(skybox.NegativeText);
             NegativeText = skybox.NegativeText;
             ModelVersion = skybox.Model;
-            _styleFamilies = _modelVersion == SkyboxModel.Model2 ? _model2Styles : _model3Styles;
+            _styleFamily = (_modelVersion == SkyboxModel.Model2 ? _model2Styles : _model3Styles).ToList();
 
             foreach (var family in _allModelStyleFamilies)
             {
-                foreach (var style in family.items)
+                foreach (var style in family.FamilyStyles)
                 {
-                    if (style.id == skybox.SkyboxStyleId)
+                    if (style.Id == skybox.SkyboxStyleId)
                     {
                         SelectedStyleFamily = family;
                         SelectedStyle = style;
@@ -1084,7 +921,7 @@ namespace BlockadeLabsSDK
             _percentageCompleted = percentageCompleted;
 
 #if UNITY_EDITOR
-            bool showProgress = percentageCompleted >= 0 && percentageCompleted < 100;
+            var showProgress = percentageCompleted >= 0 && percentageCompleted < 100;
 
             if (showProgress && _progressId == 0)
             {

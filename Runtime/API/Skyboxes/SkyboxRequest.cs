@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using UnityEngine;
 
-namespace BlockadeLabsSDK.Skyboxes
+namespace BlockadeLabsSDK
 {
     public sealed class SkyboxRequest : IDisposable
     {
@@ -162,8 +162,8 @@ namespace BlockadeLabsSDK.Skyboxes
             : this(
                 style,
                 prompt,
-                new MemoryStream(controlImage.EncodeToPNG()),
-                !string.IsNullOrWhiteSpace(controlImage.name) ? $"{controlImage.name}.png" : null,
+                controlImage ? new MemoryStream(controlImage.EncodeToPNG()) : null,
+                !string.IsNullOrWhiteSpace(controlImage?.name) ? $"{controlImage.name}.png" : null,
                 negativeText,
                 enhancePrompt,
                 seed,
@@ -274,7 +274,7 @@ namespace BlockadeLabsSDK.Skyboxes
         /// <summary>
         /// ID of a previously generated skybox.
         /// </summary>
-        public int? RemixImagineId { get; }
+        public int? RemixImagineId { get; internal set; }
 
         /// <summary>
         /// Request for high quality depth map. It will be returned in the depth_map_url parameter. (default: false)
@@ -286,7 +286,7 @@ namespace BlockadeLabsSDK.Skyboxes
         /// The image needs to be exactly 1024 pixels wide and 512 pixels tall PNG equirectangular projection image
         /// of a scribble with black background and white brush strokes.
         /// </summary>
-        public Stream ControlImage { get; }
+        public Stream ControlImage { get; internal set; }
 
         /// <summary>
         /// File name of <see cref="ControlImage"/>.

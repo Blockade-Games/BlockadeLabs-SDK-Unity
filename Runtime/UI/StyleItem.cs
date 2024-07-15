@@ -48,26 +48,14 @@ namespace BlockadeLabsSDK
 
         public void SetStyle(SkyboxStyle style)
         {
-            _nameText.text = style.name;
-            _newSticker.SetActive(style.isNew);
-            _premiumSticker.SetActive(style.premium);
-            _experimentalSticker.SetActive(style.experimental);
-            _model3Sticker.SetActive(style.model_version == "3");
-            _nextChevron.SetActive(false);
+            _nameText.text = style.Name;
+            _newSticker.SetActive(style.New);
+            _premiumSticker.SetActive(style.Premium);
+            _experimentalSticker.SetActive(style.Experimental);
+            _model3Sticker.SetActive(style.Model == SkyboxModel.Model3);
+            _nextChevron.SetActive(style.FamilyStyles != null);
             _selectedIndicator.SetActive(false);
             _style = style;
-        }
-
-        public void SetStyleFamily(SkyboxStyleFamily styleFamily)
-        {
-            _nameText.text = styleFamily.name;
-            _newSticker.SetActive(styleFamily.isNew);
-            _premiumSticker.SetActive(styleFamily.premium);
-            _experimentalSticker.SetActive(styleFamily.experimental);
-            _model3Sticker.SetActive(styleFamily.model_version == "3");
-            _nextChevron.SetActive(styleFamily.items.Count > 1);
-            _selectedIndicator.SetActive(false);
-            _style = styleFamily;
         }
 
         public void SetSelected(bool selected)

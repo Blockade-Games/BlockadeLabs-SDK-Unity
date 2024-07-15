@@ -1,6 +1,4 @@
-using BlockadeLabsSDK.Skyboxes;
 using Newtonsoft.Json;
-using System;
 using UnityEngine;
 
 #if UNITY_HDRP
@@ -130,19 +128,6 @@ namespace BlockadeLabsSDK
         {
             get => _model;
             internal set => _model = value;
-        }
-
-        [Obsolete]
-        internal void SetMetadata(ImagineResult result)
-        {
-            _id = result.id;
-            _obfuscatedId = result.obfuscated_id;
-            _skyboxStyleId = result.skybox_style_id;
-            _skyboxStyleName = result.skybox_style_name;
-            _type = result.type;
-            _prompt = result.prompt;
-            _negativeText = result.negative_text;
-            _model = result.model == "Model 3" ? SkyboxModel.Model3 : SkyboxModel.Model2;
         }
 
         internal void SetMetadata(SkyboxInfo skybox)

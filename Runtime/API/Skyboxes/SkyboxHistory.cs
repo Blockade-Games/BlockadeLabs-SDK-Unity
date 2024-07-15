@@ -2,7 +2,7 @@ using Newtonsoft.Json;
 using System.Collections.Generic;
 using UnityEngine.Scripting;
 
-namespace BlockadeLabsSDK.Skyboxes
+namespace BlockadeLabsSDK
 {
     [Preserve]
     public sealed class SkyboxHistory : BaseResponse, IListResponse<SkyboxInfo>

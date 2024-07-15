@@ -3,7 +3,7 @@ using Newtonsoft.Json.Converters;
 using System;
 using UnityEngine.Scripting;
 
-namespace BlockadeLabsSDK.Skyboxes
+namespace BlockadeLabsSDK
 {
     [Preserve]
     public sealed class SkyboxExportRequest : BaseResponse, IStatus

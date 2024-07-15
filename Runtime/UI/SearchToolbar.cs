@@ -1,5 +1,4 @@
-﻿using BlockadeLabsSDK.Skyboxes;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -85,8 +84,8 @@ namespace BlockadeLabsSDK
 
         private void OnStylePicked(SkyboxStyle style)
         {
-            _stylePickerButtonText.text = style.name;
-            _searchQueryParameters.SkyboxStyleId = style.id;
+            _stylePickerButtonText.text = style.Name;
+            _searchQueryParameters.SkyboxStyleId = style.Id;
             OnSearchQueryChanged?.Invoke(_searchQueryParameters);
         }
 

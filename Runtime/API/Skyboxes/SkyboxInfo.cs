@@ -12,7 +12,7 @@ using UnityEngine.Scripting;
 using Debug = UnityEngine.Debug;
 using Object = UnityEngine.Object;
 
-namespace BlockadeLabsSDK.Skyboxes
+namespace BlockadeLabsSDK
 {
     [Preserve]
     public sealed class SkyboxInfo : BaseResponse, IStatus
@@ -46,6 +46,7 @@ namespace BlockadeLabsSDK.Skyboxes
             [JsonProperty("error_message")] string errorMessage = null,
             [JsonProperty("pusher_channel")] string pusherChannel = null,
             [JsonProperty("pusher_event")] string pusherEvent = null,
+            [JsonProperty("api_key_id")] int? apiKeyId = null,
             [JsonProperty("exports")] Dictionary<string, string> exports = null)
         {
             Id = id;
@@ -74,6 +75,7 @@ namespace BlockadeLabsSDK.Skyboxes
             ErrorMessage = errorMessage;
             PusherChannel = pusherChannel;
             PusherEvent = pusherEvent;
+            ApiKeyId = apiKeyId;
             exports ??= new Dictionary<string, string>();
 
             if (!exports.ContainsKey(SkyboxExportOption.Equirectangular_PNG))
@@ -199,6 +201,9 @@ namespace BlockadeLabsSDK.Skyboxes
         [JsonProperty("pusher_event")]
         public string PusherEvent { get; private set; }
 
+        [JsonProperty("api_key_id")]
+        internal int? ApiKeyId { get; }
+
         [Preserve]
         [JsonProperty("exports")]
         public IReadOnlyDictionary<string, string> Exports { get; }
@@ -296,6 +301,8 @@ namespace BlockadeLabsSDK.Skyboxes
             downloadTasks.AddRange(Exports.Select(DownloadExport));
             await Task.WhenAll(downloadTasks).ConfigureAwait(true);
         }
+
+        // TODO add ExportList overload that requests exports and downloads them
 
         [Preserve]
         public bool TryGetAssetCachePath(string key, out string localCachedPath)

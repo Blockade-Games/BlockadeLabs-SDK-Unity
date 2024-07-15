@@ -49,7 +49,7 @@ namespace BlockadeLabsSDK
 
         private SkyboxStyle _selectedStyle;
         private SkyboxStyle _previewStyle;
-        private IReadOnlyList<SkyboxStyleFamily> _currentStyleFamily;
+        private IReadOnlyList<SkyboxStyle> _currentStyleFamily;
 
         private Dictionary<string, Sprite> _previewCache = new Dictionary<string, Sprite>();
 
@@ -95,9 +95,9 @@ namespace BlockadeLabsSDK
 #endif
         }
 
-        public void SetStyles(IReadOnlyList<SkyboxStyleFamily> styleFamilies)
+        public void SetStyles(IReadOnlyList<SkyboxStyle> styleFamilies)
         {
-            if (styleFamilies == _currentStyleFamily) { return; }
+            if (Equals(styleFamilies, _currentStyleFamily)) { return; }
 
             _currentStyleFamily = styleFamilies;
 
@@ -109,36 +109,30 @@ namespace BlockadeLabsSDK
             if (_showAllStylesOption)
             {
                 var allStylesFamilyItem = Instantiate(_styleItemPrefab, _styleFamilyContainer);
-                allStylesFamilyItem.SetStyleFamily(new SkyboxStyleFamily
-                {
-                    name = "All Styles",
-                    id = 0,
-                    items = new List<SkyboxStyle>()
-                });
+                allStylesFamilyItem.SetStyle(new SkyboxStyle());
             }
 
             if (_currentStyleFamily == null) { return; }
 
-            foreach (var styleFamily in styleFamilies)
+            foreach (var family in styleFamilies)
             {
                 var styleFamilyItem = Instantiate(_styleItemPrefab, _styleFamilyContainer);
-                styleFamilyItem.SetStyleFamily(styleFamily);
+                styleFamilyItem.SetStyle(family);
 
-                if (styleFamily.items.Count == 1)
+                if (family.FamilyStyles != null)
                 {
-                    var style = styleFamily.items[0];
-                    styleFamilyItem.Button.onClick.AddListener(() => SelectStyle(style));
-                    styleFamilyItem.Hoverable.OnHover.AddListener(() => ShowPreviewAsync(style));
+                    styleFamilyItem.Button.onClick.AddListener(() => PickStyleFamily(family));
+                    styleFamilyItem.Hoverable.OnHover.AddListener(() => ShowPreviewAsync(null));
                 }
                 else
                 {
-                    styleFamilyItem.Button.onClick.AddListener(() => PickStyleFamily(styleFamily));
-                    styleFamilyItem.Hoverable.OnHover.AddListener(() => ShowPreviewAsync(null));
+                    styleFamilyItem.Button.onClick.AddListener(() => SelectStyle(family));
+                    styleFamilyItem.Hoverable.OnHover.AddListener(() => ShowPreviewAsync(family));
                 }
             }
         }
 
-        private void PickStyleFamily(SkyboxStyleFamily styleFamily)
+        private void PickStyleFamily(SkyboxStyle styleFamily)
         {
             _styleFamilyContainerRoot.gameObject.SetActive(false);
             _styleContainerRoot.gameObject.SetActive(true);
@@ -151,19 +145,22 @@ namespace BlockadeLabsSDK
                 }
             }
 
-            _backButton.GetComponentInChildren<TMP_Text>().text = styleFamily.name;
+            _backButton.GetComponentInChildren<TMP_Text>().text = styleFamily.Name;
 
-            foreach (var style in styleFamily.items)
+            if (styleFamily.FamilyStyles != null)
             {
-                var styleItem = Instantiate(_styleItemPrefab, _styleContainer);
-                styleItem.SetStyle(style);
-                styleItem.SetSelected(style == _selectedStyle);
-                styleItem.Button.onClick.AddListener(() => SelectStyle(style));
-                styleItem.Hoverable.OnHover.AddListener(() => ShowPreviewAsync(style));
+                foreach (var style in styleFamily.FamilyStyles)
+                {
+                    var styleItem = Instantiate(_styleItemPrefab, _styleContainer);
+                    styleItem.SetStyle(style);
+                    styleItem.SetSelected(style == _selectedStyle);
+                    styleItem.Button.onClick.AddListener(() => SelectStyle(style));
+                    styleItem.Hoverable.OnHover.AddListener(() => ShowPreviewAsync(style));
+                }
             }
         }
 
-        public void SetSelectedStyle(SkyboxStyleFamily styleFamily, SkyboxStyle style)
+        public void SetSelectedStyle(SkyboxStyle styleFamily, SkyboxStyle style)
         {
             foreach (Transform child in _styleFamilyContainer)
             {
@@ -196,14 +193,14 @@ namespace BlockadeLabsSDK
             _previewPanelRoot.SetActive(false);
             _previewStyle = style;
 
-            if (style == null || string.IsNullOrEmpty(style.image_jpg))
+            if (style == null || string.IsNullOrEmpty(style.ImageJpg))
             {
                 return;
             }
 
-            _previewText.text = style.description;
+            _previewText.text = style.Description;
 
-            if (_previewCache.TryGetValue(style.image_jpg, out var sprite))
+            if (_previewCache.TryGetValue(style.ImageJpg, out var sprite))
             {
                 _previewImage.sprite = sprite;
                 _previewPanelRoot.SetActive(true);
@@ -211,14 +208,14 @@ namespace BlockadeLabsSDK
             }
 
             // Ensure we only make one download request.
-            _previewCache.Add(style.image_jpg, null);
+            _previewCache.Add(style.ImageJpg, null);
 
             Texture2D texture = null;
 
             // Download the image
             try
             {
-                texture = await ApiRequests.DownloadTextureAsync(style.image_jpg, cancellationToken: destroyCancellationToken);
+                texture = await Rest.DownloadTextureAsync(style.ImageJpg, cancellationToken: destroyCancellationToken);
             }
             catch (Exception e)
             {
@@ -238,7 +235,7 @@ namespace BlockadeLabsSDK
             }
 
             sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector2.zero);
-            _previewCache[style.image_jpg] = sprite;
+            _previewCache[style.ImageJpg] = sprite;
 
             // If we're still showing the style preview, update the preview image.
             if (style == _previewStyle)

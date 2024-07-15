@@ -7,6 +7,7 @@ namespace BlockadeLabsSDK.Editor
     [CustomEditor(typeof(BlockadeLabsConfiguration))]
     public class BlockadeLabsConfigurationInspector : UnityEditor.Editor
     {
+        private static bool indent;
         private static bool triggerReload;
 
         private SerializedProperty _apiKey;
@@ -43,10 +44,26 @@ namespace BlockadeLabsSDK.Editor
         {
             serializedObject.Update();
             EditorGUILayout.Space();
-            EditorGUI.indentLevel++;
-            EditorGUI.BeginChangeCheck();
 
+            if (indent)
+            {
+                EditorGUI.indentLevel++;
+            }
+
+            EditorGUI.BeginChangeCheck();
             EditorGUILayout.PropertyField(_apiKey);
+
+            if (EditorGUI.EndChangeCheck())
+            {
+                triggerReload = true;
+
+                if (!string.IsNullOrWhiteSpace(_apiKey.stringValue))
+                {
+                    VSAttribution.SendAttributionEvent("Initialization", "BlockadeLabs", _apiKey.stringValue);
+                }
+            }
+
+            EditorGUI.BeginChangeCheck();
             EditorGUILayout.PropertyField(_proxyDomainUrl);
 
             if (EditorGUI.EndChangeCheck())
@@ -54,7 +71,11 @@ namespace BlockadeLabsSDK.Editor
                 triggerReload = true;
             }
 
-            EditorGUI.indentLevel--;
+            if (indent)
+            {
+                EditorGUI.indentLevel--;
+            }
+
             serializedObject.ApplyModifiedProperties();
         }
 
@@ -93,10 +114,12 @@ namespace BlockadeLabsSDK.Editor
             }
 
             var instanceEditor = CreateEditor(instance);
+            indent = true;
             instanceEditor.OnInspectorGUI();
+            indent = false;
         }
 
-        private static BlockadeLabsConfiguration GetOrCreateInstance(Object target = null)
+        internal static BlockadeLabsConfiguration GetOrCreateInstance(Object target = null)
         {
             var update = false;
             BlockadeLabsConfiguration instance;
