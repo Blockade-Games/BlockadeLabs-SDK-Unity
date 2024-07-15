@@ -145,7 +145,6 @@ namespace BlockadeLabsSDK.Editor
         private void DrawSkyboxFields(BlockadeLabsSkyboxGenerator generator)
         {
             EditorGUILayout.PropertyField(_selectedStyle);
-
             EditorStyles.textField.wordWrap = true;
             EditorGUILayout.PropertyField(_prompt, GUILayout.Height(EditorGUIUtility.singleLineHeight * 3));
             EditorStyles.textField.wordWrap = false;

@@ -232,7 +232,14 @@ namespace BlockadeLabsSDK
                         }, destroyCancellationToken));
                     }
 
-                    await Task.WhenAll(downloadTasks).ConfigureAwait(true);
+                    try
+                    {
+                        await Task.WhenAll(downloadTasks).ConfigureAwait(true);
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogException(e);
+                    }
 
                     _imageCache[result.ObfuscatedId] = new Tuple<Texture2D, Texture2D>(skybox, depth);
 

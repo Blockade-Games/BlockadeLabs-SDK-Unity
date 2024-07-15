@@ -14,7 +14,7 @@ namespace BlockadeLabsSDK
 
             LogVerbose($"Start download: {url} to {path}");
             using var request = UnityWebRequest.Get(url);
-            request.downloadHandler = new DownloadHandlerFile(path);
+            request.downloadHandler = new DownloadHandlerFile(path) { removeFileOnAbort = true };
             await request.SendWebRequest();
 
             if (request.result != UnityWebRequest.Result.Success)

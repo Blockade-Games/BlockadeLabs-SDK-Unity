@@ -543,9 +543,9 @@ namespace BlockadeLabsSDK
                 AssetDatabase.Refresh();
             }
 
-            if (skyboxAI.SkyboxTexture == null)
+            if (skyboxAI.SkyboxTexture == null &&
+                AssetImporter.GetAtPath(texturePath) is TextureImporter colorImporter)
             {
-                var colorImporter = (TextureImporter)AssetImporter.GetAtPath(texturePath);
                 colorImporter.maxTextureSize = 8192;
                 colorImporter.textureCompression = TextureImporterCompression.Uncompressed;
                 colorImporter.mipmapEnabled = false;
@@ -556,9 +556,10 @@ namespace BlockadeLabsSDK
                 skyboxAI.SkyboxTexture = skyboxTexture;
             }
 
-            if (hasDepthMap && skyboxAI.DepthTexture == null)
+            if (hasDepthMap &&
+                skyboxAI.DepthTexture == null &&
+                AssetImporter.GetAtPath(depthTexturePath) is TextureImporter depthImporter)
             {
-                var depthImporter = (TextureImporter)AssetImporter.GetAtPath(depthTexturePath);
                 depthImporter.maxTextureSize = 2048;
                 depthImporter.textureCompression = TextureImporterCompression.Uncompressed;
                 depthImporter.mipmapEnabled = false;
@@ -738,12 +739,23 @@ namespace BlockadeLabsSDK
 
             foreach (var family in _allModelStyleFamilies)
             {
-                foreach (var style in family.FamilyStyles)
+                if (family.FamilyStyles != null)
                 {
-                    if (style.Id == skybox.SkyboxStyleId)
+                    foreach (var style in family.FamilyStyles)
                     {
-                        SelectedStyleFamily = family;
-                        SelectedStyle = style;
+                        if (style.Id == skybox.SkyboxStyleId)
+                        {
+                            SelectedStyleFamily = family;
+                            SelectedStyle = style;
+                        }
+                    }
+                }
+                else
+                {
+                    if (family.Id == skybox.SkyboxStyleId)
+                    {
+                        SelectedStyleFamily = null;
+                        SelectedStyle = family;
                     }
                 }
             }
