@@ -86,5 +86,8 @@ namespace BlockadeLabsSDK
         [Preserve]
         [JsonProperty("created_at")]
         public DateTime CreatedAt { get; }
+
+        [Preserve]
+        public static implicit operator string(SkyboxExportRequest request) => request.Id;
     }
 }

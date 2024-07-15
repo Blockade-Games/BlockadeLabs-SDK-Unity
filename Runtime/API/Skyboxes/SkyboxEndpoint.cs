@@ -225,7 +225,7 @@ namespace BlockadeLabsSDK
 #else
             while (!cancellationToken.IsCancellationRequested)
             {
-                await Task.Delay(pollingInterval * 1000, CancellationToken.None).ConfigureAwait(true);
+                await Task.Delay((int)(pollingInterval.Value * 1000), CancellationToken.None).ConfigureAwait(true);
                 skyboxInfo = await GetSkyboxInfoAsync(skyboxInfo, CancellationToken.None);
                 progressCallback?.Report(skyboxInfo);
 
@@ -491,12 +491,12 @@ namespace BlockadeLabsSDK
 #if PUSHER_PRESENT
             if (exportRequest.Status != Status.Complete)
             {
-                exportRequest = await WaitForStatusChange(exportRequest.Id, exportRequest.PusherChannel, exportRequest.PusherEvent, progressCallback, pollingInterval.Value, cancellationToken);
+                exportRequest = await WaitForStatusChange(exportRequest, exportRequest.PusherChannel, exportRequest.PusherEvent, progressCallback, pollingInterval.Value, cancellationToken);
             }
 #else
             while (!cancellationToken.IsCancellationRequested)
             {
-                await Task.Delay(pollingInterval * 1000, CancellationToken.None).ConfigureAwait(true);
+                await Task.Delay((int)(pollingInterval.Value * 1000), CancellationToken.None).ConfigureAwait(true);
                 exportRequest = await GetExportRequestStatusAsync(exportRequest, CancellationToken.None);
                 progressCallback?.Report(exportRequest);
 
