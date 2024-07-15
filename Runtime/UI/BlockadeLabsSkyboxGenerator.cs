@@ -130,11 +130,9 @@ namespace BlockadeLabsSDK
             get => _selectStyleFamily;
             set
             {
-                if (_selectStyleFamily != value)
-                {
-                    _selectStyleFamily = value;
-                    OnPropertyChanged?.Invoke();
-                }
+                if (_selectStyleFamily == value) { return; }
+                _selectStyleFamily = value;
+                OnPropertyChanged?.Invoke();
             }
         }
 
@@ -289,7 +287,6 @@ namespace BlockadeLabsSDK
         private float _percentageCompleted = -1;
         public float PercentageCompleted => _percentageCompleted;
 
-        private bool _isCancelled;
         private CancellationTokenSource _generationCts;
 
         public bool HasSkyboxMetadata => _skyboxMesh != null && _skyboxMesh.SkyboxAsset != null;
@@ -413,7 +410,6 @@ namespace BlockadeLabsSDK
 
             ClearError();
             SetState(State.Generating);
-            _isCancelled = false;
             _generationCts?.Dispose();
             _generationCts = new CancellationTokenSource();
             using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(_generationCts.Token, _destroyCancellationTokenSource.Token);
@@ -441,11 +437,6 @@ namespace BlockadeLabsSDK
                 });
 
                 var response = await BlockadeLabsClient.SkyboxEndpoint.GenerateSkyboxAsync(request, progressCallback: progress, cancellationToken: linkedCts.Token);
-
-                if (_isCancelled)
-                {
-                    return;
-                }
 
                 if (response == null)
                 {
@@ -553,11 +544,17 @@ namespace BlockadeLabsSDK
             }
             catch (Exception e)
             {
-                Debug.LogException(e);
-            }
+                switch (e)
+                {
+                    case TaskCanceledException _:
+                    case OperationCanceledException _:
+                        // ignore
+                        break;
+                    default:
+                        Debug.LogException(e);
+                        break;
+                }
 
-            if (_isCancelled)
-            {
                 Directory.Delete(folderPath, true);
                 File.Delete($"{folderPath}.meta");
                 AssetDatabase.Refresh();
@@ -722,24 +719,43 @@ namespace BlockadeLabsSDK
                 tasks.Add(Rest.DownloadTextureAsync(result.DepthTextureUrl, debug: BlockadeLabsClient.EnableDebug, cancellationToken: cancellationToken));
             }
 
-            var textures = await Task.WhenAll(tasks);
+            Texture2D[] textures = null;
 
-            if (_isCancelled)
+            try
             {
-                foreach (var texture in textures)
+                textures = await Task.WhenAll(tasks);
+            }
+            catch (Exception e)
+            {
+                switch (e)
                 {
-                    texture.Destroy();
+                    case TaskCanceledException _:
+                    case OperationCanceledException _:
+                        // ignore
+                        if (textures != null)
+                        {
+                            foreach (var texture in textures)
+                            {
+                                texture.Destroy();
+                            }
+                        }
+                        return;
+                    default:
+                        Debug.LogException(e);
+                        break;
                 }
-                return;
             }
 
             var skyboxAI = ScriptableObject.CreateInstance<SkyboxAI>();
             skyboxAI.SetMetadata(result);
-            skyboxAI.SkyboxTexture = PanoramicToCubemap.Convert(textures[0], useComputeShader ? _cubemapComputeShader : null, 2048);
 
-            textures[0].Destroy();
+            if (textures?[0] != null)
+            {
+                skyboxAI.SkyboxTexture = PanoramicToCubemap.Convert(textures[0], useComputeShader ? _cubemapComputeShader : null, 2048);
+                textures[0].Destroy();
+            }
 
-            skyboxAI.DepthTexture = textures.Length > 1 ? textures[1] : null;
+            skyboxAI.DepthTexture = textures?.Length > 1 ? textures[1] : null;
             skyboxAI.DepthMaterial = CreateDepthMaterial(skyboxAI.SkyboxTexture, skyboxAI.DepthTexture);
             skyboxAI.SkyboxMaterial = CreateSkyboxMaterial(skyboxAI.SkyboxTexture);
 
@@ -986,7 +1002,6 @@ namespace BlockadeLabsSDK
 
         public void Cancel()
         {
-            _isCancelled = true;
             _generationCts?.Cancel();
             _generationCts?.Dispose();
             UpdateProgress(-1);
