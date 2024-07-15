@@ -38,18 +38,10 @@ namespace BlockadeLabsSDK
         [SerializeField]
         [Obsolete("Use BlockadeLabsConfiguration instead")]
         [Tooltip("API Key from Blockade Labs. Get one at api.blockadelabs.com")]
+#pragma warning disable CS0414 // Field is assigned but its value is never used
+        // we will keep this serialized field so that we can convert to new Configuration
         private string _apiKey = "API key needed. Get one at api.blockadelabs.com";
-
-        [Obsolete]
-        public string ApiKey
-        {
-            get => _apiKey;
-            set
-            {
-                _blockadeLabsClient = new BlockadeLabsClient(new BlockadeLabsAuthentication(value), new BlockadeLabsClientSettings());
-                CheckApiKeyValid();
-            }
-        }
+#pragma warning restore CS0414 
 
         [SerializeField]
         private BlockadeLabsConfiguration _configuration;
