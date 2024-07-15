@@ -662,12 +662,14 @@ namespace BlockadeLabsSDK
 
                     if (partial != null && timer >= pollingInterval * 1000)
                     {
-                        progressCallback?.Report(partial);
                         timer = 0;
+                        progressCallback?.Report(partial);
                     }
 
                     if (timer >= pollingInterval * 1000 * 10)
                     {
+                        timer = 0;
+
                         if (typeof(T).IsAssignableFrom(typeof(SkyboxInfo)))
                         {
                             var skyboxInfo = await GetSkyboxInfoAsync(obfuscatedId, CancellationToken.None);
