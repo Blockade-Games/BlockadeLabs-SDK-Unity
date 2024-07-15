@@ -146,6 +146,28 @@ namespace BlockadeLabsSDK
             {
                 if (_selectedStyle == value) { return; }
                 _selectedStyle = value;
+
+                foreach (var styleFamily in _allModelStyleFamilies)
+                {
+                    if (styleFamily.FamilyStyles != null)
+                    {
+                        foreach (var style in styleFamily.FamilyStyles)
+                        {
+                            if (style.Id == _selectedStyle.Id)
+                            {
+                                _selectStyleFamily = styleFamily;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (styleFamily.Id == _selectedStyle.Id)
+                        {
+                            _selectStyleFamily = null;
+                        }
+                    }
+                }
+
                 OnPropertyChanged?.Invoke();
             }
         }
@@ -792,7 +814,6 @@ namespace BlockadeLabsSDK
                     {
                         if (style.Id == skybox.SkyboxStyleId)
                         {
-                            SelectedStyleFamily = family;
                             SelectedStyle = style;
                         }
                     }
@@ -801,7 +822,6 @@ namespace BlockadeLabsSDK
                 {
                     if (family.Id == skybox.SkyboxStyleId)
                     {
-                        SelectedStyleFamily = null;
                         SelectedStyle = family;
                     }
                 }
