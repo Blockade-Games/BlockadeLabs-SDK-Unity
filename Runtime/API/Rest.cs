@@ -104,7 +104,7 @@ namespace BlockadeLabsSDK
             return texture;
         }
 
-        public static async Task<string> DownloadFileAsync(string url, string fileName, bool debug, CancellationToken cancellationToken)
+        public static async Task<string> DownloadFileAsync(string url, string fileName = null, string destination = null, bool debug = false, CancellationToken cancellationToken = default)
         {
             await UnityMainThread;
 
@@ -113,10 +113,18 @@ namespace BlockadeLabsSDK
                 TryGetFileNameFromUrl(url, out fileName);
             }
 
-            if (TryGetDownloadCacheItem(fileName, out var filePath))
+            if (string.IsNullOrWhiteSpace(destination) &&
+                TryGetDownloadCacheItem(fileName, out var filePath))
             {
                 return filePath;
             }
+
+            if (File.Exists(destination))
+            {
+                return destination;
+            }
+
+            filePath = destination;
 
             using var webRequest = UnityWebRequest.Get(url);
             using var fileDownloadHandler = new DownloadHandlerFile(filePath);

@@ -520,15 +520,22 @@ namespace BlockadeLabsSDK
 
             if (skyboxAI.SkyboxTexture == null)
             {
-                tasks.Add(ApiRequests.DownloadFileAsync(textureUrl, texturePath));
+                tasks.Add(Rest.DownloadFileAsync(textureUrl, destination: texturePath, debug: skybox.Client.EnableDebug));
             }
 
             if (hasDepthMap && skyboxAI.DepthTexture == null)
             {
-                tasks.Add(ApiRequests.DownloadFileAsync(depthMapUrl, depthTexturePath));
+                tasks.Add(Rest.DownloadFileAsync(depthMapUrl, destination: depthTexturePath, debug: skybox.Client.EnableDebug));
             }
 
-            await Task.WhenAll(tasks).ConfigureAwait(true);
+            try
+            {
+                await Task.WhenAll(tasks).ConfigureAwait(true);
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
 
             if (_isCancelled)
             {
@@ -963,12 +970,6 @@ namespace BlockadeLabsSDK
         public void EditorPropertyChanged()
         {
             OnPropertyChanged?.Invoke();
-        }
-
-        [System.Diagnostics.Conditional("BLOCKADE_DEBUG")]
-        private static void LogVerbose(string log)
-        {
-            Debug.Log(log);
         }
     }
 }

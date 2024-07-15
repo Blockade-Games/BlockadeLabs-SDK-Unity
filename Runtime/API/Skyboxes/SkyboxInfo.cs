@@ -262,7 +262,7 @@ namespace BlockadeLabsSDK
                                 break;
                             case SkyboxExportOption.CubeMap_PNG:
                             case SkyboxExportOption.CubeMap_Roblox_PNG:
-                                var zipPath = await Rest.DownloadFileAsync(exportUrl, path, debug, cancellationToken);
+                                var zipPath = await Rest.DownloadFileAsync(exportUrl, path, debug: debug, cancellationToken: cancellationToken);
                                 var files = await ExportUtilities.UnZipAsync(zipPath, cancellationToken);
                                 var textures = new List<Texture2D>();
 
@@ -279,7 +279,7 @@ namespace BlockadeLabsSDK
                             case SkyboxExportOption.Video_LandScape_MP4:
                             case SkyboxExportOption.Video_Portrait_MP4:
                             case SkyboxExportOption.Video_Square_MP4:
-                                await Rest.DownloadFileAsync(exportUrl, path, debug, cancellationToken);
+                                await Rest.DownloadFileAsync(exportUrl, path, debug: debug, cancellationToken: cancellationToken);
                                 break;
                             default:
                                 Debug.LogWarning($"No download task defined for {export.Key}!");
