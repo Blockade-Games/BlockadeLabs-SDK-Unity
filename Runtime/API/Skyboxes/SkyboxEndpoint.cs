@@ -240,7 +240,7 @@ namespace BlockadeLabsSDK
             }
 #endif // PUSHER_PRESENT
             {
-                if (cancellationToken.IsCancellationRequested)
+                if (cancellationToken.IsCancellationRequested && skyboxInfo != null)
                 {
                     var cancelResult = await CancelSkyboxGenerationAsync(skyboxInfo, CancellationToken.None);
 
@@ -510,7 +510,7 @@ namespace BlockadeLabsSDK
                 break;
             }
 #endif // PUSHER_PRESENT
-            if (cancellationToken.IsCancellationRequested)
+            if (cancellationToken.IsCancellationRequested && exportRequest != null)
             {
                 var cancelResult = await CancelSkyboxExportAsync(exportRequest, CancellationToken.None);
 
@@ -522,7 +522,7 @@ namespace BlockadeLabsSDK
 
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (exportRequest.Status == Status.Abort)
+            if (exportRequest!.Status == Status.Abort)
             {
                 throw new OperationCanceledException($"Export aborted for skybox {skyboxInfo.Id}\n{exportRequest.ErrorMessage}\n{exportRequest}");
             }
@@ -709,8 +709,16 @@ namespace BlockadeLabsSDK
             }
             catch (Exception e)
             {
-                Debug.LogException(e);
-                throw;
+                switch (e)
+                {
+                    case TaskCanceledException _:
+                    case OperationCanceledException _:
+                        // ignored
+                        return partial;
+                    default:
+                        Debug.LogException(e);
+                        throw;
+                }
             }
             finally
             {
