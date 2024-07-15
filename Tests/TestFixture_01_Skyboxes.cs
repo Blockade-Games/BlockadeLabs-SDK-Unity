@@ -3,9 +3,11 @@ using Newtonsoft.Json;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using UnityEditor;
 using UnityEngine;
 
 namespace BlockadeLabsSDK.Tests
@@ -99,6 +101,94 @@ namespace BlockadeLabsSDK.Tests
 
                 var skyboxStyles = await BlockadeLabsClient.SkyboxEndpoint.GetSkyboxStylesAsync(SkyboxModel.Model3);
                 var request = new SkyboxRequest(skyboxStyles.First(), "mars", enhancePrompt: true);
+                var skyboxInfo = await BlockadeLabsClient.SkyboxEndpoint.GenerateSkyboxAsync(request);
+                Assert.IsNotNull(skyboxInfo);
+                Debug.Log($"Successfully created skybox: {skyboxInfo.Id}");
+
+                Assert.IsNotEmpty(skyboxInfo.Exports);
+                Assert.IsNotEmpty(skyboxInfo.ExportedAssets);
+
+                foreach (var exportInfo in skyboxInfo.Exports)
+                {
+                    Debug.Log($"{exportInfo.Key} -> {exportInfo.Value}");
+                }
+
+                foreach (var exportedAsset in skyboxInfo.ExportedAssets)
+                {
+                    Debug.Log(exportedAsset.Key);
+                    Assert.IsNotNull(exportedAsset.Value);
+                }
+
+                Debug.Log(skyboxInfo.ToString());
+
+                skyboxInfo = await BlockadeLabsClient.SkyboxEndpoint.GetSkyboxInfoAsync(skyboxInfo);
+                Assert.IsNotNull(skyboxInfo);
+                await skyboxInfo.LoadAssetsAsync();
+                Assert.IsNotEmpty(skyboxInfo.Exports);
+                Assert.IsNotEmpty(skyboxInfo.ExportedAssets);
+
+                foreach (var exportInfo in skyboxInfo.Exports)
+                {
+                    Debug.Log($"{exportInfo.Key} -> {exportInfo.Value}");
+                }
+
+                foreach (var exportedAsset in skyboxInfo.ExportedAssets)
+                {
+                    Debug.Log(exportedAsset.Key);
+                    Assert.IsNotNull(exportedAsset.Value);
+                }
+
+                var exportOptions = await BlockadeLabsClient.SkyboxEndpoint.GetAllSkyboxExportOptionsAsync();
+                Assert.IsNotNull(exportOptions);
+                Assert.IsNotEmpty(exportOptions);
+                var exportTasks = new List<Task>();
+
+                foreach (var exportOption in exportOptions)
+                {
+                    exportTasks.Add(ExportAsync(skyboxInfo));
+
+                    async Task ExportAsync(SkyboxInfo exportInfo)
+                    {
+                        await new UnityMainThread();
+                        Debug.Log(exportOption.Key);
+                        Assert.IsNotNull(exportOption);
+                        var skyboxExport = await BlockadeLabsClient.SkyboxEndpoint.ExportSkyboxAsync(exportInfo, exportOption);
+                        Assert.IsNotNull(skyboxExport);
+                        Assert.IsTrue(skyboxExport.Exports.ContainsKey(exportOption.Key));
+                        skyboxExport.Exports.TryGetValue(exportOption.Key, out var exportUrl);
+                        Debug.Log(exportUrl);
+                    }
+                }
+
+                await Task.WhenAll(exportTasks).ConfigureAwait(true);
+                skyboxInfo = await BlockadeLabsClient.SkyboxEndpoint.GetSkyboxInfoAsync(skyboxInfo);
+                Assert.IsTrue(skyboxInfo.Exports.Count == exportTasks.Count);
+
+                if (skyboxInfo.Exports.Count > 0)
+                {
+                    foreach (var exportInfo in skyboxInfo.Exports)
+                    {
+                        Debug.Log($"{exportInfo.Key} -> {exportInfo.Value}");
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+                throw;
+            }
+        }
+
+        [Test]
+        [Timeout(600000)] // 10 min timeout
+        public async Task Test_03_GenerateSkyboxRemix()
+        {
+            try
+            {
+                Assert.IsNotNull(BlockadeLabsClient.SkyboxEndpoint);
+                var blockadeLogo = await Rest.DownloadTextureAsync($"file://{Path.GetFullPath(AssetDatabase.GUIDToAssetPath("608219909903ac246ac3a12aae8675f0"))}");
+                var skyboxStyles = await BlockadeLabsClient.SkyboxEndpoint.GetSkyboxStylesAsync(SkyboxModel.Model3);
+                var request = new SkyboxRequest(skyboxStyles.First(), "mars", blockadeLogo, enhancePrompt: true);
                 var skyboxInfo = await BlockadeLabsClient.SkyboxEndpoint.GenerateSkyboxAsync(request);
                 Assert.IsNotNull(skyboxInfo);
                 Debug.Log($"Successfully created skybox: {skyboxInfo.Id}");
