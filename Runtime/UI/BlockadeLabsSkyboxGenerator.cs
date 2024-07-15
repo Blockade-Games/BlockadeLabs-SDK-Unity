@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using System.Linq;
+using System.Threading;
 using UnityEngine;
 
 #if UNITY_HDRP
@@ -297,6 +298,7 @@ namespace BlockadeLabsSDK
         public float PercentageCompleted => _percentageCompleted;
 
         private bool _isCancelled;
+        private CancellationTokenSource _generationCts;
 
         public bool HasSkyboxMetadata => _skyboxMesh != null && _skyboxMesh.SkyboxAsset != null;
 
@@ -306,9 +308,20 @@ namespace BlockadeLabsSDK
         private int _progressId = 0;
 #endif
 
+#if !UNITY_2022_1_OR_NEWER
+        private CancellationTokenSource _destroyCancellationTokenSource = new CancellationTokenSource();
+        // ReSharper disable once InconsistentNaming
+        // this is the same name as the unity property introduced in 2022+
+        private CancellationToken destroyCancellationToken => _destroyCancellationTokenSource.Token;
+#endif
+
         private void OnDestroy()
         {
             DestroyRemixImage();
+#if !UNITY_2022_1_OR_NEWER
+            _destroyCancellationTokenSource?.Cancel();
+            _destroyCancellationTokenSource?.Dispose();
+#endif
         }
 
         public bool CheckApiKeyValid()
@@ -409,15 +422,32 @@ namespace BlockadeLabsSDK
             ClearError();
             SetState(State.Generating);
             _isCancelled = false;
-            UpdateProgress(5);
+            _generationCts = new CancellationTokenSource();
+            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(_generationCts.Token, _destroyCancellationTokenSource.Token);
+            UpdateProgress(10);
 
             try
             {
                 var progress = new Progress<SkyboxInfo>(info =>
                 {
-
+                    switch (info.Status)
+                    {
+                        case Status.Pending:
+                            UpdateProgress(20);
+                            break;
+                        case Status.Dispatched:
+                            UpdateProgress(30);
+                            break;
+                        case Status.Processing:
+                            if (_percentageCompleted < 80)
+                            {
+                                UpdateProgress(_percentageCompleted + 2);
+                            }
+                            break;
+                    }
                 });
-                var response = await BlockadeLabsClient.SkyboxEndpoint.GenerateSkyboxAsync(request, progressCallback: progress);
+
+                var response = await BlockadeLabsClient.SkyboxEndpoint.GenerateSkyboxAsync(request, progressCallback: progress, cancellationToken: linkedCts.Token);
 
                 if (_isCancelled)
                 {
@@ -441,29 +471,26 @@ namespace BlockadeLabsSDK
                     OnPropertyChanged?.Invoke();
                 }
 
-                UpdateProgress(33);
-
-                if (_isCancelled)
-                {
-                    return;
-                }
-
                 UpdateProgress(80);
-
-                await DownloadResultAsync(response);
-
-                if (_isCancelled)
-                {
-                    return;
-                }
-
-                UpdateProgress(-1);
-                SetState(State.Ready);
+                await DownloadResultAsync(response, true, linkedCts.Token);
             }
             catch (Exception e)
             {
-                Debug.LogException(e);
-                SetGenerateFailed($"Error generating skybox: {e.Message}");
+                switch (e)
+                {
+                    case TaskCanceledException _:
+                    case OperationCanceledException _:
+                        break;
+                    default:
+                        Debug.LogException(e);
+                        SetGenerateFailed($"Error generating skybox: {e.Message}");
+                        break;
+                }
+            }
+            finally
+            {
+                UpdateProgress(-1);
+                SetState(State.Ready);
             }
         }
 
@@ -474,9 +501,8 @@ namespace BlockadeLabsSDK
             SetState(State.Ready);
         }
 
-
 #if UNITY_EDITOR
-        internal async Task DownloadResultAsync(SkyboxInfo skybox, bool setSkybox = true)
+        internal async Task DownloadResultAsync(SkyboxInfo skybox, bool setSkybox = true, CancellationToken cancellationToken = default)
         {
             var textureUrl = skybox.MainTextureUrl;
             var depthMapUrl = skybox.DepthTextureUrl;
@@ -520,12 +546,12 @@ namespace BlockadeLabsSDK
 
             if (skyboxAI.SkyboxTexture == null)
             {
-                tasks.Add(Rest.DownloadFileAsync(textureUrl, destination: texturePath, debug: skybox.Client.EnableDebug));
+                tasks.Add(Rest.DownloadFileAsync(textureUrl, destination: texturePath, debug: skybox.Client.EnableDebug, cancellationToken: cancellationToken));
             }
 
             if (hasDepthMap && skyboxAI.DepthTexture == null)
             {
-                tasks.Add(Rest.DownloadFileAsync(depthMapUrl, destination: depthTexturePath, debug: skybox.Client.EnableDebug));
+                tasks.Add(Rest.DownloadFileAsync(depthMapUrl, destination: depthTexturePath, debug: skybox.Client.EnableDebug, cancellationToken: cancellationToken));
             }
 
             try
@@ -689,31 +715,36 @@ namespace BlockadeLabsSDK
             return AssetUtils.CreateUniqueFolder(prefix);
         }
 #else
-        internal async Task DownloadResultAsync(ImagineResult result, bool setSkybox = true)
+        internal async Task DownloadResultAsync(SkyboxInfo result, bool setSkybox = true, CancellationToken cancellationToken = default)
         {
-            bool useComputeShader = SystemInfo.supportsComputeShaders && _cubemapComputeShader != null;
+            var useComputeShader = SystemInfo.supportsComputeShaders && _cubemapComputeShader != null;
 
-            var tasks = new List<Task<Texture2D>>();
-            tasks.Add(ApiRequests.DownloadTextureAsync(result.file_url, !useComputeShader));
-            if (!string.IsNullOrWhiteSpace(result.depth_map_url))
+            var tasks = new List<Task<Texture2D>>
             {
-                tasks.Add(ApiRequests.DownloadTextureAsync(result.depth_map_url));
+                Rest.DownloadTextureAsync(result.MainTextureUrl, debug: BlockadeLabsClient.EnableDebug, cancellationToken: cancellationToken)
+            };
+
+            if (!string.IsNullOrWhiteSpace(result.DepthTextureUrl))
+            {
+                tasks.Add(Rest.DownloadTextureAsync(result.DepthTextureUrl, debug: BlockadeLabsClient.EnableDebug, cancellationToken: cancellationToken));
             }
 
             var textures = await Task.WhenAll(tasks);
 
             if (_isCancelled)
             {
-                ObjectUtils.Destroy(textures);
+                foreach (var texture in textures)
+                {
+                    texture.Destroy();
+                }
                 return;
             }
 
             var skyboxAI = ScriptableObject.CreateInstance<SkyboxAI>();
             skyboxAI.SetMetadata(result);
-
             skyboxAI.SkyboxTexture = PanoramicToCubemap.Convert(textures[0], useComputeShader ? _cubemapComputeShader : null, 2048);
 
-            ObjectUtils.Destroy(textures[0]);
+            textures[0].Destroy();
 
             skyboxAI.DepthTexture = textures.Length > 1 ? textures[1] : null;
             skyboxAI.DepthMaterial = CreateDepthMaterial(skyboxAI.SkyboxTexture, skyboxAI.DepthTexture);
@@ -963,6 +994,8 @@ namespace BlockadeLabsSDK
         public void Cancel()
         {
             _isCancelled = true;
+            _generationCts?.Cancel();
+            _generationCts?.Dispose();
             UpdateProgress(-1);
             SetState(State.Ready);
         }

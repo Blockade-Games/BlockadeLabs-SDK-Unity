@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -1030,12 +1031,31 @@ namespace BlockadeLabsSDK
         {
             if (_generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Generating)
             {
-                var tip = await BlockadeLabsSkyboxGenerator.BlockadeLabsClient.SkyboxEndpoint.GetOneTipAsync();
-
-                if (!string.IsNullOrWhiteSpace(tip))
+                try
                 {
-                    _tipText.text = "<b>Tip:</b> " + tip.Replace("<p>", "").Replace("</p>", "");
-                    _tipContainer.SetActive(true);
+                    var tip = await BlockadeLabsSkyboxGenerator.BlockadeLabsClient.SkyboxEndpoint.GetOneTipAsync();
+
+                    if (!string.IsNullOrWhiteSpace(tip))
+                    {
+                        _tipText.text = "<b>Tip:</b> " + tip.Replace("<p>", "").Replace("</p>", "");
+                        _tipContainer.SetActive(true);
+                    }
+                }
+                catch (Exception e)
+                {
+                    switch (e)
+                    {
+                        case RestException restException:
+                            if (restException.RestResponse.Body.Contains("There is no skybox tips!"))
+                            {
+                                return;
+                            }
+                            Debug.LogException(restException);
+                            break;
+                        default:
+                            Debug.LogException(e);
+                            break;
+                    }
                 }
             }
             else

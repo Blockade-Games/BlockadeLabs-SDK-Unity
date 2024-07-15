@@ -143,7 +143,7 @@ namespace BlockadeLabsSDK
         {
             _runtimeGuiManager.ToggleHistoryPanel();
             gameObject.SetActive(false);
-            await _runtimeGuiManager.Generator.DownloadResultAsync(_skybox);
+            await _runtimeGuiManager.Generator.DownloadResultAsync(_skybox, true, destroyCancellationToken);
         }
 
         private void OnCloseButtonClicked()

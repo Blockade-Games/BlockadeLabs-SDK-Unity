@@ -161,6 +161,7 @@ namespace BlockadeLabsSDK
         /// <returns><see cref="SkyboxInfo"/>.</returns>
         public async Task<SkyboxInfo> GenerateSkyboxAsync(SkyboxRequest skyboxRequest, SkyboxExportOption[] exportOptions = null, IProgress<SkyboxInfo> progressCallback = null, int? pollingInterval = null, CancellationToken cancellationToken = default)
         {
+            pollingInterval ??= 1000;
             var formData = new WWWForm();
             formData.AddField("prompt", skyboxRequest.Prompt);
 
@@ -218,13 +219,13 @@ namespace BlockadeLabsSDK
 #if PUSHER_PRESENT
             try
             {
-                skyboxInfo = await WaitForStatusChange(skyboxInfo.PusherChannel, skyboxInfo.PusherEvent, progressCallback, cancellationToken);
+                skyboxInfo = await WaitForStatusChange(skyboxInfo.PusherChannel, skyboxInfo.PusherEvent, progressCallback, pollingInterval.Value, cancellationToken);
             }
             finally
 #else
             while (!cancellationToken.IsCancellationRequested)
             {
-                await Task.Delay(pollingInterval ?? 3000, CancellationToken.None).ConfigureAwait(true);
+                await Task.Delay(pollingInterval, CancellationToken.None).ConfigureAwait(true);
                 skyboxInfo = await GetSkyboxInfoAsync(skyboxInfo, CancellationToken.None);
                 progressCallback?.Report(skyboxInfo);
 
@@ -465,6 +466,7 @@ namespace BlockadeLabsSDK
         /// <returns>Updated <see cref="SkyboxInfo"/> with exported assets loaded into memory.</returns>
         public async Task<SkyboxInfo> ExportSkyboxAsync(SkyboxInfo skyboxInfo, SkyboxExportOption exportOption, IProgress<SkyboxExportRequest> progressCallback = null, int? pollingInterval = null, CancellationToken cancellationToken = default)
         {
+            pollingInterval ??= 1000;
             var payload = $"{{\"skybox_id\":\"{skyboxInfo.ObfuscatedId}\",\"type_id\":{exportOption.Id}}}";
             var response = await Rest.PostAsync(GetUrl("skybox/export"), payload, client.DefaultRequestHeaders, cancellationToken);
             response.Validate(EnableDebug);
@@ -474,12 +476,12 @@ namespace BlockadeLabsSDK
 #if PUSHER_PRESENT
             if (exportRequest.Status != Status.Complete)
             {
-                exportRequest = await WaitForStatusChange(exportRequest.PusherChannel, exportRequest.PusherEvent, progressCallback, cancellationToken);
+                exportRequest = await WaitForStatusChange(exportRequest.PusherChannel, exportRequest.PusherEvent, progressCallback, pollingInterval.Value, cancellationToken);
             }
 #else
             while (!cancellationToken.IsCancellationRequested)
             {
-                await Task.Delay(pollingInterval ?? 3000, CancellationToken.None).ConfigureAwait(true);
+                await Task.Delay(pollingInterval, CancellationToken.None).ConfigureAwait(true);
                 exportRequest = await GetExportRequestStatusAsync(exportRequest, CancellationToken.None);
                 progressCallback?.Report(exportRequest);
 
@@ -588,7 +590,7 @@ namespace BlockadeLabsSDK
             }
         }
 
-        private async Task<T> WaitForStatusChange<T>(string pusherChannel, string pusherEvent, IProgress<T> progressCallback, CancellationToken cancellationToken)
+        private async Task<T> WaitForStatusChange<T>(string pusherChannel, string pusherEvent, IProgress<T> progressCallback, int pollingInterval, CancellationToken cancellationToken)
             where T : IStatus
         {
             if (Pusher.State == PusherClient.ConnectionState.Uninitialized)
@@ -604,6 +606,8 @@ namespace BlockadeLabsSDK
             }
 
             var tcs = new TaskCompletionSource<T>();
+            T partial = default;
+            int timer = 0;
 
             try
             {
@@ -619,6 +623,7 @@ namespace BlockadeLabsSDK
                         var data = JsonConvert.DeserializeObject<PusherEvent>(@event).Data;
                         var result = JsonConvert.DeserializeObject<T>(data, BlockadeLabsClient.JsonSerializationOptions);
                         progressCallback?.Report(result);
+                        partial = result;
 
                         if (result.Status == Status.Complete ||
                             result.Status == Status.Error ||
@@ -638,6 +643,13 @@ namespace BlockadeLabsSDK
                     // ReSharper disable once MethodSupportsCancellation
                     await Task.Delay(16).ConfigureAwait(true);
                     cancellationToken.ThrowIfCancellationRequested();
+                    timer += 16;
+
+                    if (timer >= pollingInterval)
+                    {
+                        progressCallback?.Report(partial);
+                        timer = 0;
+                    }
                 }
 
                 return await tcs.Task;
