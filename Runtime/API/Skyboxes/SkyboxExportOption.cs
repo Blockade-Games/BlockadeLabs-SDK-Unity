@@ -46,5 +46,7 @@ namespace BlockadeLabsSDK
         [Preserve]
         [JsonProperty("isPremium")]
         public bool IsPremium { get; }
+
+        public static implicit operator string(SkyboxExportOption option) => option?.Key;
     }
 }

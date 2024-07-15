@@ -240,72 +240,114 @@ namespace BlockadeLabsSDK
                 }
             }
 
-            async Task DownloadExport(KeyValuePair<string, string> export)
-            {
-                try
-                {
-                    await new UnityMainThread();
-                    var exportUrl = export.Value;
-
-                    if (!string.IsNullOrWhiteSpace(exportUrl))
-                    {
-                        Rest.TryGetFileNameFromUrl(exportUrl, out var filename);
-                        var path = $"{ObfuscatedId}-{export.Key}{Path.GetExtension(filename)}";
-
-                        switch (export.Key)
-                        {
-                            case SkyboxExportOption.DepthMap_PNG:
-                            case SkyboxExportOption.Equirectangular_PNG:
-                            case SkyboxExportOption.Equirectangular_JPG:
-                                var texture = await Rest.DownloadTextureAsync(exportUrl, path, debug, cancellationToken);
-                                exportedAssets[export.Key] = texture;
-                                break;
-                            case SkyboxExportOption.CubeMap_PNG:
-                            case SkyboxExportOption.CubeMap_Roblox_PNG:
-                                var zipPath = await Rest.DownloadFileAsync(exportUrl, path, debug: debug, cancellationToken: cancellationToken);
-                                var files = await ExportUtilities.UnZipAsync(zipPath, cancellationToken);
-                                var textures = new List<Texture2D>();
-
-                                foreach (var file in files)
-                                {
-                                    var face = await Rest.DownloadTextureAsync($"file://{file}", debug: debug, cancellationToken: cancellationToken);
-                                    textures.Add(face);
-                                }
-
-                                exportedAssets[export.Key] = ExportUtilities.BuildCubemap(textures);
-                                break;
-                            case SkyboxExportOption.HDRI_HDR:
-                            case SkyboxExportOption.HDRI_EXR:
-                            case SkyboxExportOption.Video_LandScape_MP4:
-                            case SkyboxExportOption.Video_Portrait_MP4:
-                            case SkyboxExportOption.Video_Square_MP4:
-                                await Rest.DownloadFileAsync(exportUrl, path, debug: debug, cancellationToken: cancellationToken);
-                                break;
-                            default:
-                                Debug.LogWarning($"No download task defined for {export.Key}!");
-                                break;
-                        }
-                    }
-                    else
-                    {
-                        Debug.LogError($"No valid url for skybox {ObfuscatedId}.{export.Key}");
-                    }
-                }
-                catch (Exception e)
-                {
-                    Debug.LogError(e);
-                }
-            }
-
             var downloadTasks = new List<Task> { DownloadThumbnail() };
-            downloadTasks.AddRange(Exports.Select(DownloadExport));
+            downloadTasks.AddRange(Exports.Select(kvp => DownloadExport(kvp, debug, cancellationToken)));
             await Task.WhenAll(downloadTasks).ConfigureAwait(true);
         }
 
-        // TODO add ExportList overload that requests exports and downloads them
+        /// <summary>
+        /// Downloads and loads all the assets associated with this skybox using the specified export option.
+        /// </summary>
+        /// <param name="exportOption"><see cref="SkyboxExportOption"/>.</param>
+        /// <param name="cancellationToken">Optional, <see cref="CancellationToken"/>.</param>
+        [Preserve]
+        public async Task LoadAssetAsync(SkyboxExportOption exportOption, CancellationToken cancellationToken = default)
+            => await LoadAssetsAsync(new[] { exportOption }, cancellationToken);
+
+        /// <summary>
+        /// Downloads and loads all the assets associated with this skybox using the specified export option.
+        /// </summary>
+        /// <param name="exportOptions"><see cref="SkyboxExportOption"/>.</param>
+        /// <param name="cancellationToken">Optional, <see cref="CancellationToken"/>.</param>
+        [Preserve]
+        public async Task LoadAssetsAsync(SkyboxExportOption[] exportOptions, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                await new UnityMainThread();
+                var downloadTasks = new List<Task>();
+                foreach (var export in exportOptions)
+                {
+                    if (Exports.TryGetValue(export, out var exportUrl))
+                    {
+                        downloadTasks.Add(DownloadExport(new KeyValuePair<string, string>(export, exportUrl), false, cancellationToken));
+                    }
+                }
+
+                await Task.WhenAll(downloadTasks).ConfigureAwait(true);
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
+        }
 
         [Preserve]
-        public bool TryGetAssetCachePath(string key, out string localCachedPath)
+        private async Task DownloadExport(KeyValuePair<string, string> export, bool debug, CancellationToken cancellationToken)
+        {
+            try
+            {
+                await new UnityMainThread();
+                var exportUrl = export.Value;
+
+                if (!string.IsNullOrWhiteSpace(exportUrl))
+                {
+                    Rest.TryGetFileNameFromUrl(exportUrl, out var filename);
+                    var path = $"{ObfuscatedId}-{export.Key}{Path.GetExtension(filename)}";
+
+                    switch (export.Key)
+                    {
+                        case SkyboxExportOption.DepthMap_PNG:
+                        case SkyboxExportOption.Equirectangular_PNG:
+                        case SkyboxExportOption.Equirectangular_JPG:
+                            var texture = await Rest.DownloadTextureAsync(exportUrl, path, debug, cancellationToken);
+                            exportedAssets[export.Key] = texture;
+                            break;
+                        case SkyboxExportOption.CubeMap_PNG:
+                        case SkyboxExportOption.CubeMap_Roblox_PNG:
+                            var zipPath = await Rest.DownloadFileAsync(exportUrl, path, debug: debug, cancellationToken: cancellationToken);
+                            var files = await ExportUtilities.UnZipAsync(zipPath, cancellationToken);
+                            var textures = new List<Texture2D>();
+
+                            foreach (var file in files)
+                            {
+                                var face = await Rest.DownloadTextureAsync($"file://{file}", debug: debug, cancellationToken: cancellationToken);
+                                textures.Add(face);
+                            }
+
+                            exportedAssets[export.Key] = ExportUtilities.BuildCubemap(textures);
+                            break;
+                        case SkyboxExportOption.HDRI_HDR:
+                        case SkyboxExportOption.HDRI_EXR:
+                        case SkyboxExportOption.Video_LandScape_MP4:
+                        case SkyboxExportOption.Video_Portrait_MP4:
+                        case SkyboxExportOption.Video_Square_MP4:
+                            await Rest.DownloadFileAsync(exportUrl, path, debug: debug, cancellationToken: cancellationToken);
+                            break;
+                        default:
+                            Debug.LogWarning($"No download task defined for {export.Key}!");
+                            break;
+                    }
+                }
+                else
+                {
+                    Debug.LogError($"No valid url for skybox {ObfuscatedId}.{export.Key}");
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
+        }
+
+        /// <summary>
+        /// Attempts to get the local cached path for the specified export option.
+        /// </summary>
+        /// <param name="key"><see cref="SkyboxExportOption"/>.</param>
+        /// <param name="localCachedPath">The file cache path.</param>
+        /// <returns>True, if asset is found, otherwise false.</returns>
+        [Preserve]
+        public bool TryGetAssetCachePath(SkyboxExportOption key, out string localCachedPath)
         {
             if (Exports.TryGetValue(key, out var exportUrl) &&
                 Rest.TryGetFileNameFromUrl(exportUrl, out var filename))
@@ -318,8 +360,15 @@ namespace BlockadeLabsSDK
             return false;
         }
 
+        /// <summary>
+        /// Attempts to get the asset for the specified export option.
+        /// </summary>
+        /// <typeparam name="T">Type of asset to load.</typeparam>
+        /// <param name="key"><see cref="SkyboxExportOption"/>.</param>
+        /// <param name="asset">The asset to load.</param>
+        /// <returns>True, if the asset exists and was loaded.</returns>
         [Preserve]
-        public bool TryGetAsset<T>(string key, out T asset) where T : Object
+        public bool TryGetAsset<T>(SkyboxExportOption key, out T asset) where T : Object
         {
             if (ExportedAssets.TryGetValue(key, out var obj))
             {
