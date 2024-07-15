@@ -422,6 +422,7 @@ namespace BlockadeLabsSDK
             ClearError();
             SetState(State.Generating);
             _isCancelled = false;
+            _generationCts?.Dispose();
             _generationCts = new CancellationTokenSource();
             using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(_generationCts.Token, _destroyCancellationTokenSource.Token);
             UpdateProgress(10);
