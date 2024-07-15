@@ -147,7 +147,7 @@ namespace BlockadeLabsSDK
         /// <param name="pollingInterval">Optional, polling interval in seconds.</param>
         /// <param name="cancellationToken">Optional, <see cref="CancellationToken"/>.</param>
         /// <returns><see cref="SkyboxInfo"/>.</returns>
-        public async Task<SkyboxInfo> GenerateSkyboxAsync(SkyboxRequest skyboxRequest, SkyboxExportOption exportOption, IProgress<SkyboxInfo> progressCallback = null, int? pollingInterval = null, CancellationToken cancellationToken = default)
+        public async Task<SkyboxInfo> GenerateSkyboxAsync(SkyboxRequest skyboxRequest, SkyboxExportOption exportOption, IProgress<SkyboxInfo> progressCallback = null, float? pollingInterval = null, CancellationToken cancellationToken = default)
             => await GenerateSkyboxAsync(skyboxRequest, new[] { exportOption }, progressCallback, pollingInterval, cancellationToken);
 
         /// <summary>
@@ -159,9 +159,9 @@ namespace BlockadeLabsSDK
         /// <param name="pollingInterval">Optional, polling interval in seconds.</param>
         /// <param name="cancellationToken">Optional, <see cref="CancellationToken"/>.</param>
         /// <returns><see cref="SkyboxInfo"/>.</returns>
-        public async Task<SkyboxInfo> GenerateSkyboxAsync(SkyboxRequest skyboxRequest, SkyboxExportOption[] exportOptions = null, IProgress<SkyboxInfo> progressCallback = null, int? pollingInterval = null, CancellationToken cancellationToken = default)
+        public async Task<SkyboxInfo> GenerateSkyboxAsync(SkyboxRequest skyboxRequest, SkyboxExportOption[] exportOptions = null, IProgress<SkyboxInfo> progressCallback = null, float? pollingInterval = null, CancellationToken cancellationToken = default)
         {
-            pollingInterval ??= 1;
+            pollingInterval ??= 1f;
             var formData = new WWWForm();
             formData.AddField("prompt", skyboxRequest.Prompt);
 
@@ -219,7 +219,7 @@ namespace BlockadeLabsSDK
 #if PUSHER_PRESENT
             try
             {
-                skyboxInfo = await WaitForStatusChange(skyboxInfo.PusherChannel, skyboxInfo.PusherEvent, progressCallback, pollingInterval.Value, cancellationToken);
+                skyboxInfo = await WaitForStatusChange(skyboxInfo.ObfuscatedId, skyboxInfo.PusherChannel, skyboxInfo.PusherEvent, progressCallback, pollingInterval.Value, cancellationToken);
             }
             finally
 #else
@@ -300,6 +300,21 @@ namespace BlockadeLabsSDK
         public async Task<SkyboxInfo> GetSkyboxInfoAsync(int id, CancellationToken cancellationToken = default)
         {
             var response = await Rest.GetAsync(GetUrl($"imagine/requests/{id}"), client.DefaultRequestHeaders, cancellationToken);
+            response.Validate(EnableDebug);
+            var skyboxInfo = JsonConvert.DeserializeObject<SkyboxInfoRequest>(response.Body, BlockadeLabsClient.JsonSerializationOptions).SkyboxInfo;
+            skyboxInfo.SetResponseData(response, client);
+            return skyboxInfo;
+        }
+
+        /// <summary>
+        /// Returns the skybox metadata for the given skybox obfuscatedId.
+        /// </summary>
+        /// <param name="obfuscatedId">Skybox obfuscatedId.</param>
+        /// <param name="cancellationToken">Optional, <see cref="CancellationToken"/>.</param>
+        /// <returns><see cref="SkyboxInfo"/>.</returns>
+        public async Task<SkyboxInfo> GetSkyboxInfoAsync(string obfuscatedId, CancellationToken cancellationToken = default)
+        {
+            var response = await Rest.GetAsync(GetUrl($"imagine/requests/obfuscated-id/{obfuscatedId}"), client.DefaultRequestHeaders, cancellationToken);
             response.Validate(EnableDebug);
             var skyboxInfo = JsonConvert.DeserializeObject<SkyboxInfoRequest>(response.Body, BlockadeLabsClient.JsonSerializationOptions).SkyboxInfo;
             skyboxInfo.SetResponseData(response, client);
@@ -464,9 +479,9 @@ namespace BlockadeLabsSDK
         /// <param name="pollingInterval">Optional, polling interval in seconds.</param>
         /// <param name="cancellationToken">Optional, <see cref="CancellationToken"/>.</param>
         /// <returns>Updated <see cref="SkyboxInfo"/> with exported assets loaded into memory.</returns>
-        public async Task<SkyboxInfo> ExportSkyboxAsync(SkyboxInfo skyboxInfo, SkyboxExportOption exportOption, IProgress<SkyboxExportRequest> progressCallback = null, int? pollingInterval = null, CancellationToken cancellationToken = default)
+        public async Task<SkyboxInfo> ExportSkyboxAsync(SkyboxInfo skyboxInfo, SkyboxExportOption exportOption, IProgress<SkyboxExportRequest> progressCallback = null, float? pollingInterval = null, CancellationToken cancellationToken = default)
         {
-            pollingInterval ??= 1;
+            pollingInterval ??= 1f;
             var payload = $"{{\"skybox_id\":\"{skyboxInfo.ObfuscatedId}\",\"type_id\":{exportOption.Id}}}";
             var response = await Rest.PostAsync(GetUrl("skybox/export"), payload, client.DefaultRequestHeaders, cancellationToken);
             response.Validate(EnableDebug);
@@ -476,7 +491,7 @@ namespace BlockadeLabsSDK
 #if PUSHER_PRESENT
             if (exportRequest.Status != Status.Complete)
             {
-                exportRequest = await WaitForStatusChange(exportRequest.PusherChannel, exportRequest.PusherEvent, progressCallback, pollingInterval.Value, cancellationToken);
+                exportRequest = await WaitForStatusChange(exportRequest.Id, exportRequest.PusherChannel, exportRequest.PusherEvent, progressCallback, pollingInterval.Value, cancellationToken);
             }
 #else
             while (!cancellationToken.IsCancellationRequested)
@@ -526,14 +541,14 @@ namespace BlockadeLabsSDK
         /// <summary>
         /// Gets the status of a specified <see cref="SkyboxExportRequest"/>.
         /// </summary>
-        /// <param name="exportRequest">The export option to get the current status for.</param>
+        /// <param name="exportRequestId">The export request id to get the current status for.</param>
         /// <param name="cancellationToken">Optional, <see cref="CancellationToken"/>.</param>
         /// <returns>Updated <see cref="SkyboxExportRequest"/> with latest information.</returns>
-        public async Task<SkyboxExportRequest> GetExportRequestStatusAsync(SkyboxExportRequest exportRequest, CancellationToken cancellationToken = default)
+        public async Task<SkyboxExportRequest> GetExportRequestStatusAsync(string exportRequestId, CancellationToken cancellationToken = default)
         {
-            var response = await Rest.GetAsync(GetUrl($"skybox/export/{exportRequest.Id}"), client.DefaultRequestHeaders, cancellationToken);
+            var response = await Rest.GetAsync(GetUrl($"skybox/export/{exportRequestId}"), client.DefaultRequestHeaders, cancellationToken);
             response.Validate(EnableDebug);
-            exportRequest = JsonConvert.DeserializeObject<SkyboxExportRequest>(response.Body, BlockadeLabsClient.JsonSerializationOptions);
+            var exportRequest = JsonConvert.DeserializeObject<SkyboxExportRequest>(response.Body, BlockadeLabsClient.JsonSerializationOptions);
             exportRequest.SetResponseData(response, client);
             return exportRequest;
         }
@@ -590,7 +605,7 @@ namespace BlockadeLabsSDK
             }
         }
 
-        private async Task<T> WaitForStatusChange<T>(string pusherChannel, string pusherEvent, IProgress<T> progressCallback, int pollingInterval, CancellationToken cancellationToken)
+        private async Task<T> WaitForStatusChange<T>(string obfuscatedId, string pusherChannel, string pusherEvent, IProgress<T> progressCallback, float pollingInterval, CancellationToken cancellationToken)
             where T : IStatus
         {
             if (Pusher.State == PusherClient.ConnectionState.Uninitialized)
@@ -645,10 +660,48 @@ namespace BlockadeLabsSDK
                     cancellationToken.ThrowIfCancellationRequested();
                     timer += 16;
 
-                    if (timer >= pollingInterval * 1000)
+                    if (partial != null && timer >= pollingInterval * 1000)
                     {
                         progressCallback?.Report(partial);
                         timer = 0;
+                    }
+
+                    if (timer >= pollingInterval * 1000 * 10)
+                    {
+                        if (typeof(T).IsAssignableFrom(typeof(SkyboxInfo)))
+                        {
+                            var skyboxInfo = await GetSkyboxInfoAsync(obfuscatedId, CancellationToken.None);
+
+                            if (skyboxInfo.Status == Status.Complete ||
+                                skyboxInfo.Status == Status.Error ||
+                                skyboxInfo.Status == Status.Abort)
+                            {
+                                tcs.TrySetResult((T)(object)skyboxInfo);
+                            }
+                            else
+                            {
+                                progressCallback?.Report((T)(object)skyboxInfo);
+                            }
+                        }
+                        else if (typeof(T).IsAssignableFrom(typeof(SkyboxExportRequest)))
+                        {
+                            var requestInfo = await GetExportRequestStatusAsync(obfuscatedId, CancellationToken.None);
+
+                            if (requestInfo.Status == Status.Complete ||
+                                requestInfo.Status == Status.Error ||
+                                requestInfo.Status == Status.Abort)
+                            {
+                                tcs.TrySetResult((T)(object)requestInfo);
+                            }
+                            else
+                            {
+                                progressCallback?.Report((T)(object)requestInfo);
+                            }
+                        }
+                        else
+                        {
+                            throw new NotSupportedException($"Unsupported type {typeof(T)}");
+                        }
                     }
                 }
 

@@ -314,14 +314,14 @@ namespace BlockadeLabsSDK.Tests
 
             var progress = new Progress<SkyboxInfo>(async progress =>
             {
-                Debug.Log(progress);
+                Debug.Log(progress?.Status);
                 var result = await BlockadeLabsClient.SkyboxEndpoint.CancelAllPendingSkyboxGenerationsAsync();
                 Debug.Log(result ? "All pending generations successfully cancelled" : "No pending generations");
             });
 
             try
             {
-                await BlockadeLabsClient.SkyboxEndpoint.GenerateSkyboxAsync(request, progressCallback: progress, pollingInterval: 500);
+                await BlockadeLabsClient.SkyboxEndpoint.GenerateSkyboxAsync(request, progressCallback: progress, pollingInterval: 0.5f);
             }
             catch (OperationCanceledException)
             {
