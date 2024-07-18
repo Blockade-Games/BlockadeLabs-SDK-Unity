@@ -434,7 +434,7 @@ namespace BlockadeLabsSDK
             SetState(State.Generating);
             _generationCts?.Dispose();
             _generationCts = new CancellationTokenSource();
-            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(_generationCts.Token, _destroyCancellationTokenSource.Token);
+            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(_generationCts.Token, destroyCancellationToken);
             UpdateProgress(10);
 
             try
