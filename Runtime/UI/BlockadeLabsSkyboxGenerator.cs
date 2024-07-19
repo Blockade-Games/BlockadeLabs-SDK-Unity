@@ -470,7 +470,7 @@ namespace BlockadeLabsSDK
             OnPropertyChanged?.Invoke();
         }
 
-        public async void GenerateSkyboxAsync()
+        public async void GenerateSkybox()
         {
             if (string.IsNullOrWhiteSpace(_prompt))
             {

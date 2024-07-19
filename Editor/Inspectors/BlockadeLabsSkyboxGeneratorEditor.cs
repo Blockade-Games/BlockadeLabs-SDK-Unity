@@ -100,19 +100,19 @@ namespace BlockadeLabsSDK.Editor
                 {
                     EditorGUILayout.HelpBox(generator.LastError, MessageType.Error);
                 }
-
-                if (generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Generating)
-                {
-                    DrawProgress(generator);
-                }
-                else
-                {
-                    if (GUILayout.Button("Generate Skybox"))
-                    {
-                        generator.GenerateSkyboxAsync();
-                    }
-                }
             });
+
+            if (generator.CurrentState != BlockadeLabsSkyboxGenerator.State.Generating)
+            {
+                if (GUILayout.Button("Generate Skybox"))
+                {
+                    generator.GenerateSkybox();
+                }
+            }
+            else
+            {
+                DrawProgress(generator);
+            }
 
             if (serializedObject.ApplyModifiedProperties())
             {

@@ -862,7 +862,7 @@ namespace BlockadeLabsSDK
                 return;
             }
 
-            _generator.GenerateSkyboxAsync();
+            _generator.GenerateSkybox();
         }
 
         private IEnumerator CoAnimateDepthScale(float target)
