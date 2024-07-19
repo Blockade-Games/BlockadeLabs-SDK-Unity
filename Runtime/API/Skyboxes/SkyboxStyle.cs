@@ -128,13 +128,32 @@ namespace BlockadeLabsSDK
         public IReadOnlyList<SkyboxStyle> FamilyStyles { get; }
 
         [Preserve]
-        public static implicit operator int(SkyboxStyle style) => style.Id;
+        public static implicit operator int(SkyboxStyle style) => style?.Id ?? 0;
 
         [Preserve]
         public static bool operator ==(SkyboxStyle left, SkyboxStyle right) => left?.Id == right?.Id;
 
         [Preserve]
         public static bool operator !=(SkyboxStyle left, SkyboxStyle right) => !(left == right);
+
+        [Preserve]
+        public override bool Equals(object obj)
+        {
+            if (obj is SkyboxStyle style)
+            {
+                return Id == style.Id;
+            }
+
+            return false;
+        }
+
+        [Preserve]
+        private bool Equals(SkyboxStyle other)
+            => other != null && other.Equals(this);
+
+        [Preserve]
+        public override int GetHashCode()
+            => HashCode.Combine(Id, Model);
 
         [Preserve]
         public override string ToString() => JsonConvert.SerializeObject(this, BlockadeLabsClient.JsonSerializationOptions);

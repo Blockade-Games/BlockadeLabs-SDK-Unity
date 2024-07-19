@@ -943,11 +943,19 @@ namespace BlockadeLabsSDK
 
             _spheres.SetActive(true);
 
+#if UNITY_2023_1_OR_NEWER
+            foreach (var reflectionProbe in FindObjectsByType<ReflectionProbe>(FindObjectsSortMode.None))
+            {
+                reflectionProbe.mode = ReflectionProbeMode.Realtime;
+                reflectionProbe.RenderProbe();
+            }
+#else
             foreach (var reflectionProbe in FindObjectsOfType<ReflectionProbe>())
             {
                 reflectionProbe.mode = ReflectionProbeMode.Realtime;
                 reflectionProbe.RenderProbe();
             }
+#endif
         }
 
         private void OnStylePicked(SkyboxStyle style)

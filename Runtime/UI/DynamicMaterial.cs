@@ -18,6 +18,20 @@ namespace BlockadeLabsSDK
             UpdateMeshRenderer();
             if (_meshRenderer)
             {
+#if UNITY_2023_1_OR_NEWER
+                if (GraphicsSettings.defaultRenderPipeline?.GetType().Name.Contains("HDRenderPipelineAsset") ?? false)
+                {
+                    _meshRenderer.sharedMaterial = HDRP;
+                }
+                else if (GraphicsSettings.defaultRenderPipeline?.GetType().Name.Contains("UniversalRenderPipelineAsset") ?? false)
+                {
+                    _meshRenderer.sharedMaterial = URP;
+                }
+                else
+                {
+                    _meshRenderer.sharedMaterial = Standard;
+                }
+#else
                 if (GraphicsSettings.renderPipelineAsset?.GetType().Name.Contains("HDRenderPipelineAsset") ?? false)
                 {
                     _meshRenderer.sharedMaterial = HDRP;
@@ -30,6 +44,7 @@ namespace BlockadeLabsSDK
                 {
                     _meshRenderer.sharedMaterial = Standard;
                 }
+#endif
             }
         }
 

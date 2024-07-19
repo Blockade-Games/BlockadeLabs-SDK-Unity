@@ -9,7 +9,7 @@ namespace BlockadeLabsSDK.Extensions
 #if UNITY_EDITOR
         [UnityEditor.InitializeOnLoadMethod]
 #else
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+        [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.AfterAssembliesLoaded)]
 #endif
         public static void Initialize()
         {
