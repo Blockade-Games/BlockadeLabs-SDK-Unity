@@ -593,7 +593,10 @@ namespace BlockadeLabsSDK
 
             // History Panel Controls
             _historyButton.onClick.AddListener(ToggleHistoryPanel);
+        }
 
+        private void OnEnable()
+        {
             _generator.Load();
         }
 

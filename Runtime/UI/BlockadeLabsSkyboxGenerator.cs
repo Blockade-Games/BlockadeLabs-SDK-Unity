@@ -367,6 +367,10 @@ namespace BlockadeLabsSDK
                         return false;
                     }
                 }
+                else
+                {
+                    SetInvalid();
+                }
             }
 
             if (_blockadeLabsClient == null)
