@@ -613,6 +613,7 @@ namespace BlockadeLabsSDK
             UpdateCanRemix();
             UpdateLikeToggle();
             UpdateRemixPanel();
+            UpdateSpheres();
 
             _promptCharacterWarning.SetActive(false);
             _negativeTextCharacterWarning.SetActive(false);

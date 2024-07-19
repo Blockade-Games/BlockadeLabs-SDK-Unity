@@ -8,6 +8,7 @@ using System.Threading;
 using UnityEngine;
 
 #if UNITY_HDRP
+using UnityEditor.Rendering;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.HighDefinition;
 #endif
@@ -103,6 +104,10 @@ namespace BlockadeLabsSDK
 #if UNITY_HDRP
         [SerializeField, Tooltip("Optional volume to apply the generated volume profile to for HDRP.")]
         private Volume _HDRPVolume;
+
+        /// <summary>
+        /// <see cref="Volume"/> to apply the generated volume profile to for HDRP.
+        /// </summary>
         public Volume HDRPVolume
         {
             get => _HDRPVolume;
@@ -111,6 +116,10 @@ namespace BlockadeLabsSDK
 
         [SerializeField, Tooltip("Optional volume profile to copy from for HDRP.")]
         private VolumeProfile _HDRPVolumeProfile;
+
+        /// <summary>
+        /// <see cref="VolumeProfile"/> to copy from for HDRP.
+        /// </summary>
         public VolumeProfile HDRPVolumeProfile
         {
             get => _HDRPVolumeProfile;
@@ -193,7 +202,7 @@ namespace BlockadeLabsSDK
 
         [Tooltip("Use AI to enhance your prompt.")]
         [SerializeField]
-        private bool _enhancePrompt = false;
+        private bool _enhancePrompt = true;
         public bool EnhancePrompt
         {
             get => _enhancePrompt;
@@ -245,6 +254,9 @@ namespace BlockadeLabsSDK
         private Cubemap _remixCubemap;
         private Material _remixDepthMaterial;
         private Material _remixSkyboxMaterial;
+#if UNITY_HDRP
+        private VolumeProfile _remixVolumeProfile;
+#endif
 
         private bool _viewRemixImage;
         public bool ViewRemixImage
@@ -701,15 +713,19 @@ namespace BlockadeLabsSDK
                 {
                     volumeProfile = CreateVolumeProfile(skyboxAI.SkyboxTexture);
                     AssetDatabase.CreateAsset(volumeProfile, volumeProfilePath);
+
+                    foreach (var volumeComponent in volumeProfile.components)
+                    {
+                        volumeComponent.hideFlags = HideFlags.HideInHierarchy | HideFlags.HideInInspector;
+                        AssetDatabase.AddObjectToAsset(volumeComponent, volumeProfile);
+                    }
+
+                    EditorUtility.SetDirty(volumeProfile);
+                    AssetDatabase.SaveAssetIfDirty(volumeProfile);
                 }
 
                 skyboxAI.VolumeProfile = volumeProfile;
                 EditorUtility.SetDirty(skyboxAI);
-            }
-
-            if (setSkybox)
-            {
-                SetVolumeProfile(skyboxAI.VolumeProfile);
             }
 #endif
 
@@ -717,6 +733,7 @@ namespace BlockadeLabsSDK
             {
                 _viewRemixImage = false;
                 AssetDatabase.SaveAssetIfDirty(skyboxAI);
+                AssetDatabase.SaveAssets();
                 SetSkyboxMetadata(skyboxAI);
                 UpdateSkyboxAndDepthMesh();
                 SetState(State.Ready);
@@ -839,7 +856,7 @@ namespace BlockadeLabsSDK
                 SetState(State.Ready);
             }
         }
-#endif
+#endif // UNITY_EDITOR
 
         private void SetSkyboxMetadata(SkyboxAI skybox)
         {
@@ -883,6 +900,9 @@ namespace BlockadeLabsSDK
                 EnsureRemixImageCubemap();
                 SetDepthMaterial(_remixDepthMaterial);
                 SetSkyboxMaterial(_remixSkyboxMaterial);
+#if UNITY_HDRP
+                SetVolumeProfile(_remixVolumeProfile);
+#endif
             }
             else if (_skyboxMesh.SkyboxAsset != null)
             {
@@ -895,11 +915,20 @@ namespace BlockadeLabsSDK
                 {
                     SetSkyboxMaterial(_skyboxMesh.SkyboxAsset.SkyboxMaterial);
                 }
+#if UNITY_HDRP
+                if (_skyboxMesh.SkyboxAsset.SkyboxTexture != null)
+                {
+                    SetVolumeProfile(_skyboxMesh.SkyboxAsset.VolumeProfile);
+                }
+#endif
             }
             else
             {
                 SetDepthMaterial(_depthMaterial);
                 SetSkyboxMaterial(_skyboxMaterial);
+#if UNITY_HDRP
+                SetVolumeProfile(_HDRPVolumeProfile);
+#endif
             }
         }
 
@@ -927,6 +956,12 @@ namespace BlockadeLabsSDK
             {
                 _remixSkyboxMaterial.SetTexture("_Tex", _remixCubemap);
             }
+#if UNITY_HDRP
+            if (_remixVolumeProfile == null)
+            {
+                _remixVolumeProfile = CreateVolumeProfile(_remixCubemap);
+            }
+#endif
         }
 
         private void DestroyRemixImage()
@@ -954,6 +989,14 @@ namespace BlockadeLabsSDK
                 _remixSkyboxMaterial.Destroy();
                 _remixSkyboxMaterial = null;
             }
+
+#if UNITY_HDRP
+            if (_remixVolumeProfile != null)
+            {
+                _remixVolumeProfile.Destroy();
+                _remixVolumeProfile = null;
+            }
+#endif
         }
 
         private Material CreateDepthMaterial(Texture texture, Texture depthTexture)
@@ -1006,17 +1049,16 @@ namespace BlockadeLabsSDK
 #if UNITY_HDRP
         private VolumeProfile CreateVolumeProfile(Cubemap skyTexture)
         {
-            if (_HDRPVolumeProfile == null)
-            {
-                return null;
-            }
+            if (_HDRPVolumeProfile == null) { return null; }
 
-            var volumeProfile = ScriptableObject.CreateInstance<VolumeProfile>();
-            volumeProfile.name = _HDRPVolumeProfile.name;
+            var volumeProfile = Instantiate(_HDRPVolumeProfile);
+            volumeProfile.name = volumeProfile.name.Replace("(Clone)", string.Empty);
+            volumeProfile.components.Clear();
 
             foreach (var item in _HDRPVolumeProfile.components)
             {
                 var volumeComponent = Instantiate(item);
+                volumeComponent.name = volumeComponent.name.Replace("(Clone)", string.Empty);
 
                 if (volumeComponent is HDRISky hdriSky)
                 {
@@ -1036,7 +1078,7 @@ namespace BlockadeLabsSDK
                 _HDRPVolume.sharedProfile = volumeProfile;
             }
         }
-#endif
+#endif // UNITY_HDRP
 
         private void UpdateProgress(float percentageCompleted)
         {
@@ -1060,7 +1102,7 @@ namespace BlockadeLabsSDK
                     _progressId = 0;
                 }
             }
-#endif
+#endif // UNITY_EDITOR
         }
 
         public void Cancel()
