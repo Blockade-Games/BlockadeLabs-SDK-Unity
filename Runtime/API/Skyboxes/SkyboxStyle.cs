@@ -153,7 +153,7 @@ namespace BlockadeLabsSDK
 
         [Preserve]
         public override int GetHashCode()
-            => HashCode.Combine(Id, Model);
+            => Id;
 
         [Preserve]
         public override string ToString() => JsonConvert.SerializeObject(this, BlockadeLabsClient.JsonSerializationOptions);
