@@ -8,7 +8,6 @@ using System.Threading;
 using UnityEngine;
 
 #if UNITY_HDRP
-using UnityEditor.Rendering;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.HighDefinition;
 #endif
@@ -409,7 +408,16 @@ namespace BlockadeLabsSDK
         }
 
         public async void Load()
-            => await LoadAsync();
+        {
+            try
+            {
+                await LoadAsync();
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
+        }
 
         public async Task LoadAsync()
         {

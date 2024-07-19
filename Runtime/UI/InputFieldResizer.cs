@@ -6,15 +6,29 @@ namespace BlockadeLabsSDK
 {
     public class InputFieldResizer : MonoBehaviour
     {
+        private float _padding;
         private TMP_InputField _inputField;
         private RectTransform _rectTransform;
-        private float _padding;
 
         private void Awake()
         {
             _inputField = GetComponent<TMP_InputField>();
             _rectTransform = GetComponent<RectTransform>();
-            _padding = _rectTransform.rect.height - _inputField.placeholder.GetComponent<TMP_Text>().preferredHeight;
+            _padding = _rectTransform.rect.height - GetPreferredTextHeight();
+        }
+
+        private float GetPreferredTextHeight()
+        {
+            var tmpText = _inputField.textComponent.GetComponent<TMP_Text>();
+            var textHeight = tmpText.preferredHeight;
+
+            if (textHeight == 0)
+            {
+                const string A = nameof(A);
+                textHeight = tmpText.GetPreferredValues(A).y;
+            }
+
+            return textHeight;
         }
 
         private void OnEnable()
@@ -52,7 +66,7 @@ namespace BlockadeLabsSDK
         private void AdjustHeight()
         {
             var currentHeight = _rectTransform.rect.height;
-            var newHeight = _inputField.textComponent.preferredHeight + _padding;
+            var newHeight = GetPreferredTextHeight() + _padding;
 
             if (currentHeight != newHeight)
             {
@@ -62,7 +76,8 @@ namespace BlockadeLabsSDK
                 _inputField.textComponent.rectTransform.offsetMin = Vector2.zero;
                 _inputField.textComponent.rectTransform.offsetMax = Vector2.zero;
                 var textMovement = _inputField.textComponent.rectTransform.anchoredPosition - textPos;
-                _inputField.textViewport.Find("Caret").GetComponent<RectTransform>().anchoredPosition += textMovement;
+                const string Caret = nameof(Caret);
+                _inputField.textViewport.Find(Caret).GetComponent<RectTransform>().anchoredPosition += textMovement;
             }
         }
     }
