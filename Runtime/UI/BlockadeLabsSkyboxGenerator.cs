@@ -296,7 +296,7 @@ namespace BlockadeLabsSDK
         public bool CanRemix => HasSkyboxMetadata || _remixImage != null;
 
 #if UNITY_EDITOR
-        private int _progressId = 0;
+        private int _progressId;
 #endif
 
 #if !UNITY_2022_1_OR_NEWER

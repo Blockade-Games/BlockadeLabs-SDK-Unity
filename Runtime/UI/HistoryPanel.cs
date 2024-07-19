@@ -119,6 +119,8 @@ namespace BlockadeLabsSDK
             {
                 _isFetchingHistory = false;
             }
+
+            OnScrollRectValueChanged(_scrollRect.normalizedPosition);
         }
 
         private void ClearHistory()
