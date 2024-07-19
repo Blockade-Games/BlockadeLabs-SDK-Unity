@@ -84,8 +84,17 @@ namespace BlockadeLabsSDK
 
         private void OnStylePicked(SkyboxStyle style)
         {
-            _stylePickerButtonText.text = style.Name;
-            _searchQueryParameters.SkyboxStyleId = style.Id;
+            if (style != null)
+            {
+                _stylePickerButtonText.text = style.Name;
+                _searchQueryParameters.SkyboxStyleId = style.Id;
+            }
+            else
+            {
+                _stylePickerButtonText.text = "All Styles";
+                _searchQueryParameters.SkyboxStyleId = null;
+            }
+
             OnSearchQueryChanged?.Invoke(_searchQueryParameters);
         }
 

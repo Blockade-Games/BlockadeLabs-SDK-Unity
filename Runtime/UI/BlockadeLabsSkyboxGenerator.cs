@@ -10,6 +10,8 @@ using UnityEngine;
 #if UNITY_HDRP
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.HighDefinition;
+using System.Security.Authentication;
+
 #endif
 
 #if UNITY_EDITOR
@@ -26,7 +28,9 @@ namespace BlockadeLabsSDK
         {
             get
             {
-                _blockadeLabsClient ??= new BlockadeLabsClient(new BlockadeLabsAuthentication().LoadDefaultsReversed(), new BlockadeLabsClientSettings());
+                _blockadeLabsClient ??= Configuration != null
+                    ? new BlockadeLabsClient(Configuration)
+                    : new BlockadeLabsClient(new BlockadeLabsAuthentication().LoadDefaultsReversed(), new BlockadeLabsClientSettings());
 #if BLOCKADE_DEBUG
                 _blockadeLabsClient.EnableDebug = true;
 #endif
@@ -46,6 +50,8 @@ namespace BlockadeLabsSDK
         [SerializeField]
         private BlockadeLabsConfiguration _configuration;
 
+        public static BlockadeLabsConfiguration Configuration { get; internal set; }
+
         [SerializeField]
         [Tooltip("The version of the generation engine to use.")]
         private SkyboxModel _modelVersion = SkyboxModel.Model3;
@@ -57,8 +63,9 @@ namespace BlockadeLabsSDK
                 if (_modelVersion != value)
                 {
                     _modelVersion = value;
-                    OnPropertyChanged?.Invoke();
                     UpdateActiveStyleList();
+                    _selectedStyle = null;
+                    OnPropertyChanged?.Invoke();
                 }
             }
         }
@@ -123,20 +130,6 @@ namespace BlockadeLabsSDK
         private IReadOnlyList<SkyboxStyle> _model3Styles;
 
         [SerializeField]
-        private SkyboxStyle _selectStyleFamily = null;
-
-        public SkyboxStyle SelectedStyleFamily
-        {
-            get => _selectStyleFamily;
-            set
-            {
-                if (_selectStyleFamily == value) { return; }
-                _selectStyleFamily = value;
-                OnPropertyChanged?.Invoke();
-            }
-        }
-
-        [SerializeField]
         private SkyboxStyle _selectedStyle = null;
 
         public SkyboxStyle SelectedStyle
@@ -146,28 +139,6 @@ namespace BlockadeLabsSDK
             {
                 if (_selectedStyle == value) { return; }
                 _selectedStyle = value;
-
-                foreach (var styleFamily in _allModelStyleFamilies)
-                {
-                    if (styleFamily.FamilyStyles != null)
-                    {
-                        foreach (var style in styleFamily.FamilyStyles)
-                        {
-                            if (style.Id == _selectedStyle.Id)
-                            {
-                                _selectStyleFamily = styleFamily;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        if (styleFamily.Id == _selectedStyle.Id)
-                        {
-                            _selectStyleFamily = null;
-                        }
-                    }
-                }
-
                 OnPropertyChanged?.Invoke();
             }
         }
@@ -335,13 +306,74 @@ namespace BlockadeLabsSDK
 #endif
         }
 
+        /// <summary>
+        /// Checks if the API key is valid.
+        /// </summary>
+        /// <returns>True, if the API key is valid.</returns>
         public bool CheckApiKeyValid()
         {
-            if (_blockadeLabsClient is { HasValidAuthentication: false })
+            if (_blockadeLabsClient != null)
             {
-                SetError("Something went wrong. Please recheck you API key.");
-                SetState(State.NeedApiKey);
+                if (_blockadeLabsClient.HasValidAuthentication == false)
+                {
+                    SetInvalid();
+                    return false;
+                }
+
+                try
+                {
+                    _blockadeLabsClient.ValidateAuthentication();
+                }
+                catch (Exception)
+                {
+                    SetInvalid();
+                    return false;
+                }
+            }
+            else
+            {
+                if (_configuration != null)
+                {
+                    if (string.IsNullOrWhiteSpace(_configuration.ApiKey))
+                    {
+                        SetInvalid(false);
+                        return false;
+                    }
+
+                    try
+                    {
+                        _blockadeLabsClient = new BlockadeLabsClient(_configuration);
+
+                        if (!BlockadeLabsClient.HasValidAuthentication)
+                        {
+                            SetInvalid();
+                            return false;
+                        }
+
+                        BlockadeLabsClient.ValidateAuthentication();
+                    }
+                    catch (Exception)
+                    {
+                        SetInvalid();
+                        return false;
+                    }
+                }
+            }
+
+            if (_blockadeLabsClient == null)
+            {
+                SetInvalid(false);
                 return false;
+            }
+
+            void SetInvalid(bool showError = true)
+            {
+                if (showError)
+                {
+                    SetError("Something went wrong. Please recheck you API key.");
+                }
+
+                SetState(State.NeedApiKey);
             }
 
             return true;
@@ -366,17 +398,17 @@ namespace BlockadeLabsSDK
             OnErrorChanged?.Invoke();
         }
 
-        public async void Reload()
-        {
-            if (CheckApiKeyValid())
-            {
-                await LoadAsync();
-            }
-        }
+        public async void Load()
+            => await LoadAsync();
 
         public async Task LoadAsync()
         {
             ClearError();
+
+            if (!CheckApiKeyValid())
+            {
+                return;
+            }
 
             try
             {
@@ -385,9 +417,24 @@ namespace BlockadeLabsSDK
             }
             catch (Exception e)
             {
-                SetError("Something went wrong. Please recheck you API key.");
-                Debug.LogException(e);
-                return;
+                switch (e)
+                {
+                    case RestException restException:
+                        if (restException.RestResponse.Code == 403)
+                        {
+                            BlockadeLabsClient.HasValidAuthentication = false;
+                            SetError("Something went wrong. Please recheck you API key.");
+                            SetState(State.NeedApiKey);
+                        }
+                        else
+                        {
+                            Debug.LogException(e);
+                        }
+                        return;
+                    default:
+                        Debug.LogException(e);
+                        return;
+                }
             }
 
             _allModelStyleFamilies = _model3Styles.Concat(_model2Styles).ToList();
@@ -398,8 +445,6 @@ namespace BlockadeLabsSDK
         private void UpdateActiveStyleList()
         {
             _styleFamily = (_modelVersion == SkyboxModel.Model2 ? _model2Styles : _model3Styles).ToList();
-            _selectStyleFamily = null;
-            _selectedStyle = null;
             OnPropertyChanged?.Invoke();
         }
 

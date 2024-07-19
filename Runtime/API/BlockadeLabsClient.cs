@@ -46,20 +46,28 @@ namespace BlockadeLabsSDK
             SkyboxEndpoint = new SkyboxEndpoint(this);
         }
 
-        private void ValidateAuthentication()
+        internal void ValidateAuthentication()
         {
             if (Authentication?.Info == null)
             {
                 throw new InvalidCredentialException($"Invalid {nameof(BlockadeLabsAuthentication)}");
             }
 
-            if (!HasValidAuthentication)
+            if (string.IsNullOrWhiteSpace(Authentication?.Info?.ApiKey))
             {
-                throw new AuthenticationException("You must provide API authentication.  Please refer to https://github.com/RageAgainstThePixel/com.rest.blockadelabs#authentication for details.");
+                throw new AuthenticationException("You must provide API authentication.  Please refer to https://github.com/Blockade-Games/BlockadeLabs-SDK-Unity#authentication for details.");
             }
+
+            _hasValidAuthentication = true;
         }
 
-        public bool HasValidAuthentication => !string.IsNullOrWhiteSpace(Authentication?.Info?.ApiKey);
+        private bool _hasValidAuthentication;
+
+        public bool HasValidAuthentication
+        {
+            get => _hasValidAuthentication;
+            internal set => _hasValidAuthentication = value;
+        }
 
         private void SetupDefaultRequestHeaders()
         {

@@ -127,8 +127,16 @@ namespace BlockadeLabsSDK
         [JsonProperty("items", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public IReadOnlyList<SkyboxStyle> FamilyStyles { get; }
 
+        [Preserve]
         public static implicit operator int(SkyboxStyle style) => style.Id;
 
+        [Preserve]
+        public static bool operator ==(SkyboxStyle left, SkyboxStyle right) => left?.Id == right?.Id;
+
+        [Preserve]
+        public static bool operator !=(SkyboxStyle left, SkyboxStyle right) => !(left == right);
+
+        [Preserve]
         public override string ToString() => JsonConvert.SerializeObject(this, BlockadeLabsClient.JsonSerializationOptions);
     }
 }

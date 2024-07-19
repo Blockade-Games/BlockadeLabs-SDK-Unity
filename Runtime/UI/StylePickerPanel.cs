@@ -48,6 +48,7 @@ namespace BlockadeLabsSDK
         public event Action<SkyboxStyle> OnStylePicked;
 
         private SkyboxStyle _selectedStyle;
+        private SkyboxStyle _selectedFamily;
         private SkyboxStyle _previewStyle;
         private IReadOnlyList<SkyboxStyle> _currentStyleFamily;
 
@@ -110,24 +111,36 @@ namespace BlockadeLabsSDK
             {
                 var allStylesFamilyItem = Instantiate(_styleItemPrefab, _styleFamilyContainer);
                 allStylesFamilyItem.SetStyle(new SkyboxStyle());
+                allStylesFamilyItem.SetSelected(_selectedStyle == null && _selectedFamily == null);
+                allStylesFamilyItem.Button.onClick.AddListener(() =>
+                {
+                    _selectedFamily = null;
+                    SelectStyle(null);
+                });
             }
 
             if (_currentStyleFamily == null) { return; }
 
-            foreach (var family in styleFamilies)
+            foreach (var style in styleFamilies)
             {
-                var styleFamilyItem = Instantiate(_styleItemPrefab, _styleFamilyContainer);
-                styleFamilyItem.SetStyle(family);
+                var styleItem = Instantiate(_styleItemPrefab, _styleFamilyContainer);
+                styleItem.SetStyle(style);
 
-                if (family.FamilyStyles != null)
+                if (style.FamilyStyles != null)
                 {
-                    styleFamilyItem.Button.onClick.AddListener(() => PickStyleFamily(family));
-                    styleFamilyItem.Hoverable.OnHover.AddListener(() => ShowPreviewAsync(null));
+                    styleItem.SetSelected(style == _selectedFamily);
+                    styleItem.Button.onClick.AddListener(() => PickStyleFamily(style));
+                    styleItem.Hoverable.OnHover.AddListener(() => ShowPreview(null));
                 }
                 else
                 {
-                    styleFamilyItem.Button.onClick.AddListener(() => SelectStyle(family));
-                    styleFamilyItem.Hoverable.OnHover.AddListener(() => ShowPreviewAsync(family));
+                    styleItem.SetSelected(style == _selectedStyle);
+                    styleItem.Button.onClick.AddListener(() =>
+                    {
+                        _selectedFamily = null;
+                        SelectStyle(style);
+                    });
+                    styleItem.Hoverable.OnHover.AddListener(() => ShowPreview(style));
                 }
             }
         }
@@ -154,36 +167,72 @@ namespace BlockadeLabsSDK
                     var styleItem = Instantiate(_styleItemPrefab, _styleContainer);
                     styleItem.SetStyle(style);
                     styleItem.SetSelected(style == _selectedStyle);
-                    styleItem.Button.onClick.AddListener(() => SelectStyle(style));
-                    styleItem.Hoverable.OnHover.AddListener(() => ShowPreviewAsync(style));
+                    styleItem.Button.onClick.AddListener(() =>
+                    {
+                        _selectedFamily = styleFamily;
+                        SelectStyle(style);
+                    });
+                    styleItem.Hoverable.OnHover.AddListener(() => ShowPreview(style));
                 }
             }
         }
 
-        public void SetSelectedStyle(SkyboxStyle styleFamily, SkyboxStyle style)
+        public void SetSelectedStyle(SkyboxStyle style)
+        {
+            if (style?.Id == 0) { style = null; }
+            _selectedStyle = style;
+            UpdateSelectionVisual();
+        }
+
+        private void UpdateSelectionVisual()
         {
             foreach (Transform child in _styleFamilyContainer)
             {
-                var styleFamilyItem = child.GetComponent<StyleItem>();
-                styleFamilyItem.SetSelected(styleFamilyItem.Style == styleFamily);
+                if (child.TryGetComponent<StyleItem>(out var styleItem))
+                {
+                    if (styleItem.Style == null) { continue; }
+                    if (styleItem.Style.FamilyStyles != null)
+                    {
+                        styleItem.SetSelected(styleItem.Style == _selectedFamily);
+                    }
+                    else
+                    {
+                        if (_showAllStylesOption && styleItem.Style.Id == 0)
+                        {
+                            styleItem.SetSelected(_selectedStyle == null && _selectedFamily == null);
+                        }
+                        else
+                        {
+                            styleItem.SetSelected(styleItem.Style == _selectedStyle);
+                        }
+                    }
+                }
             }
 
-            _selectedStyle = style;
+            foreach (Transform child in _styleContainer)
+            {
+                if (child.TryGetComponent<StyleItem>(out var styleItem))
+                {
+                    styleItem.SetSelected(styleItem.Style == _selectedStyle);
+                }
+            }
         }
 
         private void ShowStyleFamilies()
         {
+            UpdateSelectionVisual();
             _styleFamilyContainerRoot.gameObject.SetActive(true);
             _styleContainerRoot.gameObject.SetActive(false);
         }
 
         private void SelectStyle(SkyboxStyle style)
         {
+            _selectedStyle = style;
             OnStylePicked?.Invoke(style);
             gameObject.SetActive(false);
         }
 
-        private async void ShowPreviewAsync(SkyboxStyle style)
+        private async void ShowPreview(SkyboxStyle style)
         {
             if (!_showPreview)
             {
@@ -219,14 +268,16 @@ namespace BlockadeLabsSDK
             }
             catch (Exception e)
             {
-                if (e is TaskCanceledException ||
-                    e is OperationCanceledException)
+                switch (e)
                 {
-                    // ignored
-                    return;
+                    case TaskCanceledException _:
+                    case OperationCanceledException _:
+                        // ignored
+                        return;
+                    default:
+                        Debug.LogException(e);
+                        break;
                 }
-
-                Debug.LogException(e);
             }
 
             if (texture == null)

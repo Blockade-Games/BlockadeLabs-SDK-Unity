@@ -1,6 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection.Emit;
+using System.Threading.Tasks;
 using UnityEditor;
+using UnityEditor.Graphs;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace BlockadeLabsSDK.Editor
 {
@@ -28,6 +34,22 @@ namespace BlockadeLabsSDK.Editor
         private SerializedProperty _enhancePrompt;
 
         private UnityEditor.Editor _configurationEditor;
+        private static BlockadeLabsSkyboxGeneratorEditor _generatorEditor;
+
+        private static bool HasValidAuth
+        {
+            get
+            {
+                try
+                {
+                    return BlockadeLabsSkyboxGenerator.BlockadeLabsClient.HasValidAuthentication;
+                }
+                catch (Exception)
+                {
+                    return false;
+                }
+            }
+        }
 
         private void OnEnable()
         {
@@ -51,10 +73,8 @@ namespace BlockadeLabsSDK.Editor
             _seed = serializedObject.FindProperty(nameof(_seed));
             _enhancePrompt = serializedObject.FindProperty(nameof(_enhancePrompt));
 
-            if (_apiKey.stringValue != null)
-            {
-                InitializeAsync((BlockadeLabsSkyboxGenerator)target, false);
-            }
+            _generatorEditor = this;
+            EditorApplication.delayCall += Initialize;
         }
 
         public override void OnInspectorGUI()
@@ -62,47 +82,34 @@ namespace BlockadeLabsSDK.Editor
             serializedObject.Update();
 
             var generator = (BlockadeLabsSkyboxGenerator)target;
-            var generating = generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Generating;
 
-            if (!BlockadeLabsSkyboxGenerator.BlockadeLabsClient.HasValidAuthentication)
+            DrawApiKey();
+
+            var hasAuth = HasValidAuth;
+
+            if (hasAuth)
             {
-                DrawApiKey();
+                hasAuth = generator.CheckApiKeyValid();
             }
 
-            BlockadeGUI.DisableGroup(generating || !BlockadeLabsSkyboxGenerator.BlockadeLabsClient.HasValidAuthentication, () =>
+            var isReady = generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Ready;
+
+            if (generator.CurrentState == BlockadeLabsSkyboxGenerator.State.NeedApiKey || generator.StyleFamily?.Count == 0)
             {
-                EditorGUI.BeginChangeCheck();
-                EditorGUILayout.PropertyField(_modelVersion);
+                EditorGUILayout.HelpBox("Missing API Key", MessageType.Error);
+            }
 
-                if (EditorGUI.EndChangeCheck() && generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Ready)
-                {
-                    generator.ModelVersion = (SkyboxModel)_modelVersion.intValue;
-                    _remix.boolValue = false;
-                }
-
-                EditorGUILayout.PropertyField(_skyboxMesh);
-                EditorGUILayout.PropertyField(_skyboxMaterial);
-                EditorGUILayout.PropertyField(_depthMaterial);
-                EditorGUILayout.PropertyField(_cubemapComputeShader);
-#if UNITY_HDRP
-                EditorGUILayout.PropertyField(_HDRPVolume);
-                EditorGUILayout.PropertyField(_HDRPVolumeProfile);
-#endif
+            BlockadeGUI.DisableGroup(!isReady || !hasAuth, () =>
+            {
+                DrawSkyboxAssetFields();
+                DrawSkyboxFields(generator);
 
                 if (!string.IsNullOrWhiteSpace(generator.LastError))
                 {
                     EditorGUILayout.HelpBox(generator.LastError, MessageType.Error);
                 }
 
-                if (generator.CurrentState == BlockadeLabsSkyboxGenerator.State.NeedApiKey || generator.StyleFamily?.Count == 0)
-                {
-                    return;
-                }
-
-                DrawSkyboxFields(generator);
-                EditorGUILayout.Space(12);
-
-                if (generating)
+                if (generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Generating)
                 {
                     DrawProgress(generator);
                 }
@@ -123,31 +130,70 @@ namespace BlockadeLabsSDK.Editor
 
         private void DrawApiKey()
         {
-            var apiKey = _apiKey.stringValue;
-
-            if (!string.IsNullOrWhiteSpace(apiKey) && _configuration.objectReferenceValue == null)
+            EditorGUILayout.Space();
+            if (_configuration.objectReferenceValue != null)
             {
-                var configuration = BlockadeLabsConfigurationInspector.GetOrCreateInstance();
-                configuration.ApiKey = apiKey;
-                BlockadeLabsSkyboxGenerator.BlockadeLabsClient = new BlockadeLabsClient(configuration);
-                _configuration.objectReferenceValue = configuration;
-                _apiKey.stringValue = string.Empty;
+                BlockadeLabsSkyboxGenerator.Configuration = (BlockadeLabsConfiguration)_configuration.objectReferenceValue;
             }
-            else if (_configuration.objectReferenceValue == null)
+            else
             {
-                BlockadeLabsConfigurationInspector.GetOrCreateInstance();
+                BlockadeLabsSkyboxGenerator.Configuration = BlockadeLabsConfigurationInspector.GetOrCreateInstance();
+                _configuration.objectReferenceValue = BlockadeLabsSkyboxGenerator.Configuration;
+
+                if (!string.IsNullOrWhiteSpace(_apiKey.stringValue))
+                {
+                    BlockadeLabsSkyboxGenerator.Configuration.ApiKey = _apiKey.stringValue;
+                    _apiKey.stringValue = string.Empty;
+                }
             }
 
             CreateCachedEditor(_configuration.objectReferenceValue, typeof(BlockadeLabsConfigurationInspector), ref _configurationEditor);
-            _configurationEditor.OnInspectorGUI();
+            _configurationEditor?.OnInspectorGUI();
+            EditorGUILayout.Space();
+        }
+
+        private void DrawSkyboxAssetFields()
+        {
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Skybox Assets", EditorStyles.boldLabel);
+            EditorGUILayout.Space();
+            EditorGUILayout.PropertyField(_skyboxMesh);
+            EditorGUILayout.PropertyField(_skyboxMaterial);
+            EditorGUILayout.PropertyField(_depthMaterial);
+            EditorGUILayout.PropertyField(_cubemapComputeShader);
+#if UNITY_HDRP
+            EditorGUILayout.PropertyField(_HDRPVolume);
+            EditorGUILayout.PropertyField(_HDRPVolumeProfile);
+#endif
         }
 
         private void DrawSkyboxFields(BlockadeLabsSkyboxGenerator generator)
         {
-            EditorGUILayout.PropertyField(_selectedStyle);
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Skybox Generation Options", EditorStyles.boldLabel);
+            EditorGUILayout.Space();
+            EditorGUI.BeginChangeCheck();
+            EditorGUILayout.PropertyField(_modelVersion);
+
+            if (EditorGUI.EndChangeCheck())
+            {
+                generator.ModelVersion = (SkyboxModel)_modelVersion.intValue;
+                generator.SelectedStyle = null;
+                _remix.boolValue = false;
+                EditorUtility.SetDirty(generator);
+            }
+
+            if (generator.ModelVersion != _model)
+            {
+                _model = generator.ModelVersion;
+                _options = null;
+            }
+
+            RenderStyleField(generator);
             EditorStyles.textField.wordWrap = true;
             EditorGUILayout.PropertyField(_prompt, GUILayout.Height(EditorGUIUtility.singleLineHeight * 3));
             EditorStyles.textField.wordWrap = false;
+            EditorGUILayout.PropertyField(_enhancePrompt);
             EditorGUILayout.PropertyField(_negativeText);
             EditorGUILayout.PropertyField(_remix);
 
@@ -158,7 +204,136 @@ namespace BlockadeLabsSDK.Editor
             });
 
             EditorGUILayout.PropertyField(_seed);
-            EditorGUILayout.PropertyField(_enhancePrompt);
+            EditorGUILayout.Space(12);
+        }
+
+        private void RenderStyleField(BlockadeLabsSkyboxGenerator generator)
+        {
+            var styleId = _selectedStyle.FindPropertyRelative("_id");
+            var styleName = _selectedStyle.FindPropertyRelative("_name");
+
+            if (_options == null || _options.Length == 0)
+            {
+                FetchStyles(generator);
+
+                if (string.IsNullOrWhiteSpace(styleName.stringValue))
+                {
+                    EditorGUILayout.HelpBox("Fetching skybox styles...", MessageType.Info);
+                    return;
+                }
+
+                EditorGUILayout.LabelField(new GUIContent(styleName.stringValue, styleId.intValue.ToString()));
+                return;
+            }
+
+            var index = -1;
+            var currentOption = generator.SelectedStyle ?? GetSelection(styleId.intValue);
+
+            if (currentOption != null)
+            {
+                for (int i = 0; i < _options.Length; i++)
+                {
+                    if (_options[i].tooltip == styleId.intValue.ToString())
+                    {
+                        index = i;
+                        break;
+                    }
+                }
+            }
+
+            EditorGUI.BeginChangeCheck();
+            index = EditorGUILayout.Popup(new GUIContent(_selectedStyle.displayName, _selectedStyle.tooltip), index, _options);
+
+            if (EditorGUI.EndChangeCheck())
+            {
+                currentOption = GetSelection(int.Parse(_options[index].tooltip));
+
+                if (currentOption != null)
+                {
+                    generator.SelectedStyle = currentOption;
+                    EditorUtility.SetDirty(generator);
+                }
+                else
+                {
+                    Debug.LogError("Failed to make a selection!");
+                }
+            }
+
+            SkyboxStyle GetSelection(int selection)
+            {
+                foreach (var style in _styles)
+                {
+                    if (style.FamilyStyles != null)
+                    {
+                        foreach (var familyStyle in style.FamilyStyles)
+                        {
+                            if (familyStyle.Id == selection)
+                            {
+                                return familyStyle;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (style.Id == selection)
+                        {
+                            return style;
+                        }
+                    }
+                }
+
+                return null;
+            }
+        }
+
+        private SkyboxModel _model = SkyboxModel.Model3;
+        private List<SkyboxStyle> _styles = new List<SkyboxStyle>();
+        private GUIContent[] _options = Array.Empty<GUIContent>();
+
+        public void FetchStyles(BlockadeLabsSkyboxGenerator generator)
+        {
+            if (generator.AllModelStyleFamilies == null)
+            {
+                return;
+            }
+
+            try
+            {
+                _styles.Clear();
+                var styleOptions = new List<GUIContent>();
+
+                foreach (var style in generator.AllModelStyleFamilies.OrderBy(style => style.SortOrder))
+                {
+                    var styleName = style.Name.Replace("/", " ");
+
+                    if (style.FamilyStyles != null && style.FamilyStyles.Count > 0)
+                    {
+                        foreach (var familyStyle in style.FamilyStyles.OrderBy(familyStyle => familyStyle.SortOrder))
+                        {
+                            if (familyStyle.Model == generator.ModelVersion)
+                            {
+                                _styles.Add(familyStyle);
+                                var name = familyStyle.Name.Replace("/", " ");
+                                styleOptions.Add(new GUIContent($"{styleName}/{name}", familyStyle.Id.ToString()));
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (style.Model == generator.ModelVersion)
+                        {
+                            _styles.Add(style);
+                            styleOptions.Add(new GUIContent($"{styleName}", style.Id.ToString()));
+                        }
+                    }
+                }
+
+                _options = styleOptions.ToArray();
+            }
+            catch (Exception e)
+            {
+                Debug.LogError(e);
+            }
         }
 
         private void DrawProgress(BlockadeLabsSkyboxGenerator generator)
@@ -173,32 +348,35 @@ namespace BlockadeLabsSDK.Editor
             });
         }
 
-        private async void InitializeAsync(BlockadeLabsSkyboxGenerator generator, bool sendAttribution)
-        {
-            if (!generator.CheckApiKeyValid())
-            {
-                return;
-            }
+        internal static async void Initialize()
+            => await InitializeAsync(false);
 
-            if (generator.CurrentState != BlockadeLabsSkyboxGenerator.State.NeedApiKey)
+        internal static async Task InitializeAsync(bool sendAttribution)
+        {
+            if (_generatorEditor == null)
             {
                 return;
             }
 
             try
             {
+                var generator = (BlockadeLabsSkyboxGenerator)_generatorEditor.target;
                 await generator.LoadAsync();
 
-                if (sendAttribution)
+                if (sendAttribution &&
+                    BlockadeLabsSkyboxGenerator.Configuration != null &&
+                    !string.IsNullOrWhiteSpace(BlockadeLabsSkyboxGenerator.Configuration.ApiKey))
                 {
-                    VSAttribution.SendAttributionEvent("Initialization", "BlockadeLabs", _apiKey.stringValue);
+                    VSAttribution.SendAttributionEvent("Initialization", "BlockadeLabs", BlockadeLabsSkyboxGenerator.Configuration.ApiKey);
                 }
-
-                Repaint();
             }
             catch (Exception e)
             {
-                Debug.LogError("Failed to initialize BlockadeLabsSkybox: " + e.Message);
+                Debug.LogError($"Failed to initialize BlockadeLabsSkybox: {e.Message}");
+            }
+            finally
+            {
+                _generatorEditor.Repaint();
             }
         }
     }

@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using UnityEditor;
+using UnityEngine;
 
 namespace BlockadeLabsSDK.Editor
 {
@@ -10,6 +11,7 @@ namespace BlockadeLabsSDK.Editor
         private static bool indent;
         private static bool triggerReload;
 
+        private Texture _logo;
         private SerializedProperty _apiKey;
         private SerializedProperty _proxyDomainUrl;
 
@@ -26,6 +28,8 @@ namespace BlockadeLabsSDK.Editor
         private void OnEnable()
         {
             GetOrCreateInstance(target);
+
+            _logo = AssetDatabase.LoadAssetAtPath<Texture>(AssetDatabase.GUIDToAssetPath("7a7ad95e1e1c4ee488d47d37aa36e95a"));
 
             try
             {
@@ -44,32 +48,39 @@ namespace BlockadeLabsSDK.Editor
         {
             serializedObject.Update();
             EditorGUILayout.Space();
+            GUILayout.Box(_logo, EditorStyles.centeredGreyMiniLabel);
+            EditorGUILayout.Space();
 
             if (indent)
             {
                 EditorGUI.indentLevel++;
             }
 
-            EditorGUI.BeginChangeCheck();
+            EditorGUILayout.BeginHorizontal();
             EditorGUILayout.PropertyField(_apiKey);
 
-            if (EditorGUI.EndChangeCheck())
+            if (GUILayout.Button("Apply", GUILayout.Width(64)))
             {
-                triggerReload = true;
-
                 if (!string.IsNullOrWhiteSpace(_apiKey.stringValue))
                 {
                     VSAttribution.SendAttributionEvent("Initialization", "BlockadeLabs", _apiKey.stringValue);
                 }
+
+                triggerReload = true;
+                EditorApplication.delayCall += CheckReload;
             }
 
-            EditorGUI.BeginChangeCheck();
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.BeginHorizontal();
             EditorGUILayout.PropertyField(_proxyDomainUrl);
 
-            if (EditorGUI.EndChangeCheck())
+            if (GUILayout.Button("Apply", GUILayout.Width(64)))
             {
                 triggerReload = true;
+                EditorApplication.delayCall += CheckReload;
             }
+
+            EditorGUILayout.EndHorizontal();
 
             if (indent)
             {
@@ -81,12 +92,13 @@ namespace BlockadeLabsSDK.Editor
 
         #endregion Inspector Window
 
-        private static void CheckReload()
+        internal static async void CheckReload()
         {
             if (triggerReload)
             {
                 triggerReload = false;
-                EditorUtility.RequestScriptReload();
+                await BlockadeLabsSkyboxGeneratorEditor.InitializeAsync(true);
+                EditorApplication.delayCall += EditorUtility.RequestScriptReload;
             }
         }
 
@@ -107,19 +119,13 @@ namespace BlockadeLabsSDK.Editor
             }
 
             var instance = GetOrCreateInstance();
-
-            if (Selection.activeObject != instance)
-            {
-                Selection.activeObject = instance;
-            }
-
             var instanceEditor = CreateEditor(instance);
             indent = true;
             instanceEditor.OnInspectorGUI();
             indent = false;
         }
 
-        internal static BlockadeLabsConfiguration GetOrCreateInstance(Object target = null)
+        internal static BlockadeLabsConfiguration GetOrCreateInstance(object target = null)
         {
             var update = false;
             BlockadeLabsConfiguration instance;

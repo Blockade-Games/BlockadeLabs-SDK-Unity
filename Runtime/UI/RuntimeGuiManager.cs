@@ -594,7 +594,7 @@ namespace BlockadeLabsSDK
             // History Panel Controls
             _historyButton.onClick.AddListener(ToggleHistoryPanel);
 
-            _generator.Reload();
+            _generator.Load();
         }
 
         private void OnGeneratorPropertyChanged()
@@ -618,7 +618,7 @@ namespace BlockadeLabsSDK
             _negativeTextCharacterWarning.SetActive(false);
 
             _selectedStyleText.text = _generator.SelectedStyle?.Name ?? "Select a Style";
-            _stylePickerPanel.SetSelectedStyle(_generator.SelectedStyleFamily, _generator.SelectedStyle);
+            _stylePickerPanel.SetSelectedStyle(_generator.SelectedStyle);
         }
 
         private void OnSkyboxPropertyChanged()

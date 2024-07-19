@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Emit;
 using System.Security.Authentication;
 using UnityEditor;
 using UnityEngine;
@@ -49,20 +50,19 @@ namespace BlockadeLabsSDK.Editor
                 return;
             }
 
-            // dropdown
             var index = -1;
             SkyboxStyle currentOption = null;
 
             if (id.intValue > 0)
             {
-                currentOption = styles?.FirstOrDefault(style => style.Id.ToString() == id.intValue.ToString());
+                currentOption = GetSelection(id.intValue);
             }
 
             if (currentOption != null)
             {
-                for (var i = 0; i < options.Length; i++)
+                for (int i = 0; i < options.Length; i++)
                 {
-                    if (options[i].tooltip.Contains(currentOption.Id.ToString()))
+                    if (options[i].tooltip == id.intValue.ToString())
                     {
                         index = i;
                         break;
@@ -73,26 +73,60 @@ namespace BlockadeLabsSDK.Editor
             EditorGUI.BeginChangeCheck();
             index = EditorGUI.Popup(position, label, index, options);
 
-            if (EditorGUI.EndChangeCheck())
+            if (EditorGUI.EndChangeCheck() && styles != null)
             {
-                currentOption = styles?.FirstOrDefault(style => options[index].tooltip.Contains(style.Id.ToString()));
-                id.intValue = currentOption!.Id;
-                name.stringValue = currentOption!.Name;
-                model.intValue = (int)currentOption.Model!;
+                var selection = int.Parse(options[index].tooltip);
+                currentOption = GetSelection(selection);
+
+                if (currentOption != null)
+                {
+                    id.intValue = currentOption!.Id;
+                    name.stringValue = currentOption!.Name;
+                    model.intValue = (int)currentOption.Model!;
+                }
+                else
+                {
+                    Debug.LogError("Failed to make a selection!");
+                }
+            }
+
+            SkyboxStyle GetSelection(int selection)
+            {
+                if (styles == null)
+                {
+                    return null;
+                }
+
+                foreach (var style in styles)
+                {
+                    if (style.FamilyStyles != null)
+                    {
+                        foreach (var familyStyle in style.FamilyStyles)
+                        {
+                            if (familyStyle.Id == selection)
+                            {
+                                return familyStyle;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (style.Id == selection)
+                        {
+                            return style;
+                        }
+                    }
+                }
+
+                return null;
             }
         }
 
         private static bool isFetchingStyles;
 
-        public static bool IsFetchingStyles => isFetchingStyles;
-
         private static List<SkyboxStyle> styles = new List<SkyboxStyle>();
 
-        public static IReadOnlyList<SkyboxStyle> Styles => styles;
-
         private static GUIContent[] options = Array.Empty<GUIContent>();
-
-        public static IReadOnlyList<GUIContent> Options => options;
 
         public static async void FetchStyles()
         {
