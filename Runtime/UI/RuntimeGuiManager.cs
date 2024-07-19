@@ -704,6 +704,13 @@ namespace BlockadeLabsSDK
         private void UpdateRemixPanel()
         {
             _uploadButton.gameObject.SetActive(Application.isEditor);
+            _uploadButton.interactable = _generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Ready;
+
+            foreach (var chile in _uploadButton.GetComponentsInChildren<DisabledColor>())
+            {
+                chile.Disabled = !_uploadButton.interactable;
+            }
+
             _remixImagePanel.SetActive(_generator.Remix && _generator.RemixImage != null);
             _remixImage.texture = _generator.RemixImage;
 
