@@ -4,7 +4,7 @@ using UnityEngine;
 namespace BlockadeLabsSDK.Editor
 {
     [CustomEditor(typeof(BlockadeLabsSkyboxMesh))]
-    public class BlockadeLabsSkyboxMeshEditor : UnityEditor.Editor
+    internal class BlockadeLabsSkyboxMeshEditor : UnityEditor.Editor
     {
         private SerializedProperty _skyboxMetadata;
         private SerializedProperty _meshDensity;

@@ -6,7 +6,7 @@ using UnityEngine;
 namespace BlockadeLabsSDK.Editor
 {
     [CustomEditor(typeof(BlockadeLabsConfiguration))]
-    public class BlockadeLabsConfigurationInspector : UnityEditor.Editor
+    internal class BlockadeLabsConfigurationInspector : UnityEditor.Editor
     {
         private static bool indent;
         private static bool triggerReload;
@@ -14,6 +14,8 @@ namespace BlockadeLabsSDK.Editor
         private Texture _logo;
         private SerializedProperty _apiKey;
         private SerializedProperty _proxyDomainUrl;
+
+        public static bool ShowApiHelpBox { get; set; }
 
         #region Project Settings Window
 
@@ -42,7 +44,8 @@ namespace BlockadeLabsSDK.Editor
             }
         }
 
-        private void OnDisable() => CheckReload();
+        private void OnDisable()
+            => CheckReload();
 
         public override void OnInspectorGUI()
         {
@@ -81,6 +84,18 @@ namespace BlockadeLabsSDK.Editor
             }
 
             EditorGUILayout.EndHorizontal();
+
+            if (string.IsNullOrWhiteSpace(_apiKey.stringValue) || ShowApiHelpBox)
+            {
+                const string apiUrl = "https://skybox.blockadelabs.com/dashboard/api";
+                var message = $"In order to use this package you need to provide an API key from Blockade Labs in the API section.\n<a href=\"{apiUrl}\">{apiUrl}</a>";
+                EditorGUILayout.Space();
+
+                if (BlockadeGUI.HelpBoxLinkButton(message, MessageType.Warning))
+                {
+                    Application.OpenURL(apiUrl);
+                }
+            }
 
             if (indent)
             {

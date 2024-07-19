@@ -267,5 +267,33 @@ namespace BlockadeLabsSDK.Editor
             ColorUtility.TryParseHtmlString(hex, out var color);
             return color;
         }
+
+        public static bool HelpBoxLinkButton(string message, MessageType type)
+        {
+            Texture icon = null;
+
+            switch (type)
+            {
+                case MessageType.Info:
+                    icon = EditorGUIUtility.IconContent("console.infoicon").image;
+                    break;
+                case MessageType.Warning:
+                    icon = EditorGUIUtility.IconContent("console.warnicon").image;
+                    break;
+                case MessageType.Error:
+                    icon = EditorGUIUtility.IconContent("console.erroricon").image;
+                    break;
+            }
+
+            var style = new GUIStyle(EditorStyles.helpBox)
+            {
+                richText = true,
+                fontSize = EditorStyles.helpBox.fontSize
+            };
+            EditorGUILayout.LabelField(GUIContent.none, new GUIContent(message, icon), style);
+            var position = GUILayoutUtility.GetLastRect();
+            EditorGUIUtility.AddCursorRect(position, MouseCursor.Link);
+            return GUI.Button(position, GUIContent.none, EditorStyles.linkLabel);
+        }
     }
 }

@@ -1,17 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection.Emit;
 using System.Threading.Tasks;
 using UnityEditor;
-using UnityEditor.Graphs;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 namespace BlockadeLabsSDK.Editor
 {
     [CustomEditor(typeof(BlockadeLabsSkyboxGenerator))]
-    public class BlockadeLabsSkyboxGeneratorEditor : UnityEditor.Editor
+    internal class BlockadeLabsSkyboxGeneratorEditor : UnityEditor.Editor
     {
         private SerializedProperty _configuration;
         private SerializedProperty _apiKey;
@@ -83,7 +80,7 @@ namespace BlockadeLabsSDK.Editor
 
             var generator = (BlockadeLabsSkyboxGenerator)target;
 
-            DrawApiKey();
+            DrawApiKey(generator);
 
             var hasAuth = HasValidAuth;
 
@@ -93,11 +90,6 @@ namespace BlockadeLabsSDK.Editor
             }
 
             var isReady = generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Ready;
-
-            if (generator.CurrentState == BlockadeLabsSkyboxGenerator.State.NeedApiKey || generator.StyleFamily?.Count == 0)
-            {
-                EditorGUILayout.HelpBox("Missing API Key", MessageType.Error);
-            }
 
             BlockadeGUI.DisableGroup(!isReady || !hasAuth, () =>
             {
@@ -128,7 +120,7 @@ namespace BlockadeLabsSDK.Editor
             }
         }
 
-        private void DrawApiKey()
+        private void DrawApiKey(BlockadeLabsSkyboxGenerator generator)
         {
             EditorGUILayout.Space();
             if (_configuration.objectReferenceValue != null)
@@ -148,6 +140,7 @@ namespace BlockadeLabsSDK.Editor
             }
 
             CreateCachedEditor(_configuration.objectReferenceValue, typeof(BlockadeLabsConfigurationInspector), ref _configurationEditor);
+            BlockadeLabsConfigurationInspector.ShowApiHelpBox = generator.CurrentState == BlockadeLabsSkyboxGenerator.State.NeedApiKey;
             _configurationEditor?.OnInspectorGUI();
             EditorGUILayout.Space();
         }
@@ -358,9 +351,15 @@ namespace BlockadeLabsSDK.Editor
                 return;
             }
 
+            var generator = (BlockadeLabsSkyboxGenerator)_generatorEditor.target;
+
+            if (generator.CurrentState == BlockadeLabsSkyboxGenerator.State.Generating)
+            {
+                return;
+            }
+
             try
             {
-                var generator = (BlockadeLabsSkyboxGenerator)_generatorEditor.target;
                 await generator.LoadAsync();
 
                 if (sendAttribution &&

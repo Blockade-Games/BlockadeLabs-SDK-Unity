@@ -10,8 +10,6 @@ using UnityEngine;
 #if UNITY_HDRP
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.HighDefinition;
-using System.Security.Authentication;
-
 #endif
 
 #if UNITY_EDITOR
