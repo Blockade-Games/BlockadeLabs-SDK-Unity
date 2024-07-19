@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
@@ -193,7 +194,7 @@ namespace BlockadeLabsSDK
                     if (styleItem.Style == null) { continue; }
                     if (styleItem.Style.FamilyStyles != null)
                     {
-                        styleItem.SetSelected(styleItem.Style == _selectedFamily);
+                        styleItem.SetSelected(styleItem.Style == _selectedFamily || styleItem.Style.FamilyStyles.Any(style => style == _selectedStyle));
                     }
                     else
                     {
