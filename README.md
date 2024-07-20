@@ -56,7 +56,7 @@ Option 2: Install the Pusher package with OpenUPM:
 - Registry:
   - Add scope: `com.pusher.pusherwebsocketunity`
 
-> ![NOTE]
+> [!NOTE]
 > After installing the Pusher package for Unity 2021+ versions you might encounter an error saying:
 
 ```text
@@ -99,7 +99,7 @@ If the onboarding window does not open for you, you can access the SkyboxAI scen
 - menu: `Tools > Blockade Labs > /Open SkyboxAI Scene`
 - open: `Packages/Blockade Labs SDK/Scenes/SkyboxScene`
 
-> ![NOTE]
+> [!NOTE]
 > The SkyboxSceneAI scene uses Text Mesh Pro elements for runtime UI. If you haven't imported TMP Essentials
 you will be prompted to do so after you load the scene. When you are done importing TMP Essentials,
 reload the scene by either double clicking on it in the `Assets/Samples/Blockade Labs SDK/Scenes`.
@@ -215,7 +215,7 @@ If you want to use the generated mesh in your own scene, click `Save Prefab`, th
 
 If you're interested in having runtime generated content generated on demand, you can use the public API surface directly.
 
-> ![WARNING]
+> [!WARNING]
 > It is highly encouraged to use a proxy service when generating runtime content, to keep your API key secure and to minimize unauthorized content generation. **DO NOT** store or check in your API key into source control or ship it with your application. Ensure that you have not hard coded your API key in source control, and **DO NOT** check in your `BlockadeLabsConfiguration` into source control.
 
 #### [BlockadeLabs API Proxy](BlockadeLabs-SDK-DotNet-Proxy/Readme.md)
