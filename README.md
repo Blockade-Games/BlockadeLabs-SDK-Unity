@@ -98,7 +98,7 @@ After importing the package an onboarding window should pop up with directions t
 
 If the onboarding window does not open for you, you can access the SkyboxAI scene by the following:
 
-- menu: `Tools > Blockade Labs > /Open SkyboxAI Scene`
+- menu: `Tools > Blockade Labs > Open SkyboxAI Scene`
 - open: `Packages/Blockade Labs SDK/Scenes/SkyboxScene`
 
 > [!NOTE]
