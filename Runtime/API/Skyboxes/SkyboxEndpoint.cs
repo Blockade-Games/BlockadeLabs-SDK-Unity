@@ -117,10 +117,10 @@ namespace BlockadeLabsSDK
 
             var response = await Rest.GetAsync(GetUrl("skybox/families", @params), client.DefaultRequestHeaders, cancellationToken);
             response.Validate(EnableDebug);
-            var styles = JsonConvert.DeserializeObject<IReadOnlyList<SkyboxStyle>>(response.Body, BlockadeLabsClient.JsonSerializationOptions);
+            var families = JsonConvert.DeserializeObject<IReadOnlyList<SkyboxStyle>>(response.Body, BlockadeLabsClient.JsonSerializationOptions);
             return model != null
-                ? styles.Where(style => style.FamilyStyles != null ? style.FamilyStyles[0].Model == model : style.Model == model).ToList()
-                : styles;
+                ? families.Where(style => style.FamilyStyles != null ? style.FamilyStyles[0].Model == model : style.Model == model).ToList()
+                : families;
         }
 
         /// <summary>

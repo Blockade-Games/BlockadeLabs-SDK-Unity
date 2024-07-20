@@ -121,7 +121,7 @@ namespace BlockadeLabsSDK.Tests
 
                 Debug.Log(skyboxInfo.ToString());
 
-                skyboxInfo = await BlockadeLabsClient.SkyboxEndpoint.GetSkyboxInfoAsync(skyboxInfo);
+                skyboxInfo = await BlockadeLabsClient.SkyboxEndpoint.GetSkyboxInfoAsync(skyboxInfo.ObfuscatedId);
                 Assert.IsNotNull(skyboxInfo);
                 await skyboxInfo.LoadAssetsAsync();
                 Assert.IsNotEmpty(skyboxInfo.Exports);
