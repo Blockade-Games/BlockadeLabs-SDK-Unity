@@ -76,6 +76,8 @@ Refer to the changelog file [here](CHANGELOG.md).
 - [Getting Started](#getting-started)
 - [Authentication](#authentication)
 - [Generating Skyboxes in Editor](#generating-skyboxes-in-editor)
+  - [Using Skyboxes in your scene](#using-the-skybox-in-your-scene)
+  - [3D Mesh Creator](#mesh-creator)
 - [Generating Skyboxes at Runtime](#generating-skyboxes-at-runtime)
   - [BlockadeLabs API Proxy](#blockadelabs-api-proxy)
   - [Skyboxes API](#skyboxes-api)
