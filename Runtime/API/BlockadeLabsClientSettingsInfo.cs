@@ -29,8 +29,8 @@ namespace BlockadeLabsSDK
                 domain = DefaultDomain;
             }
 
-            if (!domain.Contains('.') &&
-                !domain.Contains(':'))
+            if (!domain.Contains(".") &&
+                !domain.Contains(":"))
             {
                 throw new ArgumentException($"Invalid parameter \"{nameof(domain)}\"");
             }
