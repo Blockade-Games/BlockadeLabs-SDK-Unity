@@ -1,15 +1,14 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Security.Authentication;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.Networking;
 
 namespace BlockadeLabsSDK.Editor
 {
     internal class Survey : EditorWindow
     {
-        private static readonly string[] _quantitativeColors = new string[]
+        private static readonly string[] _quantitativeColors =
         {
             "#FC5555", "#FC5555", "#FC5555", "#FC5555", "#FC5555",
             "#F6B100", "#F6B100", "#F6B100", "#02EE8B", "#02EE8B"
@@ -18,7 +17,7 @@ namespace BlockadeLabsSDK.Editor
         private const string _windowTitle = "Skybox AI Feedback";
         private const string _styleTag = "BlockadeLabsSDK_Survey";
 
-        private static readonly  Vector2 _windowSize = new Vector2(866, 360);
+        private static readonly Vector2 _windowSize = new Vector2(866, 360);
 
         private GUIStyle _bgStyle;
         private GUIStyle _titleStyle;
@@ -31,67 +30,40 @@ namespace BlockadeLabsSDK.Editor
         private GUIStyle _textAreaStyle;
         private GUIStyle _finishedStyle;
 
-        private static string _apiKey;
-        private static GetFeedbacksResponse _feedbacks;
-        private static PostFeedbacksRequest _response;
+        private static FeedbackQuestions _questions;
+        private static FeedbackAnswers _answers;
         private static int _currentQuestion;
 
 #if BLOCKADE_DEBUG
         [MenuItem("TEST/Feedback Survey")]
-        public static void Test()
-        {
-            ShowSurvey();
-        }
 #endif
-
-        private void CreateTestFeedbacks()
+        public static async void Trigger()
         {
-            var json = Resources.Load<TextAsset>("feedback-test");
-            _feedbacks = Newtonsoft.Json.JsonConvert.DeserializeObject<List<GetFeedbacksResponse>>(json.text)[0];
-            InitializeResponse();
-            _currentQuestion = 0;
-        }
-
-        private static void InitializeResponse()
-        {
-            _response = new PostFeedbacksRequest() {
-                id = _feedbacks.id,
-                version = _feedbacks.version,
-                channel = "integration - unity",
-                data = _feedbacks.data.Select(d => new FeedbackAnswer()
-                {
-                    id = d.id,
-                    answer = (d.type == "qualitative") ? "" : -1
-                }).ToList()
-            };
-        }
-
-        public static async void Trigger(string apiKey)
-        {
-            if (_feedbacks != null)
-            {
-                // Already showing
-                return;
-            }
-
             try
             {
-                var feedbacksList = await ApiRequests.GetFeedbacksAsync(apiKey);
+                var feedbacksList = await BlockadeLabsSkyboxGenerator.BlockadeLabsClient.FeedbackEndpoint.GetFeedbackListAsync();
+
                 if (feedbacksList.Count > 0)
                 {
-                    _feedbacks = feedbacksList[0];
+                    _questions = feedbacksList[0];
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                return;
+                switch (e)
+                {
+                    case AuthenticationException _:
+                        return;
+                    default:
+                        Debug.LogException(e);
+                        return;
+                }
             }
 
-            if (_feedbacks?.data?.Count > 0)
+            if (_questions?.Data?.Count > 0)
             {
-                InitializeResponse();
+                _answers = new FeedbackAnswers(_questions);
                 _currentQuestion = 0;
-                _apiKey = apiKey;
                 ShowSurvey();
             }
             else
@@ -111,35 +83,22 @@ namespace BlockadeLabsSDK.Editor
             _bgStyle = null;
         }
 
-        private void OnDisable()
+        private async void OnDisable()
         {
-            if (_feedbacks != null && !string.IsNullOrWhiteSpace(_apiKey) && _currentQuestion < _feedbacks.data.Count)
+            if (_questions != null && _currentQuestion < _questions.Data.Count)
             {
-                var requestData = new PostFeedbacksSkipRequest()
-                {
-                    id = _feedbacks.id,
-                    channel = "integration - unity",
-                    ask_me_later = true
-                };
-
-                ApiRequests.PostFeedbackSkipAsync(requestData, _apiKey);
+                var request = new FeedbackAnswers(_questions.Id, _questions.Version, true);
+                await BlockadeLabsSkyboxGenerator.BlockadeLabsClient.FeedbackEndpoint.PostFeedbackAsync(request);
             }
 
-            _feedbacks = null;
-            _response = null;
+            _questions = null;
+            _answers = null;
             BlockadeGUI.CleanupBackgroundTextures(_styleTag);
         }
 
         private void InitStyles()
         {
-            if (_bgStyle != null) return;
-
-#if BLOCKADE_DEBUG
-            if (_feedbacks == null)
-            {
-                CreateTestFeedbacks();
-            }
-#endif
+            if (_bgStyle != null) { return; }
 
             BlockadeGUI.StyleFontSize = 14;
             BlockadeGUI.StyleTag = _styleTag;
@@ -180,9 +139,11 @@ namespace BlockadeLabsSDK.Editor
             _nextButtonDisabledStyle.alignment = TextAnchor.MiddleCenter;
             _nextButtonDisabledStyle.fontStyle = FontStyle.Bold;
 
-            _textAreaStyle = new GUIStyle(EditorStyles.textArea);
-            _textAreaStyle.padding = new RectOffset(10, 10, 10, 10);
-            _textAreaStyle.fontSize = 14;
+            _textAreaStyle = new GUIStyle(EditorStyles.textArea)
+            {
+                padding = new RectOffset(10, 10, 10, 10),
+                fontSize = 14
+            };
 
             _finishedStyle = BlockadeGUI.CreateStyle(Color.white);
             _finishedStyle.fontSize = 32;
@@ -201,9 +162,9 @@ namespace BlockadeLabsSDK.Editor
 
             BlockadeGUI.VerticalExpanded(_bgStyle, () =>
             {
-                if (_currentQuestion < _feedbacks.data.Count)
+                if (_currentQuestion < _questions.Data.Count)
                 {
-                    DrawFeedbackQuestion(_feedbacks.data[_currentQuestion], _response.data[_currentQuestion]);
+                    DrawFeedbackQuestion(_questions.Data[_currentQuestion], _answers.Data[_currentQuestion]);
                 }
                 else
                 {
@@ -214,36 +175,37 @@ namespace BlockadeLabsSDK.Editor
 
         private Vector2 _textScroll;
 
-        private void DrawFeedbackQuestion(FeedbackData data, FeedbackAnswer answer)
+        private void DrawFeedbackQuestion(FeedbackQuestion question, FeedbackAnswer answer)
         {
             GUILayout.Space(13);
 
             BlockadeGUI.Horizontal(() =>
             {
-                GUILayout.Label(data.question, _titleStyle, GUILayout.ExpandWidth(true));
+                _titleStyle.richText = true;
+                GUILayout.Label(ReplaceTags(question.Question), _titleStyle, GUILayout.ExpandWidth(true));
             });
 
             GUILayout.Space(28);
 
-            bool canProceed = false;
+            var canProceed = false;
 
-            switch (data.type)
+            switch (question.Type)
             {
                 case "quantitative":
-                    answer.answer = DrawQuantitative((int)answer.answer, data.low_hint, data.high_hint);
-                    canProceed = (int)answer.answer >= 0;
+                    answer.Answer = DrawQuantitative((int)answer.Answer, question.Range);
+                    canProceed = (int)answer.Answer >= 0;
                     break;
                 case "qualitative":
                     _textScroll = BlockadeGUI.Scroll(_textScroll, 105, () =>
                     {
-                        answer.answer = GUILayout.TextArea((string)answer.answer, _textAreaStyle, GUILayout.ExpandHeight(true), GUILayout.ExpandWidth(true));
+                        answer.Answer = GUILayout.TextArea((string)answer.Answer, _textAreaStyle, GUILayout.ExpandHeight(true), GUILayout.ExpandWidth(true));
                     });
 
-                    canProceed = !string.IsNullOrWhiteSpace((string)answer.answer);
+                    canProceed = !string.IsNullOrWhiteSpace((string)answer.Answer);
                     break;
                 case "choice":
-                    answer.answer = DrawChoice((int)answer.answer, data.options);
-                    canProceed = (int)answer.answer >= 0;
+                    answer.Answer = DrawChoice((int)answer.Answer, question.Options);
+                    canProceed = (int)answer.Answer >= 0;
                     break;
             }
 
@@ -264,12 +226,12 @@ namespace BlockadeLabsSDK.Editor
             DrawAskMeLater(GUILayoutUtility.GetLastRect().center);
         }
 
-        private Rect _lastHoveredRect = new Rect();
+        private Rect _lastHoveredRect;
 
         private bool IsHovered(Rect rect)
         {
-            bool isHovered = rect.Contains(Event.current.mousePosition);
-            bool isSameRect = rect == _lastHoveredRect;
+            var isHovered = rect.Contains(Event.current.mousePosition);
+            var isSameRect = rect == _lastHoveredRect;
 
             // We need to repaint if the hovered state changes, otherwise
             // it might take time to see the updated hover state.
@@ -304,8 +266,9 @@ namespace BlockadeLabsSDK.Editor
         {
             var content = new GUIContent("PREVIOUS");
             var rect = BlockadeGUI.GetRect(130, 48);
-            bool hovered = rect.Contains(Event.current.mousePosition);
+            var hovered = rect.Contains(Event.current.mousePosition);
             var borderWidth = hovered ? 4 : 2;
+
             if (BlockadeGUI.BoxButton(content, rect, _previousButtonStyle, BlockadeGUI.HexColor("#313131"), BlockadeGUI.HexColor("#8F8F8F"), borderWidth))
             {
                 _textScroll = Vector2.zero;
@@ -327,7 +290,7 @@ namespace BlockadeLabsSDK.Editor
 
         private void DrawNextButton(bool canProceed)
         {
-            var lastQuestion = _currentQuestion == _feedbacks.data.Count - 1;
+            var lastQuestion = _currentQuestion == _questions.Data.Count - 1;
             var text = lastQuestion ? "FINISH & SUBMIT" : "NEXT";
             var content = new GUIContent(text);
             var style = canProceed ? _nextButtonStyle : _nextButtonDisabledStyle;
@@ -376,7 +339,7 @@ namespace BlockadeLabsSDK.Editor
             }
         }
 
-        private int DrawQuantitative(int selected, string lowHint, string highHint)
+        private int DrawQuantitative(int selected, Range range)
         {
             var totalWidth = 600;
             var gap = 6;
@@ -389,12 +352,13 @@ namespace BlockadeLabsSDK.Editor
                 {
                     BlockadeGUI.Horizontal(() =>
                     {
-                        for (int i = 0; i < _quantitativeColors.Length; i++)
+                        for (var i = 0; i < _quantitativeColors.Length; i++)
                         {
                             var rect = BlockadeGUI.GetRect(optionWidth, 50);
                             var hovered = IsHovered(rect);
                             var borderWidth = (hovered || selected == i) ? 4 : 2;
                             var content = new GUIContent((i + 1).ToString());
+
                             if (BlockadeGUI.BoxButton(content, rect, _optionStyle, BlockadeGUI.HexColor("#313131"), BlockadeGUI.HexColor(_quantitativeColors[i]), borderWidth))
                             {
                                 selected = i;
@@ -416,9 +380,9 @@ namespace BlockadeLabsSDK.Editor
 
                     BlockadeGUI.Horizontal(() =>
                     {
-                        GUILayout.Label(lowHint, _optionDescriptionStyle);
+                        GUILayout.Label(range.Start.ToString(), _optionDescriptionStyle);
                         GUILayout.FlexibleSpace();
-                        GUILayout.Label(highHint, _optionDescriptionStyle);
+                        GUILayout.Label(range.End.ToString(), _optionDescriptionStyle);
                     });
                 });
             });
@@ -426,7 +390,7 @@ namespace BlockadeLabsSDK.Editor
             return selected;
         }
 
-        private int DrawChoice(int selected, List<string> options)
+        private int DrawChoice(int selected, IReadOnlyList<string> options)
         {
             BlockadeGUI.HorizontalCentered(() =>
             {
@@ -435,11 +399,11 @@ namespace BlockadeLabsSDK.Editor
                 var totalGap = gap * (options.Count - 1);
                 var optionWidth = (totalWidth - totalGap);
 
-                for (int i = 0; i < options.Count; i++)
+                for (var i = 0; i < options.Count; i++)
                 {
                     var rect = BlockadeGUI.GetRect(optionWidth, 50);
                     var borderColor = selected == i ? BlockadeGUI.HexColor("#02ee8b") : BlockadeGUI.HexColor("#8F8F8F");
-                    bool hovered = IsHovered(rect);
+                    var hovered = IsHovered(rect);
                     var borderWidth = (hovered || selected == i) ? 4 : 2;
                     var content = new GUIContent(options[i]);
 
@@ -467,13 +431,17 @@ namespace BlockadeLabsSDK.Editor
         {
             try
             {
-                if (!string.IsNullOrWhiteSpace(_apiKey))
-                {
-                    await ApiRequests.PostFeedbackAsync(_response, _apiKey);
-                }
+                await BlockadeLabsSkyboxGenerator.BlockadeLabsClient.FeedbackEndpoint.PostFeedbackAsync(_answers);
             }
-            catch (Exception)
+#if BLOCKADE_DEBUG
+            catch (Exception e)
             {
+                Debug.LogException(e);
+            }
+#endif
+            finally
+            {
+                _answers = null;
             }
         }
 
@@ -500,10 +468,16 @@ namespace BlockadeLabsSDK.Editor
 
             GUILayout.FlexibleSpace();
 
-            BlockadeGUI.HorizontalCentered(() =>
-            {
-                DrawFinishButton();
-            });
+            BlockadeGUI.HorizontalCentered(DrawFinishButton);
+        }
+
+        private string ReplaceTags(string input)
+        {
+            return input
+                .Replace("<p>", string.Empty)
+                .Replace("</p>", string.Empty)
+                .Replace("<strong>", "<b>")
+                .Replace("</strong>", "</b>");
         }
     }
 }
