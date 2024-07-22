@@ -88,7 +88,7 @@ namespace BlockadeLabsSDK.Editor
             if (_questions != null && _currentQuestion < _questions.Data.Count)
             {
                 var request = new FeedbackAnswers(_questions.Id, _questions.Version, true);
-                await BlockadeLabsSkyboxGenerator.BlockadeLabsClient.FeedbackEndpoint.PostFeedbackAsync(request);
+                await BlockadeLabsSkyboxGenerator.BlockadeLabsClient.FeedbackEndpoint.SubmitFeedbackAsync(request);
             }
 
             _questions = null;
@@ -431,7 +431,7 @@ namespace BlockadeLabsSDK.Editor
         {
             try
             {
-                await BlockadeLabsSkyboxGenerator.BlockadeLabsClient.FeedbackEndpoint.PostFeedbackAsync(_answers);
+                await BlockadeLabsSkyboxGenerator.BlockadeLabsClient.FeedbackEndpoint.SubmitFeedbackAsync(_answers);
             }
 #if BLOCKADE_DEBUG
             catch (Exception e)

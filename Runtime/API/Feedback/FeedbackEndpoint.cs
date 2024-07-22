@@ -22,10 +22,11 @@ namespace BlockadeLabsSDK
             return JsonConvert.DeserializeObject<IReadOnlyList<FeedbackQuestions>>(response.Body, BlockadeLabsClient.JsonSerializationOptions);
         }
 
-        public async Task PostFeedbackAsync(FeedbackAnswers response)
+        public async Task SubmitFeedbackAsync(FeedbackAnswers answers, CancellationToken cancellationToken = default)
         {
-            await Task.CompletedTask;
-            throw new System.NotImplementedException();
+            var payload = JsonConvert.SerializeObject(answers, BlockadeLabsClient.JsonSerializationOptions);
+            var response = await Rest.PostAsync(GetUrl(), payload, client.DefaultRequestHeaders, cancellationToken);
+            response.Validate(EnableDebug);
         }
     }
 
