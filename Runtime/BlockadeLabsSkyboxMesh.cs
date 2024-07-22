@@ -1,8 +1,7 @@
 using UnityEngine;
-using System.IO;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Collections;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -22,6 +21,15 @@ namespace BlockadeLabsSDK
     public class BlockadeLabsSkyboxMesh : MonoBehaviour
     {
         [SerializeField]
+        private SkyboxAI _skyboxMetadata;
+
+        public SkyboxAI SkyboxAsset
+        {
+            get => _skyboxMetadata;
+            internal set => _skyboxMetadata = value;
+        }
+
+        [SerializeField]
         private MeshDensity _meshDensity = MeshDensity.Medium;
         public MeshDensity MeshDensity
         {
@@ -30,7 +38,6 @@ namespace BlockadeLabsSDK
             {
                 if (_meshDensity != value)
                 {
-                    _somethingChangedSinceSave = true;
                     _meshDensity = value;
                     UpdateMesh();
                     OnPropertyChanged?.Invoke();
@@ -47,163 +54,198 @@ namespace BlockadeLabsSDK
             {
                 if (_depthScale != value)
                 {
-                    _somethingChangedSinceSave = true;
                     _depthScale = value;
-                    UpdateDepthScale();
-                    OnPropertyChanged?.Invoke();
+                    OnMaterialPropertyChanged();
                 }
             }
         }
 
-        private bool _somethingChangedSinceSave = true;
-
-        public bool CanSave => _meshRenderer && _meshFilter && _meshRenderer.sharedMaterial &&
-            _meshRenderer.sharedMaterial.mainTexture && _meshFilter.sharedMesh && _somethingChangedSinceSave &&
-            _meshRenderer.sharedMaterial.mainTexture.name != "default_skybox_texture";
+        [SerializeField]
+        private Mesh _bakedMesh;
+        public Mesh BakedMesh
+        {
+            get => _bakedMesh;
+            set
+            {
+                if (_bakedMesh != value)
+                {
+                    _bakedMesh = value;
+                    UpdateMesh();
+                    OnMaterialPropertyChanged();
+                }
+            }
+        }
 
         public event Action OnPropertyChanged;
+        public event Action<bool> OnLoadingChanged;
 
-        public bool HasDepthTexture => _meshRenderer?.sharedMaterial?.GetTexture("_DepthMap") != null;
+        public bool HasDepthTexture => _meshRenderer &&
+            _meshRenderer.sharedMaterial &&
+            _meshRenderer.sharedMaterial.GetTexture("_DepthMap");
 
-        private int _remixId;
         private MeshRenderer _meshRenderer;
+        public MeshRenderer MeshRenderer => _meshRenderer ? _meshRenderer : _meshRenderer = GetComponent<MeshRenderer>();
+
         private MeshFilter _meshFilter;
-        private Material _material;
+        private MeshFilter MeshFilter => _meshFilter ? _meshFilter : _meshFilter = GetComponent<MeshFilter>();
+
         private MaterialPropertyBlock _materialPropertyBlock;
         private Dictionary<int, Mesh> _meshes = new Dictionary<int, Mesh>();
 
-        public void SetSkyboxDepthMaterial(Material material, int remixId)
-        {
-            _meshRenderer = GetComponent<MeshRenderer>();
-            _meshRenderer.sharedMaterial = material;
-            _material = material;
-            _remixId = remixId;
-            _somethingChangedSinceSave = true;
-        }
+        private string _loadingText;
+        public string LoadingText => _loadingText;
 
         private void OnEnable()
         {
-            _meshDensity = MeshDensity.Medium;
             UpdateMesh();
-            UpdateDepthScale();
+            UpdateMaterialProperties();
         }
 
-        public int? GetRemixId()
+        private void OnDisable()
         {
-            if (!TryGetComponent<Renderer>(out var renderer) || renderer.sharedMaterial == null || renderer.sharedMaterial.mainTexture == null)
+            if (MeshRenderer != null && _materialPropertyBlock != null)
             {
-                return null;
+                MeshRenderer.SetPropertyBlock(null);
+                _materialPropertyBlock = null;
             }
-
-            if (renderer.sharedMaterial.mainTexture.name == "default_skybox_texture")
-            {
-                return 0;
-            }
-
-            if (renderer.sharedMaterial == _material)
-            {
-                return _remixId;
-            }
-
-#if UNITY_EDITOR
-            // In editor, read the remix ID from the data file saved next to the texture.
-            var texturePath = AssetDatabase.GetAssetPath(renderer.sharedMaterial.mainTexture);
-            var folder = texturePath.Substring(0, texturePath.LastIndexOf('/'));
-            var dataFiles = Directory.GetFiles(folder, "*data.txt", SearchOption.TopDirectoryOnly);
-            if (dataFiles.Length > 0)
-            {
-                return JsonConvert.DeserializeObject<GetImagineResult>(File.ReadAllText(dataFiles[0])).request.id;
-            }
-#endif
-            return null;
         }
 
-        public void UpdateMesh()
+        private void UpdateMesh()
         {
-            _meshFilter = GetComponent<MeshFilter>();
+            if (BakedMesh != null)
+            {
+                MeshFilter.sharedMesh = BakedMesh;
+                return;
+            }
+
+            int subdivisions = 0;
+
             switch (_meshDensity)
             {
                 case MeshDensity.Low:
-                    _meshFilter.sharedMesh = GetOrCreateMesh(64);
+                    subdivisions = 64;
                     break;
                 case MeshDensity.Medium:
-                    _meshFilter.sharedMesh = GetOrCreateMesh(128);
+                    subdivisions = 128;
                     break;
                 case MeshDensity.High:
-                    _meshFilter.sharedMesh = GetOrCreateMesh(256);
+                    subdivisions = 256;
                     break;
                 case MeshDensity.Epic:
-                    _meshFilter.sharedMesh = GetOrCreateMesh(768);
+                    subdivisions = 768;
                     break;
             }
-        }
 
-        private Mesh GetOrCreateMesh(int subdivisions)
-        {
             if (_meshes.TryGetValue(subdivisions, out var mesh))
             {
-                return mesh;
+                MeshFilter.sharedMesh = mesh;
+                return;
             }
 
-#if UNITY_EDITOR
-            // Look for a mesh in the project
-            var folder = AssetUtils.GetOrCreateFolder("Meshes");
-            var meshPath = $"{folder}/Tetrahedron_{subdivisions}.asset";
-            mesh = AssetDatabase.LoadAssetAtPath<Mesh>(meshPath);
-            if (mesh != null)
+            StartLoading("Generating mesh...", () =>
             {
-                _meshes.Add(subdivisions, mesh);
-                return mesh;
-            }
-#endif
-
-            mesh = TetrahedronMesh.GenerateMesh(subdivisions);
-#if UNITY_EDITOR
-            AssetDatabase.CreateAsset(mesh, meshPath);
-            AssetDatabase.SaveAssets();
-#endif
-            _meshes.Add(subdivisions, mesh);
-            return mesh;
+                MeshFilter.sharedMesh = CreateMesh(subdivisions);
+            });
         }
 
-        public void UpdateDepthScale()
+        private Mesh CreateMesh(int subdivisions)
+        {
+#if UNITY_EDITOR
+            // Look for a mesh in the project
+            AssetUtils.TryCreateFolder("Meshes", out var folder);
+            var meshPath = $"{folder}/Tetrahedron_{subdivisions}.asset";
+            var existingMesh = AssetDatabase.LoadAssetAtPath<Mesh>(meshPath);
+            if (existingMesh != null)
+            {
+                _meshes.Add(subdivisions, existingMesh);
+                return existingMesh;
+            }
+#endif
+
+            var newMesh = TetrahedronMesh.GenerateMesh(subdivisions);
+
+#if UNITY_EDITOR
+            AssetDatabase.CreateAsset(newMesh, meshPath);
+            AssetDatabase.SaveAssets();
+#endif
+            _meshes.Add(subdivisions, newMesh);
+            return newMesh;
+        }
+
+        public void UpdateMaterialProperties()
         {
             if (_materialPropertyBlock == null)
             {
                 _materialPropertyBlock = new MaterialPropertyBlock();
             }
 
-            _meshRenderer = GetComponent<MeshRenderer>();
             _materialPropertyBlock.SetFloat("_DepthScale", _depthScale);
-            _meshRenderer.SetPropertyBlock(_materialPropertyBlock);
+            MeshRenderer.SetPropertyBlock(_materialPropertyBlock);
         }
 
         public void EditorPropertyChanged()
         {
             UpdateMesh();
-            UpdateDepthScale();
-            _somethingChangedSinceSave = true;
+            OnMaterialPropertyChanged();
+        }
+
+        private void OnMaterialPropertyChanged()
+        {
+            UpdateMaterialProperties();
             OnPropertyChanged?.Invoke();
         }
 
         public void SavePrefab()
         {
 #if UNITY_EDITOR
-            if (!CanSave)
-            {
-                return;
-            }
-
-            var materialPath = AssetDatabase.GetAssetPath(_meshRenderer.sharedMaterial);
-            var folder = materialPath.Substring(0, materialPath.LastIndexOf('/'));
-            var prefabPath = AssetDatabase.GenerateUniqueAssetPath($"{folder}/{name}.prefab");
-            var clone = Instantiate(gameObject);
-            var prefab = PrefabUtility.SaveAsPrefabAsset(clone, prefabPath);
-            DestroyImmediate(clone);
-            AssetUtils.PingAsset(prefab);
-            _somethingChangedSinceSave = false;
+            AssetUtils.SavePrefabNextTo(gameObject, _meshRenderer.sharedMaterial);
             OnPropertyChanged?.Invoke();
 #endif
+        }
+
+        public void BakeMesh()
+        {
+            BakedMesh = null;
+            StartLoading("Baking depth to mesh...", () =>
+            {
+                var depthMap = _meshRenderer.sharedMaterial.GetTexture("_DepthMap") as Texture2D;
+                var depthScale = _materialPropertyBlock.GetFloat("_DepthScale");
+                BakedMesh = BakeDepth.Bake(_meshFilter.sharedMesh, depthMap, depthScale);
+
+#if UNITY_EDITOR
+                AssetUtils.SaveAssetNextTo(_bakedMesh, _meshRenderer.sharedMaterial);
+#endif
+            });
+        }
+
+        private void StartLoading(string text, Action action)
+        {
+            if (Application.isPlaying)
+            {
+                StartCoroutine(CoStartLoading(text, action));
+            }
+            else
+            {
+                action();
+            }
+        }
+
+        private IEnumerator CoStartLoading(string text, Action action)
+        {
+            _loadingText = text;
+            OnLoadingChanged?.Invoke(true);
+
+            yield return null;
+
+            try
+            {
+                action();
+            }
+            finally
+            {
+                _loadingText = null;
+                OnLoadingChanged?.Invoke(false);
+            }
         }
     }
 }

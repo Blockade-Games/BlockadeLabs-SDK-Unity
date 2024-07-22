@@ -1,7 +1,6 @@
 using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEditor.SceneManagement;
@@ -258,7 +257,7 @@ namespace BlockadeLabsSDK.Editor
                     EditorGUILayout.Space();
                 }
                 else
-                 {
+                {
                     Bullet(line);
                     EditorGUILayout.Space();
                 }

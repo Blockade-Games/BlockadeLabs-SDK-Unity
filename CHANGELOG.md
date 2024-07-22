@@ -1,15 +1,31 @@
 ﻿# Changelog
 
-## 1.7.2 - February 7, 2023.
+## 1.9.0 - Jun 14, 2024.
+- Model 3.1: Higher quality skyboxes in Model 3!
+- Model 3.1 now supports Remix!
+- Model 3.1 now supports 3D!
+- History: You can now view and download all your skyboxes in the new History menu.
+- You can now use the Upload button to remix from your own image.
+- Mesh Baking: Saving a 3D prefab will now bake the depth into your skybox mesh, which you can use for occlusion and collision.
+- Tips will now appear while waiting for a skybox to generate.
+
+## 1.8.0 - May 10, 2024.
+- Model 3 Preview: Skybox AI has taken a generational leap forward with the release of our Model 3 preview! This overhaul of our generative engine allows you to create stunning worlds and scenes that were previously impossible, with:
+  - Dramatically improved generation quality, including: enhanced realism, extra details, more scene depth and coherency, more prompt adherence
+  - Native 8K resolution (8192x4096 pixels), which is a 77% increase in pixels
+  - 21 new Model 3 styles (try the new one called Playground which is specifically tuned to create your wildest prompt ideas)
+  - Updated Model 3 Prompt Enhancer, tailored for Model 3’s new prompting best practices
+
+## 1.7.2 - February 7, 2024.
 - Added PanoramicToCubemap, which allows the BlockadeLabsSkyboxGenerator to create cubemaps in a built application.
 - Add XR support with single-pass instanced rendering to the Blockade Depth Skybox shader.
 
-## 1.7.1 - January 30, 2023.
+## 1.7.1 - January 30, 2024.
 - Fix the issue where the `Start Screen` was redisplayed even when disabled in options.
 - Fix the issue where the `Remix help popup` was redisplayed every time on runtime, even when the `Don't show this message again` checkbox was ticked.
 - Add an option to permanently disable initial `Help popup` on runtime.
 
-## 1.7.0 - January 19, 2023.
+## 1.7.0 - January 19, 2024.
 - The downloaded skybox is now imported as a `Cubemap`.
 - The `Blockade Skybox Depth` shader now takes a `Cubemap` texture.
 - A `Skybox Cubemap` material is now generated for use in the Scene Lighting settings.
