@@ -44,6 +44,9 @@ namespace BlockadeLabsSDK
             SetupDefaultRequestHeaders();
 
             SkyboxEndpoint = new SkyboxEndpoint(this);
+#if UNITY_EDITOR
+            FeedbackEndpoint = new FeedbackEndpoint(this);
+#endif
         }
 
         internal void ValidateAuthentication()
@@ -98,5 +101,8 @@ namespace BlockadeLabsSDK
         public bool EnableDebug { get; set; }
 
         public SkyboxEndpoint SkyboxEndpoint { get; }
+#if UNITY_EDITOR
+        internal FeedbackEndpoint FeedbackEndpoint { get; }
+#endif
     }
 }

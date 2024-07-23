@@ -1,9 +1,10 @@
-using UnityEngine;
-using UnityEditor;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using UnityEditor;
 using UnityEditor.SceneManagement;
+using UnityEngine;
 
 namespace BlockadeLabsSDK.Editor
 {
@@ -82,12 +83,14 @@ namespace BlockadeLabsSDK.Editor
             {
                 OpenStartScreen();
             }
+
+            BlockadeLabsSkyboxGenerator.OnSurveyTrigger += Survey.Trigger;
         }
 
         private void OnEnable()
         {
             _bodyStyle = null;
-            _showStartScreenOptions = ShowStartScreen.GetNames(typeof(ShowStartScreen)).Select(x => ObjectNames.NicifyVariableName(x)).ToArray();
+            _showStartScreenOptions = Enum.GetNames(typeof(ShowStartScreen)).Select(ObjectNames.NicifyVariableName).ToArray();
         }
 
         private void OnDisable()
@@ -119,7 +122,10 @@ namespace BlockadeLabsSDK.Editor
 
         private void InitStyles()
         {
-            if (_bodyStyle != null) return;
+            if (_bodyStyle != null)
+            {
+                return;
+            }
 
             BlockadeGUI.StyleFontSize = 16;
             BlockadeGUI.StyleTag = _styleTag;
