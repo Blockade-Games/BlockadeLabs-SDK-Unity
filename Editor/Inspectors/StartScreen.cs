@@ -134,6 +134,9 @@ namespace BlockadeLabsSDK.Editor
             _bodyStyle = BlockadeGUI.CreateStyle(Color.white);
             _bodyStyle.stretchWidth = false;
 
+            _boldStyle = BlockadeGUI.CreateStyle(Color.white);
+            _boldStyle.fontStyle = FontStyle.Bold;
+
             _linkStyle = BlockadeGUI.CreateStyle(Color.white);
             _linkStyle.fontStyle = FontStyle.Bold;
 
@@ -209,7 +212,7 @@ namespace BlockadeLabsSDK.Editor
             _changelog = changelogAsset.text.Split('\n')
                 .Select(x => Regex.Replace(x.TrimEnd(), @"\*\*(.*?)\*\*", "<b>$1</b>"))
                 .Select(x => Regex.Replace(x, @"\*(.*?)\*", "<i>$1</i>"))
-                .Select(x => Regex.Replace(x, @"`(.*?)`", "<b>$1</b>"))
+                .Select(x => Regex.Replace(x, @"`(.*?)`", "'$1'"))
                 .Where(x => !string.IsNullOrEmpty(x))
                 .ToList();
             var start = _changelog.FindIndex(l => l.StartsWith("## "));

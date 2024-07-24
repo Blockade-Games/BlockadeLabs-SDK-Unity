@@ -2,15 +2,19 @@
 
 ## 2.0.0 - July 19, 2024
 
-- Added public API surface
-  - Refactored SDK internals to use the new public API surface
-  - Added Proxy API support with BlockadeLabs-SDK-DotNet
-- Fixed HDRP volume profiles not being properly saved to disk
+### New Features
 
-## Breaking Changes
+- Added a new C# API surface which you can use to generate skyboxes in your games.
+- Added Proxy API support with BlockadeLabs-SDK-DotNet. A proxy helps you to protect your API key when deploying Skybox AI in your application.
 
-- `BlockadeLabsSkyboxGenerator.ApiKey` was replaced by `BlockadeLabsSkyboxGenerator.Configuration.ApiKey`
-- `BlockadeLabsSkyboxGenerator.StyleFamilies` was renamed to `BlockadeLabsSkyboxGenerator.StyleFamily`
+### Fixes
+- Fixed HDRP volume profiles not being properly saved to disk.
+
+### Breaking Changes
+
+- These changes were made to support the new C# API.
+- `BlockadeLabsSkyboxGenerator.ApiKey` was replaced by `BlockadeLabsSkyboxGenerator.Configuration.ApiKey`.
+- `SkyboxAiModelVersion` was renamed `SkyboxModel`.
 - `BlockadeLabsSkyboxGenerator.Reload` was replaced by `BlockadeLabsSkyboxGenerator.Load`
 - `BlockadeLabsSkyboxGenerator.GenerateSkyboxAsync` was renamed to `BlockadeLabsSkyboxGenerator.GenerateSkybox`
 - `SkyboxStyleFamily` was removed. Use `SkyboxStyle` instead.

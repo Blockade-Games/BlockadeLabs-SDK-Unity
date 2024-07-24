@@ -126,14 +126,14 @@ namespace BlockadeLabsSDK
         }
 #endif
 
-        private List<SkyboxStyle> _styleFamily;
-        public IReadOnlyList<SkyboxStyle> StyleFamily => _styleFamily;
+        private List<SkyboxStyle> _styleFamilies;
+        public IReadOnlyList<SkyboxStyle> StyleFamilies => _styleFamilies;
 
         private List<SkyboxStyle> _allModelStyleFamilies;
         public IReadOnlyList<SkyboxStyle> AllModelStyleFamilies => _allModelStyleFamilies;
 
-        private IReadOnlyList<SkyboxStyle> _model2Styles;
-        private IReadOnlyList<SkyboxStyle> _model3Styles;
+        private IReadOnlyList<SkyboxStyle> _model2StyleFamilies;
+        private IReadOnlyList<SkyboxStyle> _model3StyleFamilies;
 
         [SerializeField]
         private SkyboxStyle _selectedStyle = null;
@@ -436,8 +436,10 @@ namespace BlockadeLabsSDK
 
             try
             {
-                _model2Styles = (await BlockadeLabsClient.SkyboxEndpoint.GetSkyboxStylesMenuAsync(SkyboxModel.Model2)).Where(style => style.Status != "disabled").ToList();
-                _model3Styles = (await BlockadeLabsClient.SkyboxEndpoint.GetSkyboxStylesMenuAsync(SkyboxModel.Model3)).Where(style => style.Status != "disabled").ToList();
+                _model2StyleFamilies = (await BlockadeLabsClient.SkyboxEndpoint.GetSkyboxStylesMenuAsync(SkyboxModel.Model2))
+                    .Where(style => style.Status != "disabled").ToList();
+                _model3StyleFamilies = (await BlockadeLabsClient.SkyboxEndpoint.GetSkyboxStylesMenuAsync(SkyboxModel.Model3))
+                    .Where(style => style.Status != "disabled").ToList();
             }
             catch (Exception e)
             {
@@ -461,14 +463,14 @@ namespace BlockadeLabsSDK
                 }
             }
 
-            _allModelStyleFamilies = _model3Styles.Concat(_model2Styles).ToList();
+            _allModelStyleFamilies = _model3StyleFamilies.Concat(_model2StyleFamilies).ToList();
             UpdateActiveStyleList();
             SetState(State.Ready);
         }
 
         private void UpdateActiveStyleList()
         {
-            _styleFamily = (_modelVersion == SkyboxModel.Model2 ? _model2Styles : _model3Styles).ToList();
+            _styleFamilies = (_modelVersion == SkyboxModel.Model2 ? _model2StyleFamilies : _model3StyleFamilies).ToList();
             OnPropertyChanged?.Invoke();
         }
 
@@ -881,7 +883,7 @@ namespace BlockadeLabsSDK
             SendNegativeText = !string.IsNullOrWhiteSpace(skybox.NegativeText);
             NegativeText = skybox.NegativeText;
             ModelVersion = skybox.Model;
-            _styleFamily = (_modelVersion == SkyboxModel.Model2 ? _model2Styles : _model3Styles).ToList();
+            _styleFamilies = (_modelVersion == SkyboxModel.Model2 ? _model2StyleFamilies : _model3StyleFamilies).ToList();
 
             foreach (var family in _allModelStyleFamilies)
             {

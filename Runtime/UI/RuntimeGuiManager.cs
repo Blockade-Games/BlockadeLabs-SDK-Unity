@@ -608,7 +608,7 @@ namespace BlockadeLabsSDK
             _negativeTextToggle.IsOn = _generator.SendNegativeText;
             _negativeTextInput.text = _generator.NegativeText;
 
-            _stylePickerPanel.SetStyles(_generator.StyleFamily);
+            _stylePickerPanel.SetStyles(_generator.StyleFamilies);
             UpdateHintText();
             UpdateGenerateButton();
             UpdatePromptCharacterLimit();
