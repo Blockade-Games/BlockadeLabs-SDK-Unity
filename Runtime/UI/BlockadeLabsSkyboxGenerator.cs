@@ -425,7 +425,28 @@ namespace BlockadeLabsSDK
             }
         }
 
+        private static Task _loadingTask;
+
         public async Task LoadAsync()
+        {
+            if (_loadingTask != null)
+            {
+                await _loadingTask;
+                return;
+            }
+
+            try
+            {
+                _loadingTask = LoadInternalAsync();
+                await _loadingTask;
+            }
+            finally
+            {
+                _loadingTask = null;
+            }
+        }
+
+        private async Task LoadInternalAsync()
         {
             ClearError();
 
