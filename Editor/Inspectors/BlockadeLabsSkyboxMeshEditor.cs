@@ -46,10 +46,12 @@ namespace BlockadeLabsSDK.Editor
                     if (!skybox.BakedMesh && GUILayout.Button("Bake Depth to Mesh"))
                     {
                         skybox.BakeMesh();
+                        EditorUtility.SetDirty(skybox);
                     }
                     else if (skybox.BakedMesh && GUILayout.Button("Unbake Depth from Mesh"))
                     {
                         skybox.BakedMesh = null;
+                        EditorUtility.SetDirty(skybox);
                     }
                 });
 
