@@ -28,6 +28,7 @@ namespace BlockadeLabsSDK.Editor
         private static string[] _showStartScreenOptions;
 
         private GUIStyle _bodyStyle;
+        private GUIStyle _bulletStyle;
         private GUIStyle _boldStyle;
         private GUIStyle _linkStyle;
         private GUIStyle _navLinkStyle;
@@ -134,6 +135,10 @@ namespace BlockadeLabsSDK.Editor
             _bodyStyle = BlockadeGUI.CreateStyle(Color.white);
             _bodyStyle.stretchWidth = false;
 
+            _bulletStyle = BlockadeGUI.CreateStyle(Color.white);
+            _bulletStyle.stretchWidth = false;
+            _bulletStyle.wordWrap = false;
+
             _boldStyle = BlockadeGUI.CreateStyle(Color.white);
             _boldStyle.fontStyle = FontStyle.Bold;
 
@@ -198,7 +203,7 @@ namespace BlockadeLabsSDK.Editor
                     GUILayout.Space(8);
                 }
 
-                GUILayout.Label(bullet, _bodyStyle);
+                GUILayout.Label(bullet, _bulletStyle);
                 GUILayout.Space(8);
                 GUILayout.Label(text.Substring(ws + 1), _bodyStyle, GUILayout.ExpandWidth(true));
             });
@@ -351,9 +356,10 @@ namespace BlockadeLabsSDK.Editor
                             BlockadeGUI.Horizontal(() =>
                             {
                                 GUILayout.Space(8);
-                                GUILayout.Label("1.", _bodyStyle);
+                                GUILayout.Label("1.", _bulletStyle);
                                 GUILayout.Space(8);
                                 GUILayout.Label("Go to ", _bodyStyle);
+                                GUILayout.Space(8);
                                 if (BlockadeGUI.Link("api.blockadelabs.com", _linkStyle))
                                 {
                                     Application.OpenURL(_apikeyUrl);
