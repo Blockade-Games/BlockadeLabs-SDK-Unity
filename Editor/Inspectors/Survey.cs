@@ -98,16 +98,19 @@ namespace BlockadeLabsSDK.Editor
                 {
                     await BlockadeLabsSkyboxGenerator.BlockadeLabsClient.FeedbackEndpoint.SubmitFeedbackAsync(request);
                 }
+#if BLOCKADE_DEBUG
                 catch (Exception e)
                 {
-#if BLOCKADE_DEBUG
                     Debug.LogException(e);
+                }
 #endif
+                finally
+                {
+                    _answers = null;
                 }
             }
 
             _questions = null;
-            _answers = null;
             BlockadeGUI.CleanupBackgroundTextures(_styleTag);
         }
 
