@@ -140,11 +140,11 @@ namespace BlockadeLabsSDK
 
         public SkyboxStyle SelectedStyle
         {
-            get => _selectedStyle;
+            get => _selectedStyle?.Id == 0 ? null : _selectedStyle;
             set
             {
                 if (_selectedStyle == value) { return; }
-                _selectedStyle = value;
+                _selectedStyle = value.Id == 0 ? null : value;
                 OnPropertyChanged?.Invoke();
             }
         }
