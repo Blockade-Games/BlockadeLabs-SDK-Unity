@@ -16,8 +16,8 @@
 - These changes were made to support the new C# API.
 - `BlockadeLabsSkyboxGenerator.ApiKey` was replaced by `BlockadeLabsSkyboxGenerator.Configuration.ApiKey`.
 - `SkyboxAiModelVersion` was renamed `SkyboxModel`.
-- `BlockadeLabsSkyboxGenerator.Reload` was replaced by `BlockadeLabsSkyboxGenerator.Load`
-- `BlockadeLabsSkyboxGenerator.GenerateSkyboxAsync` was renamed to `BlockadeLabsSkyboxGenerator.GenerateSkybox`
+- `BlockadeLabsSkyboxGenerator.Reload` was replaced by `BlockadeLabsSkyboxGenerator.Load`.
+- `BlockadeLabsSkyboxGenerator.GenerateSkyboxAsync` was renamed to `BlockadeLabsSkyboxGenerator.GenerateSkybox`.
 - `SkyboxStyleFamily` was removed. Use `SkyboxStyle` instead.
 
 ## 1.9.0 - June 14, 2024
