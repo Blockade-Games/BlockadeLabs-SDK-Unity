@@ -8,6 +8,7 @@
 - Added Proxy API support with BlockadeLabs-SDK-DotNet. A proxy helps you to protect your API key when deploying Skybox AI in your application.
 
 ### Fixes
+
 - Fixed HDRP volume profiles not being properly saved to disk.
 
 ### Breaking Changes
