@@ -4,6 +4,12 @@ Shader "BlockadeLabsSDK/BlockadeSkyboxDepth"
     {
         _MainTex ("Texture", Cube) = "white" {}
         _DepthMap ("Depth Map", 2D ) = "white" {}
+
+        // Depth Modes:
+        // 0 - None
+        // 1 - Inverse depth
+        _DepthMode ("Depth Mode", Integer) = 1
+
         _DepthScale ("Depth Scale", Range(3, 10)) = 5.3
     }
 
@@ -50,6 +56,7 @@ Shader "BlockadeLabsSDK/BlockadeSkyboxDepth"
             TEXTURE2D(_DepthMap);
             SAMPLER(sampler_MainTex);
             SAMPLER(sampler_DepthMap);
+            int _DepthMode;
             float _DepthScale;
 
             Varyings vert(Attributes IN)
@@ -58,10 +65,13 @@ Shader "BlockadeLabsSDK/BlockadeSkyboxDepth"
                 UNITY_SETUP_INSTANCE_ID(IN);
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(OUT);
 
-                float depth = SAMPLE_TEXTURE2D_LOD(_DepthMap, sampler_DepthMap, IN.uv, 0).g;
-                depth = clamp(1.0 / depth + 10 / _DepthScale, 0, _DepthScale);
+                if (_DepthMode == 1)
+                {
+                    float depth = SAMPLE_TEXTURE2D_LOD(_DepthMap, sampler_DepthMap, IN.uv, 0).g;
+                    depth = clamp(1.0 / depth + 10 / _DepthScale, 0, _DepthScale);
+                    IN.positionOS.xyz = normalize(IN.positionOS.xyz) * depth;
+                }
 
-                IN.positionOS.xyz = normalize(IN.positionOS.xyz) * depth;
                 OUT.positionCS = TransformObjectToHClip(IN.positionOS.xyz);
 
                 // Unity generates cubemaps with -90 deg rotation for some reason
@@ -114,6 +124,7 @@ Shader "BlockadeLabsSDK/BlockadeSkyboxDepth"
             samplerCUBE _MainTex;
             sampler2D _DepthMap;
             float _DepthScale;
+            int _DepthMode;
 
             v2f vert (appdata v)
             {
@@ -123,11 +134,13 @@ Shader "BlockadeLabsSDK/BlockadeSkyboxDepth"
                 UNITY_INITIALIZE_OUTPUT(v2f, o);
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
 
-                float4 uvLOD = float4(v.uv, 0, 0);
-                float depth = tex2Dlod(_DepthMap, uvLOD).g;
-
-                depth = clamp(1.0 / depth + 10 / _DepthScale, 0, _DepthScale);
-                v.vertex.xyz = normalize(v.vertex.xyz) * depth;
+                if (_DepthMode == 1)
+                {
+                    float4 uvLOD = float4(v.uv, 0, 0);
+                    float depth = tex2Dlod(_DepthMap, uvLOD).g;
+                    depth = clamp(1.0 / depth + 10 / _DepthScale, 0, _DepthScale);
+                    v.vertex.xyz = normalize(v.vertex.xyz) * depth;
+                }
 
                 o.vertex = UnityObjectToClipPos(v.vertex.xyz);
 

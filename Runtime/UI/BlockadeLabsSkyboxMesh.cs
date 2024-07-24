@@ -179,6 +179,7 @@ namespace BlockadeLabsSDK
                 _materialPropertyBlock = new MaterialPropertyBlock();
             }
 
+            _materialPropertyBlock.SetInteger("_DepthMode", HasDepthTexture && BakedMesh == null ? 1 : 0);
             _materialPropertyBlock.SetFloat("_DepthScale", _depthScale);
             MeshRenderer.SetPropertyBlock(_materialPropertyBlock);
         }
