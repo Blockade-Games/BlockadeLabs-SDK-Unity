@@ -358,13 +358,14 @@ namespace BlockadeLabsSDK.Editor
                                 GUILayout.Space(8);
                                 GUILayout.Label("1.", _bulletStyle);
                                 GUILayout.Space(8);
-                                GUILayout.Label("Go to ", _bodyStyle);
+                                GUILayout.Label("Go to", _bodyStyle);
                                 GUILayout.Space(8);
                                 if (BlockadeGUI.Link("api.blockadelabs.com", _linkStyle))
                                 {
                                     Application.OpenURL(_apikeyUrl);
                                 }
-                                GUILayout.Label(" to get your API key.", _bodyStyle);
+                                GUILayout.Space(8);
+                                GUILayout.Label("to get your API key.", _bodyStyle);
                             });
 
                             EditorGUILayout.Space(4);
