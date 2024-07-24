@@ -436,9 +436,9 @@ namespace BlockadeLabsSDK
 
             try
             {
-                _model2StyleFamilies = (await BlockadeLabsClient.SkyboxEndpoint.GetSkyboxStylesMenuAsync(SkyboxModel.Model2))
+                _model2StyleFamilies = (await BlockadeLabsClient.SkyboxEndpoint.GetSkyboxStylesMenuAsync(SkyboxModel.Model2, destroyCancellationToken))
                     .Where(style => style.Status != "disabled").ToList();
-                _model3StyleFamilies = (await BlockadeLabsClient.SkyboxEndpoint.GetSkyboxStylesMenuAsync(SkyboxModel.Model3))
+                _model3StyleFamilies = (await BlockadeLabsClient.SkyboxEndpoint.GetSkyboxStylesMenuAsync(SkyboxModel.Model3, destroyCancellationToken))
                     .Where(style => style.Status != "disabled").ToList();
             }
             catch (Exception e)

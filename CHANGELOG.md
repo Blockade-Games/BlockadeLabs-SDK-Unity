@@ -18,7 +18,6 @@
 - `BlockadeLabsSkyboxGenerator.Reload` was replaced by `BlockadeLabsSkyboxGenerator.Load`
 - `BlockadeLabsSkyboxGenerator.GenerateSkyboxAsync` was renamed to `BlockadeLabsSkyboxGenerator.GenerateSkybox`
 - `SkyboxStyleFamily` was removed. Use `SkyboxStyle` instead.
-- `HistorySearchQueryParameters` was removed. Use `SkyboxHistoryParameters` instead.
 
 ## 1.9.0 - June 14, 2024
 
