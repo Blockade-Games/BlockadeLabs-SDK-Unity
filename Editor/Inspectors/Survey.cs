@@ -39,6 +39,11 @@ namespace BlockadeLabsSDK.Editor
 #endif
         public static async void Trigger()
         {
+            if (BlockadeLabsSkyboxGenerator.Configuration == null)
+            {
+                return;
+            }
+
             try
             {
                 var feedbacksList = await BlockadeLabsSkyboxGenerator.BlockadeLabsClient.FeedbackEndpoint.GetFeedbackListAsync();
