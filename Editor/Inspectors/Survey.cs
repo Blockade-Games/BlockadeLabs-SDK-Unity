@@ -93,7 +93,17 @@ namespace BlockadeLabsSDK.Editor
             if (_questions != null && _currentQuestion < _questions.Data.Count)
             {
                 var request = new FeedbackAnswers(_questions.Id, _questions.Version, true);
-                await BlockadeLabsSkyboxGenerator.BlockadeLabsClient.FeedbackEndpoint.SubmitFeedbackAsync(request);
+
+                try
+                {
+                    await BlockadeLabsSkyboxGenerator.BlockadeLabsClient.FeedbackEndpoint.SubmitFeedbackAsync(request);
+                }
+                catch (Exception e)
+                {
+#if BLOCKADE_DEBUG
+                    Debug.LogException(e);
+#endif
+                }
             }
 
             _questions = null;
