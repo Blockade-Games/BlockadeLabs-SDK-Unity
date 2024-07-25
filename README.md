@@ -207,11 +207,13 @@ For detailed information on how skyboxes work in Unity, see [using skyboxes](htt
 
 If you are building a 'Fully Immersive' visionOS app, then the steps are the same as the render pipeline which you are using.
 
-If you are building a 'PolySpatial Mixed Reality' app, then the scene sky is not rendered. However, if you use [Mesh Creator](#mesh-creator) to create skybox mesh, then you can render it in mixed reality. Since PolySpatial only supports Shader Graph materials, you need to the type of the generated depth material:
+If you are building a 'PolySpatial Mixed Reality' app, then the scene sky is not rendered. However, if you use [Mesh Creator](#mesh-creator) to create skybox mesh, then you can render it in mixed reality. Since PolySpatial only supports Shader Graph materials, you need to change the type of the generated depth material:
 
 1. Install the `Shader Graph` package from the Unity Package Manager.
 2. Go to the "skybox depth material" you want to use and duplicate it to create a material for visionOS.
 3. Change the material type from `Blockade Skybox Depth` to `Block Skybox Depth Shader Graph`.
+
+If you want the `Blockade Labs Skybox Generator` component to always generae shader graph materials, update the `Depth Material` field.
 
 #### Mesh Creator
 
