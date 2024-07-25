@@ -179,9 +179,35 @@ namespace BlockadeLabsSDK
                 _materialPropertyBlock = new MaterialPropertyBlock();
             }
 
-            _materialPropertyBlock.SetInteger("_DepthMode", HasDepthTexture && BakedMesh == null ? 1 : 0);
+            int depthMode = HasDepthTexture && BakedMesh == null ? 1 : 0;
+
+            if (MeshRenderer.sharedMaterial.HasInt("_DepthMode"))
+            {
+                // Shader graph doesn't support Integer type
+                _materialPropertyBlock.SetInt("_DepthMode", depthMode);
+            }
+            else if (MeshRenderer.sharedMaterial.HasInteger("_DepthMode"))
+            {
+                MeshRenderer.sharedMaterial.SetInteger("_DepthMode", depthMode);
+            }
+
             _materialPropertyBlock.SetFloat("_DepthScale", _depthScale);
             MeshRenderer.SetPropertyBlock(_materialPropertyBlock);
+
+#if UNITY_VISIONOS
+            // Workaround: MaterialPropertyBlock doesn't work correctly in VisionOS
+            // https://unity3d.atlassian.net/servicedesk/customer/portal/2/IN-81259
+            if (Application.isPlaying)
+            {
+                if (MeshRenderer.sharedMaterial.HasInt("_DepthMode"))
+                {
+                    // Shader graph doesn't support Integer type
+                    MeshRenderer.material.SetInt("_DepthMode", depthMode);
+                }
+
+                MeshRenderer.material.SetFloat("_DepthScale", _depthScale);
+            }
+#endif
         }
 
         public void EditorPropertyChanged()
