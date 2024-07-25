@@ -79,9 +79,9 @@ namespace BlockadeLabsSDK
         public event Action OnPropertyChanged;
         public event Action<bool> OnLoadingChanged;
 
-        public bool HasDepthTexture => _meshRenderer &&
-            _meshRenderer.sharedMaterial &&
-            _meshRenderer.sharedMaterial.GetTexture("_DepthMap");
+        public bool HasDepthTexture => MeshRenderer &&
+            MeshRenderer.sharedMaterial &&
+            MeshRenderer.sharedMaterial.GetTexture("_DepthMap");
 
         private MeshRenderer _meshRenderer;
         public MeshRenderer MeshRenderer => _meshRenderer ? _meshRenderer : _meshRenderer = GetComponent<MeshRenderer>();
