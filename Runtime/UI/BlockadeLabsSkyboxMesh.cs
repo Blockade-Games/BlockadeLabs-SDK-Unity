@@ -181,14 +181,10 @@ namespace BlockadeLabsSDK
 
             int depthMode = HasDepthTexture && BakedMesh == null ? 1 : 0;
 
-            if (MeshRenderer.sharedMaterial.HasInt("_DepthMode"))
+            if (MeshRenderer.sharedMaterial.HasProperty("_DepthMode"))
             {
                 // Shader graph doesn't support Integer type
                 _materialPropertyBlock.SetInt("_DepthMode", depthMode);
-            }
-            else if (MeshRenderer.sharedMaterial.HasInteger("_DepthMode"))
-            {
-                MeshRenderer.sharedMaterial.SetInteger("_DepthMode", depthMode);
             }
 
             _materialPropertyBlock.SetFloat("_DepthScale", _depthScale);
@@ -199,7 +195,7 @@ namespace BlockadeLabsSDK
             // https://unity3d.atlassian.net/servicedesk/customer/portal/2/IN-81259
             if (Application.isPlaying)
             {
-                if (MeshRenderer.sharedMaterial.HasInt("_DepthMode"))
+                if (MeshRenderer.sharedMaterial.HasProperty("_DepthMode"))
                 {
                     // Shader graph doesn't support Integer type
                     MeshRenderer.material.SetInt("_DepthMode", depthMode);

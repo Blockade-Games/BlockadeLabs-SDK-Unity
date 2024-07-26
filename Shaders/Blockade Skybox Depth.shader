@@ -3,12 +3,12 @@ Shader "BlockadeLabsSDK/BlockadeSkyboxDepth"
     Properties
     {
         _MainTex ("Texture", Cube) = "white" {}
-        _DepthMap ("Depth Map", 2D ) = "white" {}
+        _DepthMap ("Depth Map", 2D) = "white" {}
 
         // Depth Modes:
         // 0 - None
         // 1 - Inverse depth
-        _DepthMode ("Depth Mode", Integer) = 1
+        _DepthMode ("Depth Mode", int) = 1
 
         _DepthScale ("Depth Scale", Range(3, 10)) = 5.3
     }
