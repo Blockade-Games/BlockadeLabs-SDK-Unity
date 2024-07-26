@@ -213,7 +213,7 @@ If you are building a 'PolySpatial Mixed Reality' app, then the scene sky is not
 2. Go to the "skybox depth material" you want to use and duplicate it to create a material for visionOS.
 3. Change the material type from `Blockade Skybox Depth` to `Block Skybox Depth Shader Graph`.
 
-If you want the `Blockade Labs Skybox Generator` component to always generae shader graph materials, update the `Depth Material` field.
+If you want the `Blockade Labs Skybox Generator` component to always generate shader graph materials, update the `Depth Material` field.
 
 #### Mesh Creator
 
