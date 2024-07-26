@@ -35,7 +35,7 @@ namespace BlockadeLabsSDK.Editor
         private static int _currentQuestion;
 
 #if BLOCKADE_DEBUG
-        [MenuItem("TEST/Feedback Survey")]
+        [MenuItem("Tools/Blockade Labs/Feedback Survey")]
 #endif
         public static async void Trigger()
         {
