@@ -6,6 +6,7 @@
 
 - Added a new C# API surface which you can use to generate skyboxes in your games at runtime.
 - Added Proxy API support with BlockadeLabs-SDK-DotNet. A proxy helps you to protect your API key when deploying Skybox AI in your application.
+- Added support for VisionOS PolySpatial Mixed Reality. See README for instructions.
 
 ### Fixes
 
