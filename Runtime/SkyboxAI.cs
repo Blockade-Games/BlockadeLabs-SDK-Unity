@@ -50,16 +50,6 @@ namespace BlockadeLabsSDK
         }
 
         [SerializeField]
-        private Status _status;
-
-        [JsonProperty("status")]
-        public Status Status
-        {
-            get => _status;
-            internal set => _status = value;
-        }
-
-        [SerializeField]
         private string _type;
 
         [JsonProperty("type")]
@@ -133,40 +123,30 @@ namespace BlockadeLabsSDK
         }
 
         [SerializeField]
-        private SkyboxAiModelVersion _model;
-        public SkyboxAiModelVersion Model
+        private SkyboxModel _model;
+        public SkyboxModel Model
         {
             get => _model;
             internal set => _model = value;
         }
 
-        internal void SetMetadata(ImagineResult result)
+        internal void SetMetadata(SkyboxInfo skybox)
         {
-            _id = result.id;
-            _obfuscatedId = result.obfuscated_id;
-            _skyboxStyleId = result.skybox_style_id;
-            _skyboxStyleName = result.skybox_style_name;
-            _status = result.status;
-            _type = result.type;
-            _prompt = result.prompt;
-            _negativeText = result.negative_text;
-            _model = result.model == "Model 3" ? SkyboxAiModelVersion.Model3 : SkyboxAiModelVersion.Model2;
+            _id = skybox.Id;
+            _obfuscatedId = skybox.ObfuscatedId;
+            _skyboxStyleId = skybox.SkyboxStyleId;
+            _skyboxStyleName = skybox.SkyboxStyleName;
+            _type = skybox.Type;
+            _prompt = skybox.Prompt;
+            _negativeText = skybox.NegativeText;
+            _model = skybox.Model;
         }
 
-        internal ImagineResult GetMetadata()
+        public static implicit operator SkyboxAI(SkyboxInfo skybox)
         {
-            return new ImagineResult
-            {
-                id = _id,
-                obfuscated_id = _obfuscatedId,
-                skybox_style_id = _skyboxStyleId,
-                skybox_style_name = _skyboxStyleName,
-                status = _status,
-                type = _type,
-                prompt = _prompt,
-                negative_text = _negativeText,
-                model = _model == SkyboxAiModelVersion.Model3 ? "Model 3" : "Model 2"
-            };
+            var skyboxAI = CreateInstance<SkyboxAI>();
+            skyboxAI.SetMetadata(skybox);
+            return skyboxAI;
         }
     }
 }

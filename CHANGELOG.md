@@ -1,6 +1,28 @@
 ﻿# Changelog
 
-## 1.9.0 - Jun 14, 2024.
+## 2.0.0 - July 19, 2024
+
+### New Features
+
+- Added a new C# API surface which you can use to generate skyboxes in your games at runtime.
+- Added Proxy API support with BlockadeLabs-SDK-DotNet. A proxy helps you to protect your API key when deploying Skybox AI in your application.
+- Added support for VisionOS PolySpatial Mixed Reality. See README for instructions.
+
+### Fixes
+
+- Fixed HDRP volume profiles not being properly saved to disk.
+
+### Breaking Changes
+
+- These changes were made to support the new C# API.
+- `BlockadeLabsSkyboxGenerator.ApiKey` was replaced by `BlockadeLabsSkyboxGenerator.Configuration.ApiKey`.
+- `SkyboxAiModelVersion` was renamed `SkyboxModel`.
+- `BlockadeLabsSkyboxGenerator.Reload` was replaced by `BlockadeLabsSkyboxGenerator.Load`.
+- `BlockadeLabsSkyboxGenerator.GenerateSkyboxAsync` was renamed to `BlockadeLabsSkyboxGenerator.GenerateSkybox`.
+- `SkyboxStyleFamily` was removed. Use `SkyboxStyle` instead.
+
+## 1.9.0 - June 14, 2024
+
 - Model 3.1: Higher quality skyboxes in Model 3!
 - Model 3.1 now supports Remix!
 - Model 3.1 now supports 3D!
@@ -9,23 +31,27 @@
 - Mesh Baking: Saving a 3D prefab will now bake the depth into your skybox mesh, which you can use for occlusion and collision.
 - Tips will now appear while waiting for a skybox to generate.
 
-## 1.8.0 - May 10, 2024.
+## 1.8.0 - May 10, 2024
+
 - Model 3 Preview: Skybox AI has taken a generational leap forward with the release of our Model 3 preview! This overhaul of our generative engine allows you to create stunning worlds and scenes that were previously impossible, with:
   - Dramatically improved generation quality, including: enhanced realism, extra details, more scene depth and coherency, more prompt adherence
   - Native 8K resolution (8192x4096 pixels), which is a 77% increase in pixels
   - 21 new Model 3 styles (try the new one called Playground which is specifically tuned to create your wildest prompt ideas)
   - Updated Model 3 Prompt Enhancer, tailored for Model 3’s new prompting best practices
 
-## 1.7.2 - February 7, 2024.
-- Added PanoramicToCubemap, which allows the BlockadeLabsSkyboxGenerator to create cubemaps in a built application.
+## 1.7.2 - February 7, 2024
+
+- Added `PanoramicToCubemap`, which allows the BlockadeLabsSkyboxGenerator to create cubemaps in a built application.
 - Add XR support with single-pass instanced rendering to the Blockade Depth Skybox shader.
 
-## 1.7.1 - January 30, 2024.
+## 1.7.1 - January 30, 2024
+
 - Fix the issue where the `Start Screen` was redisplayed even when disabled in options.
 - Fix the issue where the `Remix help popup` was redisplayed every time on runtime, even when the `Don't show this message again` checkbox was ticked.
 - Add an option to permanently disable initial `Help popup` on runtime.
 
-## 1.7.0 - January 19, 2024.
+## 1.7.0 - January 19, 2024
+
 - The downloaded skybox is now imported as a `Cubemap`.
 - The `Blockade Skybox Depth` shader now takes a `Cubemap` texture.
 - A `Skybox Cubemap` material is now generated for use in the Scene Lighting settings.
@@ -34,7 +60,7 @@
 - The `Save Mesh` function has been replaced with `Save Prefab` to make it easier to drop a preconfigured skybox mesh into your scene.
 - A new `Start Screen` will optionally appear when the plugin installed and updated.
 
-## 1.6.1 - December 21, 2023.
+## 1.6.1 - December 21, 2023
 
 - Added Mesh Creator mode, which uses a new shader to display the depth map.
 - Blockade Labs Skybox is split into two components:
@@ -42,7 +68,7 @@
   - `Blockade Labs Skybox` generates a mesh and configures the shader for Mesh Creator mode.
   - See README for details.
 
-## 1.6.0 - December 11, 2023.
+## 1.6.0 - December 11, 2023
 
 - Reorganize package to more standard package format.
 - Overhaul the runtime UI to match the web interface.
@@ -50,30 +76,30 @@
 - Add "Move Scene Camera to Skybox" button to Blockade Labs Skybox component.
 - Improve stability and error reporting.
 
-## 1.5.4 - October 11th, 2023.
+## 1.5.4 - October 11th, 2023
 
 - Fix the issue with depth maps for trial users
 
-## 1.5.0 - September 14th, 2023.
+## 1.5.0 - September 14th, 2023
 
 - Generate depth maps along with original skyboxes
 - Add enhance prompt param
 - Compress textures
 
-## 1.4.0 - May 11th, 2023.
+## 1.4.0 - May 11th, 2023
 
 - Update editor and runtime UI
 - Add negative text and seed params
 
-## 1.3.0 - April 3rd, 2023.
+## 1.3.0 - April 3rd, 2023
 
 - Switch to using obfuscated IDs to track generations
 - Minor fixes
 
-## 1.2.0 - March 30th, 2023.
+## 1.2.0 - March 30th, 2023
 
 - Initial public release
 
-## 1.0.0/1.1.0 - Pre-March 2023.
+## 1.0.0/1.1.0 - Pre-March 2023
 
 - Pre-release builds and tests
