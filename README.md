@@ -268,10 +268,11 @@ In this example, we demonstrate how to set up and use `BlockadeLabsProxy` in a n
 1. Create a new [ASP.NET Core minimal web API](https://learn.microsoft.com/en-us/aspnet/core/tutorials/min-web-api?view=aspnetcore-6.0) project.
 2. Add the BlockadeLabs-SDK-DotNet nuget package to your project.
     - Powershell install: `Install-Package BlockadeLabs-SDK-DotNet-Proxy`
+    - dotnet: `dotnet add package BlockadeLabs-SDK-DotNet-Proxy`
     - Manually editing .csproj: `<PackageReference Include="BlockadeLabs-SDK-DotNet-Proxy" />`
-3. Create a new class that inherits from `AbstractAuthenticationFilter` and override the `ValidateAuthenticationAsync` method. This will implement the `IAuthenticationFilter` that you will use to check user session token against your internal server.
-4. In `Program.cs`, create a new proxy web application by calling `BlockadeLabsProxy.CreateWebApplication` method, passing your custom `AuthenticationFilter` as a type argument.
-5. Create `BlockadeLabsAuthentication` as you would normally and load your API key from environment variable.
+4. Create a new class that inherits from `AbstractAuthenticationFilter` and override the `ValidateAuthenticationAsync` method. This will implement the `IAuthenticationFilter` that you will use to check user session token against your internal server.
+5. In `Program.cs`, create a new proxy web application by calling `BlockadeLabsProxy.CreateWebApplication` method, passing your custom `AuthenticationFilter` as a type argument.
+6. Create `BlockadeLabsAuthentication` as you would normally and load your API key from environment variable.
 
 ```csharp
 using BlockadeLabsSDK;
