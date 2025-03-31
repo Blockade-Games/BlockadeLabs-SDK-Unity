@@ -231,15 +231,58 @@ namespace BlockadeLabsSDK.Editor
             BlockadeGUI.HorizontalLine(BlockadeGUI.HexColor("#797979"));
             EditorGUILayout.Space(8);
 
-            GUILayout.Label("BLOCKADE NEWS", _h4Style);
+            GUILayout.Label("NEWS", _h4Style);
 
             GUILayout.Space(28);
 
-            GUILayout.Label("New Feature Headline", _h2Style);
+            GUILayout.Label("Simplified Subscriptions & More Access", _h2Style);
 
             GUILayout.Space(8);
 
-            GUILayout.Label("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris dignissim risus sed hendrerit ullamcorper. Aliquam justo est, semper ac nisi sit amet, aliquet aliquam nunc. Sed vitae nisl eget nunc aliquam aliquet. Sed vitae nisl eget nunc aliquam aliquet.", _bodyStyle);
+            GUILayout.Label("We’re streamlining Skybox AI subscriptions to make access easier and more flexible for all users. Every paid membership now gets API and Unity integration without managing multiple plans.", _bodyStyle);
+
+            GUILayout.Space(8);
+
+            GUILayout.Label("What’s Changing?", _bodyStyle);
+
+            GUILayout.Space(8);
+
+            GUILayout.Label("<b>API & Unity for All Paid Subscription</b> – Basic plans are being discontinued, and all Basic ($12/mo) and Individual API ($20/mo) subscribers will be migrated to Pro ($24/mo).", _bodyStyle);
+
+            GUILayout.Space(8);
+
+            GUILayout.Label("<b>Unified Access</b> – Pro and Technowizard users now get API access in one plan, usable in our Unity plug-in, third-party tools, or for small-scale API projects.", _bodyStyle);
+
+            GUILayout.Space(8);
+
+            GUILayout.Label("<b>Enterprise API Plans</b> – Team API memberships ($100/mo) will transition to Enterprise plans for better scalability and support.", _bodyStyle);
+
+            GUILayout.Space(8);
+
+            GUILayout.Label("Changes take effect <b>between March 26 - April 25, 2025</b>, depending on your billing date.", _bodyStyle);
+
+            GUILayout.Space(8);
+
+            BlockadeGUI.Horizontal(() =>
+            {
+                GUILayout.Label("<b>Lock in 40% savings:</b>", _bodyStyle);
+                GUILayout.Space(4);
+                if (BlockadeGUI.Link("Upgrade to an annual plan now", _bodyStyle))
+                {
+                    Application.OpenURL("https://skybox.blockadelabs.com/membership");
+                }
+                GUILayout.Space(4);
+                GUILayout.Label("for an extra 20% off", _bodyStyle);
+            });
+
+            GUILayout.Label("the already discounted yearly rate.", _bodyStyle);
+
+            GUILayout.Space(8);
+
+            if (BlockadeGUI.Link("Read the full update for more details →", _linkStyle))
+            {
+                Application.OpenURL("https://www.blockadelabs.com/post/streamlining-skybox-ai-subscriptions-simpler-plans-more-access");
+            }
         }
 
         private void Changelog()
@@ -387,8 +430,8 @@ namespace BlockadeLabsSDK.Editor
                                 OpenSkyboxAIScene();
                             }
 
-                            // EditorGUILayout.Space(28);
-                            // News();
+                            EditorGUILayout.Space(28);
+                            News();
 
                             EditorGUILayout.Space(28);
                             Changelog();
