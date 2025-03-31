@@ -5,7 +5,7 @@ Create stunning AI-generated skybox assets within [Unity](https://unity.com/) fo
 ## Prerequisites
 
 In order to use this package you need to provide an API key from Blockade Labs in the API section.
-Get one at [https://api.blockadelabs.com](https://api.blockadelabs.com).
+Get one at [https://www.skyboxai.net/plug-in-api](https://www.skyboxai.net/plug-in-api).
 
 Unity 2020.3 LTS or higher.
 

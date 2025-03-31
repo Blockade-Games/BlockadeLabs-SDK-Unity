@@ -39,10 +39,10 @@ namespace BlockadeLabsSDK
 
         [SerializeField]
         [Obsolete("Use BlockadeLabsConfiguration instead")]
-        [Tooltip("API Key from Blockade Labs. Get one at api.blockadelabs.com")]
+        [Tooltip("API Key from Blockade Labs. Get one at https://www.skyboxai.net/plug-in-api")]
 #pragma warning disable CS0414 // Field is assigned but its value is never used
         // we will keep this serialized field so that we can convert to new Configuration
-        private string _apiKey = "API key needed. Get one at api.blockadelabs.com";
+        private string _apiKey = "API key needed. Get one at https://www.skyboxai.net/plug-in-api";
 #pragma warning restore CS0414
 
         [SerializeField]
