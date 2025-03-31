@@ -1,6 +1,10 @@
 ﻿# Changelog
 
-## 2.0.1 - March 31, 2024
+## 2.0.2 - April 14, 2025
+
+- News update.
+
+## 2.0.1 - March 31, 2025
 
 - News update, new API website link.
 
