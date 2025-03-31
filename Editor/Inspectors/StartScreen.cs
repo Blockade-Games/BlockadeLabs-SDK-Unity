@@ -12,7 +12,7 @@ namespace BlockadeLabsSDK.Editor
     internal class StartScreen : EditorWindow
     {
         private const string _website = "https://www.blockadelabs.com/";
-        private const string _apikeyUrl = "https://api.blockadelabs.com/";
+        private const string _apikeyUrl = "https://www.skyboxai.net/plug-in-api";
         private const string _discord = "https://discord.gg/kqKB3X4TJz";
         private const string _github = "https://github.com/Blockade-Games/BlockadeLabs-SDK-Unity";
 
@@ -231,15 +231,62 @@ namespace BlockadeLabsSDK.Editor
             BlockadeGUI.HorizontalLine(BlockadeGUI.HexColor("#797979"));
             EditorGUILayout.Space(8);
 
-            GUILayout.Label("BLOCKADE NEWS", _h4Style);
+            GUILayout.Label("NEWS", _h4Style);
 
-            GUILayout.Space(28);
+            GUILayout.Space(20);
 
-            GUILayout.Label("New Feature Headline", _h2Style);
+            GUILayout.Label("Simplified Subscriptions & More Access", _h1Style);
 
-            GUILayout.Space(8);
+            GUILayout.Space(20);
 
-            GUILayout.Label("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris dignissim risus sed hendrerit ullamcorper. Aliquam justo est, semper ac nisi sit amet, aliquet aliquam nunc. Sed vitae nisl eget nunc aliquam aliquet. Sed vitae nisl eget nunc aliquam aliquet.", _bodyStyle);
+            GUILayout.Label("We’re streamlining Skybox AI subscriptions to make access easier and more flexible for all users. Every paid membership now gets API and Unity integration without managing multiple plans.", _bodyStyle);
+
+            GUILayout.Space(20);
+
+            GUILayout.Label("What’s Changing? (The Basics)", _h2Style);
+
+            GUILayout.Space(20);
+
+            GUILayout.Label("<b>API & Unity for All Paid Subscriptions</b> – Starting today, Basic plans and all API plans are no longer offered, and all Basic ($12/mo) and Individual API ($20/mo) subscribers will be migrated to Pro ($24/mo) in the next 30 days.", _bodyStyle);
+
+            GUILayout.Space(16);
+
+            GUILayout.Label("<b>Unified Access</b> – Pro and Technowizard users now get API access in one plan, usable in our Unity plug-in, third-party tools, or for small-scale API projects.", _bodyStyle);
+
+            GUILayout.Space(16);
+
+            GUILayout.Label("<b>Enterprise API Plans</b> – Team API memberships ($100/mo) will transition to Enterprise plans for better scalability and support.", _bodyStyle);
+
+            GUILayout.Space(16);
+
+            GUILayout.Label("Changes take effect to existing plans on <b>April 14, 2025</b>, with any billing amount changes kicking in on your following renewal date.", _bodyStyle);
+
+            GUILayout.Space(16);
+
+            BlockadeGUI.Horizontal(() =>
+            {
+                GUILayout.Label("<b>Lock in 40% savings:</b>", _bodyStyle);
+                GUILayout.Space(4);
+                if (BlockadeGUI.Link("Upgrade to an annual plan now", _bodyStyle))
+                {
+                    Application.OpenURL("https://skybox.blockadelabs.com/membership");
+                }
+                GUILayout.Space(4);
+                GUILayout.Label("for an extra 20% off the already ", _bodyStyle);
+            });
+
+            GUILayout.Label("discounted yearly rate.", _bodyStyle);
+
+            GUILayout.Space(20);
+
+            GUILayout.Label("What’s Changing? (All the Details)", _h2Style);
+
+            GUILayout.Space(20);
+
+            if (BlockadeGUI.Link("Read the full update for more details →", _linkStyle))
+            {
+                Application.OpenURL("https://www.blockadelabs.com/post/streamlining-skybox-ai-subscriptions-simpler-plans-more-access");
+            }
         }
 
         private void Changelog()
@@ -360,7 +407,7 @@ namespace BlockadeLabsSDK.Editor
                                 GUILayout.Space(8);
                                 GUILayout.Label("Go to", _bodyStyle);
                                 GUILayout.Space(8);
-                                if (BlockadeGUI.Link("api.blockadelabs.com", _linkStyle))
+                                if (BlockadeGUI.Link("skyboxai.net/plug-in-api", _linkStyle))
                                 {
                                     Application.OpenURL(_apikeyUrl);
                                 }
@@ -387,8 +434,8 @@ namespace BlockadeLabsSDK.Editor
                                 OpenSkyboxAIScene();
                             }
 
-                            // EditorGUILayout.Space(28);
-                            // News();
+                            EditorGUILayout.Space(28);
+                            News();
 
                             EditorGUILayout.Space(28);
                             Changelog();

@@ -23727,7 +23727,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: '<line-height=20px>1. Go to api.blockadelabs.com to get your API key.
+  m_text: '<line-height=20px>1. Go to <link="https://www.skyboxai.net/plug-in-api"><u>skyboxai.net/plug-in-api</u></link> to get your API key.
 
 
     2. 
