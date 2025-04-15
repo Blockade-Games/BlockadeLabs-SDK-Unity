@@ -235,58 +235,53 @@ namespace BlockadeLabsSDK.Editor
 
             GUILayout.Space(20);
 
-            GUILayout.Label("Simplified Subscriptions & More Access", _h1Style);
+            GUILayout.Label("Product Update: Subscription Transition Complete", _h2Style);
 
             GUILayout.Space(20);
 
-            GUILayout.Label("We’re streamlining Skybox AI subscriptions to make access easier and more flexible for all users. Every paid membership now gets API and Unity integration without managing multiple plans.", _bodyStyle);
+            GUILayout.Label("The Skybox AI <b>subscription update is now live!</b> As of today, all Basic and Individual API plans have been <b>upgraded to Pro</b>. If you’re on a Team API legacy plan, keep an eye out for an email about getting you set up with an <b>Enterprise</b> plan for better scalability and support.", _bodyStyle);
 
             GUILayout.Space(20);
 
-            GUILayout.Label("What’s Changing? (The Basics)", _h2Style);
+            GUILayout.Label("What This Means for You", _h2Style);
+
+            GUILayout.Space(12);
+
+            GUILayout.Label("• <b>API & Unity plug-in access as a standard feature</b>", _bodyStyle);
+
+            GUILayout.Space(12);
+
+            GUILayout.Label("• <b>Simplified plans—no</b> more managing multiple accounts.", _bodyStyle);
+
+            GUILayout.Space(12);
+
+            GUILayout.Label("• <b>Revised generation limits</b>", _bodyStyle);
 
             GUILayout.Space(20);
 
-            GUILayout.Label("<b>API & Unity for All Paid Subscriptions</b> – Starting today, Basic plans and all API plans are no longer offered, and all Basic ($12/mo) and Individual API ($20/mo) subscribers will be migrated to Pro ($24/mo) in the next 30 days.", _bodyStyle);
+            GUILayout.Label("If you had a Basic or API plan, no action is needed—your plan will continue uninterrupted. If you’d like to explore other plan options, you can review them anytime on the", _bodyStyle);
+            if (BlockadeGUI.Link("membership page.", _bodyStyle))
+            {
+                Application.OpenURL("https://skybox.blockadelabs.com/membership");
+            }
 
             GUILayout.Space(16);
 
-            GUILayout.Label("<b>Unified Access</b> – Pro and Technowizard users now get API access in one plan, usable in our Unity plug-in, third-party tools, or for small-scale API projects.", _bodyStyle);
-
-            GUILayout.Space(16);
-
-            GUILayout.Label("<b>Enterprise API Plans</b> – Team API memberships ($100/mo) will transition to Enterprise plans for better scalability and support.", _bodyStyle);
-
-            GUILayout.Space(16);
-
-            GUILayout.Label("Changes take effect to existing plans on <b>April 14, 2025</b>, with any billing amount changes kicking in on your following renewal date.", _bodyStyle);
+            GUILayout.Label("Thank you for being a valued part of Skybox AI!", _bodyStyle, GUILayout.ExpandWidth(true));
 
             GUILayout.Space(16);
 
             BlockadeGUI.Horizontal(() =>
             {
-                GUILayout.Label("<b>Lock in 40% savings:</b>", _bodyStyle);
+                GUILayout.Label("Need more details?", _bodyStyle);
+
                 GUILayout.Space(4);
-                if (BlockadeGUI.Link("Upgrade to an annual plan now", _bodyStyle))
+
+                if (BlockadeGUI.Link("Read the full update for more details →", _linkStyle))
                 {
-                    Application.OpenURL("https://skybox.blockadelabs.com/membership");
+                    Application.OpenURL("https://www.blockadelabs.com/post/streamlining-skybox-ai-subscriptions-simpler-plans-more-access");
                 }
-                GUILayout.Space(4);
-                GUILayout.Label("for an extra 20% off the already ", _bodyStyle);
             });
-
-            GUILayout.Label("discounted yearly rate.", _bodyStyle);
-
-            GUILayout.Space(20);
-
-            GUILayout.Label("What’s Changing? (All the Details)", _h2Style);
-
-            GUILayout.Space(20);
-
-            if (BlockadeGUI.Link("Read the full update for more details →", _linkStyle))
-            {
-                Application.OpenURL("https://www.blockadelabs.com/post/streamlining-skybox-ai-subscriptions-simpler-plans-more-access");
-            }
         }
 
         private void Changelog()
