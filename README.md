@@ -232,7 +232,7 @@ If you're interested in having runtime generated content generated on demand, yo
 > [!WARNING]
 > It is highly encouraged to use a proxy service when generating runtime content, to keep your API key secure and to minimize unauthorized content generation. **DO NOT** store or check in your API key into source control or ship it with your application. Ensure that you have not hard coded your API key in source control, and **DO NOT** check in your `BlockadeLabsConfiguration` into source control.
 
-#### [BlockadeLabs API Proxy](BlockadeLabs-SDK-DotNet-Proxy/Readme.md)
+#### [BlockadeLabs API Proxy](https://github.com/RageAgainstThePixel/BlockadeLabs-SDK-DotNet/blob/main/BlockadeLabs-SDK-DotNet-Proxy/Readme.md)
 
 [![NuGet version (BlockadeLabs-SDK-DotNet-Proxy)](https://img.shields.io/nuget/v/BlockadeLabs-SDK-DotNet-Proxy.svg?label=BlockadeLabs-SDK-DotNet-Proxy&logo=nuget)](https://www.nuget.org/packages/BlockadeLabs-SDK-DotNet-Proxy/)
 
