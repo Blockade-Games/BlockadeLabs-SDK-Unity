@@ -4,7 +4,8 @@
     "references": [
         "Unity.TextMeshPro",
         "Unity.RenderPipelines.Core.Runtime",
-        "Unity.RenderPipelines.HighDefinition.Runtime"
+        "Unity.RenderPipelines.HighDefinition.Runtime",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -43,6 +44,11 @@
             "name": "com.unity.modules.unitywebrequest",
             "expression": "",
             "define": "UNITY_WEB_REQUEST"
+        },
+        {
+            "name": "com.unity.inputsystem",
+            "expression": "",
+            "define": "UNITY_INPUT_SYSTEM"
         }
     ],
     "noEngineReferences": false

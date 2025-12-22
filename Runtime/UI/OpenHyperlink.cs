@@ -18,7 +18,7 @@ namespace BlockadeLabsSDK
 
         public void OnPointerClick(PointerEventData eventData)
         {
-            int linkIndex = TMP_TextUtilities.FindIntersectingLink(textMeshProText, Input.mousePosition, null);
+            int linkIndex = TMP_TextUtilities.FindIntersectingLink(textMeshProText, InputHelper.MousePosition, null);
             if (linkIndex != -1)
             {
                 TMP_LinkInfo linkInfo = textMeshProText.textInfo.linkInfo[linkIndex];
