@@ -1,3 +1,5 @@
+#if UNITY_TMPRO
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -298,3 +300,5 @@ namespace BlockadeLabsSDK
         }
     }
 }
+
+#endif
