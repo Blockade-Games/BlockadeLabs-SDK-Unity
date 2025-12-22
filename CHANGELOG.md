@@ -1,5 +1,11 @@
 ﻿# Changelog
 
+## 2.0.3 - December 22, 2025
+
+- Important: This package will now install into the Assets folder instead of the Packages folder. Before updating, please delete the old version from the Packages folder using your computer's file explorer.
+- Added support for new Input System.
+- Added some version defines to avoid compile errors if packages are missing.
+
 ## 2.0.2 - April 14, 2025
 
 - News update.
