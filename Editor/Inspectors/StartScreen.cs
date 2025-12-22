@@ -247,15 +247,15 @@ namespace BlockadeLabsSDK.Editor
 
             GUILayout.Space(12);
 
-            GUILayout.Label("• <b>API & Unity plug-in access as a standard feature</b>", _bodyStyle);
+            GUILayout.Label("• <b>API & Unity plug-in access as a standard feature</b>", _bodyStyle, GUILayout.ExpandWidth(true));
 
             GUILayout.Space(12);
 
-            GUILayout.Label("• <b>Simplified plans—no</b> more managing multiple accounts.", _bodyStyle);
+            GUILayout.Label("• <b>Simplified plans—no</b> more managing multiple accounts.", _bodyStyle, GUILayout.ExpandWidth(true));
 
             GUILayout.Space(12);
 
-            GUILayout.Label("• <b>Revised generation limits</b>", _bodyStyle);
+            GUILayout.Label("• <b>Revised generation limits</b>", _bodyStyle, GUILayout.ExpandWidth(true));
 
             GUILayout.Space(20);
 
