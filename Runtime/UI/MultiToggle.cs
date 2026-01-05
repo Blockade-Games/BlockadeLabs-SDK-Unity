@@ -1,3 +1,5 @@
+#if UNITY_TMPRO
+
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
@@ -83,3 +85,5 @@ namespace BlockadeLabsSDK
         }
     }
 }
+
+#endif

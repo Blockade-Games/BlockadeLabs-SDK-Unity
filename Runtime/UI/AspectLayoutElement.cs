@@ -1,3 +1,5 @@
+#if UNITY_TMPRO
+
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -37,3 +39,5 @@ namespace BlockadeLabsSDK
         public void CalculateLayoutInputVertical() { }
     }
 }
+
+#endif

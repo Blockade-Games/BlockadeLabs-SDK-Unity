@@ -1,3 +1,5 @@
+#if UNITY_TMPRO
+
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -184,19 +186,19 @@ namespace BlockadeLabsSDK
 
             if (_rectTransform)
             {
-                mouseOverGameView = RectTransformUtility.RectangleContainsScreenPoint(_rectTransform, Input.mousePosition);
+                mouseOverGameView = RectTransformUtility.RectangleContainsScreenPoint(_rectTransform, InputHelper.MousePosition);
             }
             else
             {
-                mouseOverGameView = Input.mousePosition.x >= 0 &&
-                                    Input.mousePosition.x < Screen.width &&
-                                    Input.mousePosition.y >= 0 &&
-                                    Input.mousePosition.y < Screen.height;
+                mouseOverGameView = InputHelper.MousePosition.x >= 0 &&
+                                    InputHelper.MousePosition.x < Screen.width &&
+                                    InputHelper.MousePosition.y >= 0 &&
+                                    InputHelper.MousePosition.y < Screen.height;
             }
 
-            if (!MouseIsOverUI() && Input.mouseScrollDelta.y != 0 && mouseOverGameView)
+            if (!MouseIsOverUI() && InputHelper.ScrollDelta.y != 0 && mouseOverGameView)
             {
-                _zoom += Input.mouseScrollDelta.y * _zoomSpeed * 0.001f;
+                _zoom += InputHelper.ScrollDelta.y * _zoomSpeed * 0.001f;
                 _zoom = Mathf.Clamp(_zoom, _zoomMin, _mode == Mode.CenterOrbit ? _sphereOrbitZoomMax : _zoomMax);
             }
 
@@ -222,10 +224,10 @@ namespace BlockadeLabsSDK
 
         private void UpdateWaitingToAutoPan()
         {
-            if (!MouseIsOverUI() && Input.GetMouseButtonDown(0))
+            if (!MouseIsOverUI() && InputHelper.GetMouseButtonDown())
             {
                 _state = State.ManuallyMoving;
-                _mousePosition = Input.mousePosition;
+                _mousePosition = InputHelper.MousePosition;
             }
             else if (!_autoPan)
             {
@@ -240,10 +242,10 @@ namespace BlockadeLabsSDK
 
         private void UpdateAutoPanning()
         {
-            if (!_autoPan || (!MouseIsOverUI() && Input.GetMouseButtonDown(0)))
+            if (!_autoPan || (!MouseIsOverUI() && InputHelper.GetMouseButtonDown()))
             {
                 _state = State.ManuallyMoving;
-                _mousePosition = Input.mousePosition;
+                _mousePosition = InputHelper.MousePosition;
             }
             else
             {
@@ -256,7 +258,7 @@ namespace BlockadeLabsSDK
         {
             if (_rectTransform)
             {
-                return !RectTransformUtility.RectangleContainsScreenPoint(_rectTransform, Input.mousePosition);
+                return !RectTransformUtility.RectangleContainsScreenPoint(_rectTransform, InputHelper.MousePosition);
             }
 
             return EventSystem.current?.IsPointerOverGameObject() ?? false;
@@ -264,10 +266,10 @@ namespace BlockadeLabsSDK
 
         private void UpdateManuallyMoving()
         {
-            if (Input.GetMouseButton(0))
+            if (InputHelper.GetMouseButton())
             {
-                var mouseDelta = Input.mousePosition - _mousePosition;
-                _mousePosition = Input.mousePosition;
+                var mouseDelta = InputHelper.MousePosition - _mousePosition;
+                _mousePosition = InputHelper.MousePosition;
 
                 if (_mode == Mode.CenterOrbit)
                 {
@@ -285,3 +287,5 @@ namespace BlockadeLabsSDK
         }
     }
 }
+
+#endif

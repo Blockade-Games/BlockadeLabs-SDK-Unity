@@ -1,3 +1,5 @@
+#if UNITY_TMPRO
+
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -24,3 +26,5 @@ namespace BlockadeLabsSDK
         }
     }
 }
+
+#endif

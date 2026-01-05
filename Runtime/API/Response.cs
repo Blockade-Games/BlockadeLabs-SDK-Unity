@@ -1,3 +1,5 @@
+#if UNITY_WEB_REQUEST
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
@@ -55,7 +57,6 @@ namespace BlockadeLabsSDK
                     case DownloadHandlerFile _:
                     case DownloadHandlerTexture _:
                     case DownloadHandlerAudioClip _:
-                    case DownloadHandlerAssetBundle _:
                         Body = null;
                         Data = null;
                         break;
@@ -211,3 +212,5 @@ namespace BlockadeLabsSDK
         }
     }
 }
+
+#endif

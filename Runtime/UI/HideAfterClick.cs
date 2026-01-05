@@ -23,18 +23,18 @@ namespace BlockadeLabsSDK
         {
             var waitForEndOfFrame = new WaitForEndOfFrame();
             // wait until mouse isn't down so we don't capture the click that enabled this component
-            while (Input.GetMouseButton(0) || Input.GetMouseButtonUp(0))
+            while (InputHelper.GetMouseButton() || InputHelper.GetMouseButtonUp())
             {
                 yield return waitForEndOfFrame;
             }
 
             while (true)
             {
-                if (Input.GetMouseButtonUp(0))
+                if (InputHelper.GetMouseButtonUp())
                 {
                     // check if pointer is inside rect
                     if (_ignoreClicksInsideRect &&
-                        RectTransformUtility.RectangleContainsScreenPoint(GetComponent<RectTransform>(), Input.mousePosition))
+                        RectTransformUtility.RectangleContainsScreenPoint(GetComponent<RectTransform>(), InputHelper.MousePosition))
                     {
                         // ignore click
                         yield return null;

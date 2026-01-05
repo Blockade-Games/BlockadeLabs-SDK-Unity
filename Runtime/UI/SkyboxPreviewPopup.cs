@@ -1,4 +1,6 @@
-﻿using System;
+﻿#if UNITY_TMPRO
+
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using TMPro;
@@ -267,3 +269,5 @@ namespace BlockadeLabsSDK
         }
     }
 }
+
+#endif
